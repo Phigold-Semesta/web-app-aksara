@@ -2,15 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasFactory, Notifiable;
 
-    protected $table = 'user'; // Nama tabel singular
-    protected $primaryKey = 'id_user'; // PK sesuai ERD
+    protected $table = 'user';
+    protected $primaryKey = 'id_user';
+
+    // Menegaskan bahwa PK adalah integer dan auto-incrementing
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'nama_lengkap',
@@ -22,22 +28,33 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password',
+        'remember_token',
     ];
 
-    // Relasi: User mengelola banyak Surat
-    public function surat()
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Relasi: User mengelola banyak Surat
+     */
+    public function surat(): HasMany
     {
         return $this->hasMany(Surat::class, 'id_user', 'id_user');
     }
 
-    // Relasi: User (Pimpinan) memberikan banyak Disposisi
-    public function disposisi()
+    /**
+     * Relasi: User memberikan banyak Disposisi
+     */
+    public function disposisi(): HasMany
     {
         return $this->hasMany(Disposisi::class, 'id_user', 'id_user');
     }
 
-    // Relasi: User melakukan banyak aktivitas di Audit Log
-    public function audit_log()
+    /**
+     * Relasi: User melakukan banyak aktivitas di Audit Log
+     */
+    public function audit_log(): HasMany
     {
         return $this->hasMany(AuditLog::class, 'id_user', 'id_user');
     }

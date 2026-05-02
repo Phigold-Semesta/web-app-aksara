@@ -10,31 +10,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Buat Admin
-        User::create([
-            'nama_lengkap' => 'Administrator Aksara',
-            'username' => 'admin',
-            'password' => Hash::make('password'),
-            'jabatan' => 'IT Support',
-            'role' => 'admin',
-        ]);
 
-        // Buat Pimpinan
-        User::create([
-            'nama_lengkap' => 'Kepala LPSE',
-            'username' => 'pimpinan',
-            'password' => Hash::make('password'),
-            'jabatan' => 'Kepala Bagian',
-            'role' => 'pimpinan',
-        ]);
-
-        // Buat Petugas
-        User::create([
-            'nama_lengkap' => 'Petugas Helpdesk',
-            'username' => 'petugas',
-            'password' => Hash::make('password'),
-            'jabatan' => 'Staff Administrasi',
-            'role' => 'petugas',
-        ]);
+    $this->call([
+        // UserSeeder::class, // Jika Anda punya seeder user, jalankan ini dulu
+        SuratSeeder::class,
+    ]);
     }
+        
 }
