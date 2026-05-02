@@ -41,16 +41,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Master Data (Folder: admin/master/...)[cite: 2]
         Route::prefix('master')->name('master.')->group(function() {
-            // Mengelola Data User[cite: 1]
             Route::resource('user', AdminController::class); 
-            // Mengelola Master Kategori[cite: 1]
             Route::resource('kategori', AdminController::class);
-            // Mengelola Master Instruksi Pimpinan[cite: 1]
             Route::resource('instruksi', AdminController::class);
         });
 
         // Manajemen Surat (Input & Digitalisasi)[cite: 1]
-        // Sesuai Sidebar: admin.manajemen_surat.index
         Route::resource('manajemen_surat', AdminController::class);
 
         // Manajemen Arsip[cite: 1]
@@ -64,25 +60,35 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ==========================================
-    // 2. AKTOR: PETUGAS
+    // 2. AKTOR: PETUGAS (Sempurna & Aktif)
     // ==========================================
     Route::middleware(['checkrole:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
         
-        // Dashboard[cite: 2]
+        // Dashboard & Laporan (Sesuai image_cf3a21.png)[cite: 2]
         Route::get('/dashboard', [PetugasController::class, 'index'])->name('dashboard');
 
-        // Input & Digitalisasi Surat[cite: 1]
-        // Sesuai Sidebar: petugas.manajemen_surat.index
-        Route::resource('manajemen_surat', PetugasController::class);
+        // Input & Digitalisasi Surat[cite: 1, 3]
+        // Menggunakan resource untuk index, create, store, edit, update, destroy
+        Route::resource('manajemen_surat', PetugasController::class)->names([
+            'index' => 'manajemen_surat.index',
+            'create' => 'manajemen_surat.create',
+            'store' => 'manajemen_surat.store',
+        ]);
         
-        // Meneruskan Surat Ke Pimpinan[cite: 1]
-        Route::get('/surat/{id}/teruskan', [PetugasController::class, 'teruskanKePimpinan'])->name('surat.teruskan');
+        // Route Tambahan untuk Status Surat (Jika ingin halaman terpisah dari index)
+        Route::get('/manajemen_surat/status', [PetugasController::class, 'statusSurat'])->name('manajemen_surat.status');
 
-        // Manajemen Arsip (Input Lokasi & Cek Retensi)[cite: 1]
-        Route::resource('manajemen_arsip', PetugasController::class);
+        // Meneruskan Surat Ke Pimpinan (Workflow Utama)[cite: 1, 3]
+        // Diubah menjadi POST/PATCH untuk keamanan data
+        Route::patch('/surat/{id}/teruskan', [PetugasController::class, 'teruskanKePimpinan'])->name('surat.teruskan');
+
+        // Manajemen Arsip (Input Lokasi & Cek Retensi)[cite: 1, 3]
+        Route::get('/manajemen_arsip', [PetugasController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
+        Route::resource('arsip', PetugasController::class)->except(['index']); // Untuk operasional arsip lainnya
 
         // Melihat Laporan Statistik[cite: 1]
-        Route::get('/statistik', [PetugasController::class, 'statistik'])->name('statistik');
+        // Dialihkan ke dashboard jika data statistik sudah ada di dashboard
+        Route::get('/statistik', [PetugasController::class, 'index'])->name('statistik');
     });
 
     // ==========================================
@@ -94,7 +100,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [PimpinanController::class, 'index'])->name('dashboard');
 
         // Menerima & Meninjau Surat / Instruksi[cite: 1]
-        // Sesuai Sidebar: pimpinan.instruksi_surat.index
         Route::resource('instruksi_surat', PimpinanController::class);
 
         // Monitoring Riwayat Surat[cite: 1]
@@ -110,7 +115,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/download', [PimpinanController::class, 'downloadArsip'])->name('download');
         });
 
-        // Monitoring Audit Log (Sesuai Use Case Pimpinan)[cite: 1]
+        // Monitoring Audit Log[cite: 1]
         Route::get('/audit-log', [PimpinanController::class, 'auditLog'])->name('aktivitas.index');
         
         // Melihat Laporan Statistik[cite: 1]
