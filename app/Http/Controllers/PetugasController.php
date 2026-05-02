@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Surat;
 use App\Models\Arsip;
-use App\Models\Kategori;
+use App\Models\KategoriSurat; // Perbaikan: Sesuaikan dengan nama model yang benar
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -22,10 +22,10 @@ class PetugasController extends Controller
             'surat_masuk'  => Surat::where('id_kategori', 1)->count(),
             'surat_keluar' => Surat::where('id_kategori', 2)->count(),
             'total_arsip'  => Arsip::count(),
-            'update_time'  => now()->diffForHumans(), // Contoh: 2 minutes ago
+            'update_time'  => now()->diffForHumans(), 
         ];
 
-        // Ringkasan Monitoring (Limit 5)
+        // Ringkasan Monitoring (Limit 5) untuk Dashboard
         $surats = Surat::with('kategori')->latest()->take(5)->get();
 
         // Data Lengkap untuk Tabel Laporan (Akan diproses oleh DataTables Export)
@@ -35,25 +35,27 @@ class PetugasController extends Controller
     }
 
     /**
-     * Form Input & Digitalisasi Surat
+     * Form Input & Digitalisasi Surat (Method standar Resource: create)
+     * DISESUAIKAN: Mengikuti Route::resource('manajemen_surat', ...)
      */
-    public function inputSurat()
+    public function create()
     {
-        $kategoris = Kategori::all(); 
+        $kategoris = KategoriSurat::all(); // Perbaikan: Gunakan Model KategoriSurat
         return view('petugas.manajemen_surat.create', compact('kategoris'));
     }
 
     /**
-     * Menyimpan data surat dan mengunggah file
+     * Menyimpan data surat dan mengunggah file (Method standar Resource: store)
+     * DISESUAIKAN: Mengikuti Route::resource('manajemen_surat', ...)
      */
-    public function storeSurat(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'nomor_surat'   => 'required|unique:surat,nomor_surat',
             'tanggal_surat' => 'required|date',
             'asal_instansi' => 'required|string|max:255',
-            'perihal'       => 'required|string',
-            'id_kategori'   => 'required|exists:kategori,id_kategori',
+            'perihal'        => 'required|string',
+            'id_kategori'   => 'required|exists:kategori_surat,id_kategori', // Perbaikan: nama tabel kategori_surat
             'file_dokumen'  => 'required|mimes:pdf,jpg,png|max:2048', 
         ]);
 
@@ -80,15 +82,31 @@ class PetugasController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->route('petugas.status_surat')
+            
+            // DISESUAIKAN: Redirect ke index manajemen_surat sesuai web.php
+            return redirect()->route('petugas.manajemen_surat.index')
                              ->with('success', 'Surat Berhasil Didigitalisasi!');
 
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->with('error', 'Gagal: ' . $e->getMessage());
+            return back()->with('error', 'Gagal: ' . $e->getMessage())->withInput();
         }
     }
 
+    /**
+     * Menampilkan daftar status surat (Index Manajemen Surat)
+     */
+    public function indexManajemenSurat() // Ini dipetakan ke manajemen_surat.index
+    {
+        $surats = Surat::with('kategori')
+                      ->latest()
+                      ->paginate(10);
+        return view('petugas.manajemen_surat.index', compact('surats'));
+    }
+
+    /**
+     * Meneruskan Surat Ke Pimpinan
+     */
     public function teruskanKePimpinan($id)
     {
         $surat = Surat::findOrFail($id);
@@ -96,6 +114,9 @@ class PetugasController extends Controller
         return back()->with('success', 'Surat berhasil diteruskan ke Pimpinan.');
     }
 
+    /**
+     * Route Tambahan untuk Status Surat (Halaman khusus jika diperlukan)
+     */
     public function statusSurat()
     {
         $surats = Surat::with('kategori')
@@ -105,6 +126,9 @@ class PetugasController extends Controller
         return view('petugas.manajemen_surat.index', compact('surats'));
     }
 
+    /**
+     * Manajemen Arsip
+     */
     public function kelolaArsip()
     {
         $arsips = Arsip::with('surat')->latest()->paginate(10);
