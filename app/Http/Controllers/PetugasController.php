@@ -14,12 +14,9 @@ class PetugasController extends Controller
 {
     /**
      * DASHBOARD PETUGAS
-     * Menampilkan statistik dan ringkasan surat terbaru.
      */
     public function dashboard()
     {
-        // Statistik Real-time untuk Card
-        // Asumsi: id_kategori 1 = Masuk, 2 = Keluar
         $stats = [
             'surat_masuk'  => Surat::where('id_kategori', 1)->count(),
             'surat_keluar' => Surat::where('id_kategori', 2)->count(),
@@ -27,31 +24,41 @@ class PetugasController extends Controller
             'update_time'  => now()->diffForHumans(), 
         ];
 
-        // Ringkasan Monitoring (Limit 5) untuk Dashboard
         $surats = Surat::with('kategori')->latest()->take(5)->get();
-
-        // Data Lengkap untuk Tabel Laporan
         $riwayat_surats = Surat::with(['kategori', 'user'])->latest()->get();
 
         return view('petugas.dashboard', compact('stats', 'surats', 'riwayat_surats'));
     }
 
     /**
-     * MANAJEMEN SURAT: INDEX
-     * Menampilkan daftar semua surat dengan pagination.
+     * MANAJEMEN SURAT: INDEX (DENGAN SEARCH & FILTER PER PAGE)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $surats = Surat::with(['kategori', 'user'])
-                      ->latest()
-                      ->paginate(10);
-                      
+        $query = Surat::with(['kategori', 'user'])->latest();
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('perihal', 'like', "%$search%")
+                  ->orWhere('nomor_surat', 'like', "%$search%")
+                  ->orWhere('asal_instansi', 'like', "%$search%");
+            });
+        }
+
+        $perPage = $request->get('per_page', 10);
+        
+        if ($perPage == 'all') {
+            $surats = $query->paginate($query->count())->withQueryString();
+        } else {
+            $surats = $query->paginate($perPage)->withQueryString();
+        }
+                          
         return view('petugas.manajemen_surat.index', compact('surats'));
     }
 
     /**
      * MANAJEMEN SURAT: CREATE
-     * Menampilkan form input surat baru.
      */
     public function create()
     {
@@ -61,7 +68,7 @@ class PetugasController extends Controller
 
     /**
      * MANAJEMEN SURAT: STORE
-     * Validasi dan simpan data surat beserta upload file.
+     * DISESUAIKAN: Menambahkan sanitasi nama file untuk fix preview
      */
     public function store(Request $request)
     {
@@ -80,8 +87,15 @@ class PetugasController extends Controller
             $fileName = null;
             if ($request->hasFile('file_dokumen')) {
                 $file = $request->file('file_dokumen');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $file->storeAs('public/dokumen_surat', $fileName);
+                
+                // --- PERBAIKAN: Sanitasi Nama File ---
+                // Menghapus spasi dan karakter khusus agar URL preview tidak rusak (403/404)
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeName = preg_replace('/[^A-Za-z0-9]/', '_', $originalName); 
+                $fileName = time() . '_' . $safeName . '.' . $file->getClientOriginalExtension();
+                
+                // Simpan ke storage/app/public/dokumen_surat
+                $file->storeAs('dokumen_surat', $fileName, 'public');
             }
 
             Surat::create([
@@ -109,7 +123,6 @@ class PetugasController extends Controller
 
     /**
      * MANAJEMEN SURAT: SHOW
-     * Menampilkan detail surat.
      */
     public function show($id)
     {
@@ -118,8 +131,7 @@ class PetugasController extends Controller
     }
 
     /**
-     * MANAJEMEN SURAT: EDIT (SOLUSI UNTUK ERROR ANDA)
-     * Menampilkan form edit untuk data surat tertentu.
+     * MANAJEMEN SURAT: EDIT
      */
     public function edit($id)
     {
@@ -129,8 +141,8 @@ class PetugasController extends Controller
     }
 
     /**
-     * MANAJEMEN SURAT: UPDATE (SOLUSI UNTUK PROSES EDIT)
-     * Mengupdate data surat di database.
+     * MANAJEMEN SURAT: UPDATE
+     * DISESUAIKAN: Sinkronisasi penghapusan file lama & sanitasi file baru
      */
     public function update(Request $request, $id)
     {
@@ -149,14 +161,19 @@ class PetugasController extends Controller
             DB::beginTransaction();
 
             if ($request->hasFile('file_dokumen')) {
-                // Hapus file lama jika ada untuk menghemat storage
+                // 1. Hapus file lama dari disk public jika ada
                 if ($surat->file_surat) {
-                    Storage::delete('public/dokumen_surat/' . $surat->file_surat);
+                    Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
                 }
 
+                // 2. Olah file baru dengan sanitasi nama
                 $file = $request->file('file_dokumen');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $file->storeAs('public/dokumen_surat', $fileName);
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeName = preg_replace('/[^A-Za-z0-9]/', '_', $originalName);
+                $fileName = time() . '_' . $safeName . '.' . $file->getClientOriginalExtension();
+                
+                // 3. Simpan file baru ke disk public
+                $file->storeAs('dokumen_surat', $fileName, 'public');
                 $surat->file_surat = $fileName;
             }
 
@@ -176,6 +193,28 @@ class PetugasController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             return back()->with('error', 'Gagal update: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * MANAJEMEN SURAT: DESTROY
+     */
+    public function destroy($id)
+    {
+        try {
+            $surat = Surat::findOrFail($id);
+
+            if ($surat->file_surat) {
+                // Pastikan file fisik terhapus dari folder dokumen_surat
+                Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
+            }
+
+            $surat->delete();
+
+            return redirect()->route('petugas.manajemen_surat.index')
+                             ->with('success', 'Data Surat dan Dokumen Berhasil Dihapus!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
 

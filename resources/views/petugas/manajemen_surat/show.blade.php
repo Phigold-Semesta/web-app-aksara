@@ -62,7 +62,7 @@
                             </span>
                         @else
                             <span class="inline-flex items-center gap-2 text-blue-500 font-black text-xs uppercase">
-                                <i class="fas fa-check-circle"></i> {{ $surat->status }}
+                                <i class="fas fa-check-circle"></i> {{ strtoupper($surat->status) }}
                             </span>
                         @endif
                     </div>
@@ -75,17 +75,28 @@
             <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 border border-emerald-50 dark:border-slate-800 overflow-hidden h-full min-h-[600px] flex flex-col">
                 <div class="p-6 border-b border-emerald-50 dark:border-slate-800 flex justify-between items-center bg-emerald-50/30 dark:bg-slate-800/30">
                     <span class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest">Preview Dokumen Digital</span>
-                    <a href="{{ asset('storage/' . $surat->file_surat) }}" target="_blank" class="text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:underline">
-                        <i class="fas fa-external-link-alt mr-1"></i> Buka di Tab Baru
+                    
+                    {{-- Tombol Buka Tab Baru --}}
+                    <a href="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" target="_blank" class="text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:underline">
+                        <i class="fas fa-external-link-alt mr-1"></i> Buka Fullscreen
                     </a>
                 </div>
-                <div class="flex-grow bg-slate-100 dark:bg-slate-950">
+                <div class="flex-grow bg-slate-100 dark:bg-slate-950 flex flex-col">
                     @php $extension = pathinfo($surat->file_surat, PATHINFO_EXTENSION); @endphp
-                    @if($extension == 'pdf')
-                        <embed src="{{ asset('storage/' . $surat->file_surat) }}" type="application/pdf" class="w-full h-full min-h-[600px]">
+                    
+                    @if(strtolower($extension) == 'pdf')
+                        {{-- PERBAIKAN: Menambahkan parameter #toolbar=0 dan styling height 100% agar tidak crash/inception --}}
+                        <iframe 
+                            src="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}#toolbar=0" 
+                            class="w-full flex-grow border-none" 
+                            style="min-height: 600px;"
+                            loading="lazy">
+                        </iframe>
                     @else
-                        <div class="flex items-center justify-center h-full p-10">
-                            <img src="{{ asset('storage/' . $surat->file_surat) }}" alt="Preview Surat" class="max-w-full max-h-full rounded-xl shadow-lg">
+                        <div class="flex items-center justify-center flex-grow p-10">
+                            <img src="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" 
+                                 alt="Preview Surat" 
+                                 class="max-w-full max-h-[550px] rounded-xl shadow-2xl object-contain border-4 border-white dark:border-slate-800">
                         </div>
                     @endif
                 </div>
