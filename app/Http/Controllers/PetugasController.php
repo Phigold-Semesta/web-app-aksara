@@ -109,13 +109,74 @@ class PetugasController extends Controller
 
     /**
      * MANAJEMEN SURAT: SHOW
-     * Menampilkan detail surat. (PENTING: Agar route show tidak error)
+     * Menampilkan detail surat.
      */
     public function show($id)
     {
-        // Menggunakan findOrFail untuk memastikan data ditemukan berdasarkan id_surat
         $surat = Surat::with(['kategori', 'user'])->findOrFail($id);
         return view('petugas.manajemen_surat.show', compact('surat'));
+    }
+
+    /**
+     * MANAJEMEN SURAT: EDIT (SOLUSI UNTUK ERROR ANDA)
+     * Menampilkan form edit untuk data surat tertentu.
+     */
+    public function edit($id)
+    {
+        $surat = Surat::findOrFail($id);
+        $kategoris = KategoriSurat::all();
+        return view('petugas.manajemen_surat.edit', compact('surat', 'kategoris'));
+    }
+
+    /**
+     * MANAJEMEN SURAT: UPDATE (SOLUSI UNTUK PROSES EDIT)
+     * Mengupdate data surat di database.
+     */
+    public function update(Request $request, $id)
+    {
+        $surat = Surat::findOrFail($id);
+
+        $request->validate([
+            'nomor_surat'   => 'required|unique:surat,nomor_surat,' . $id . ',id_surat',
+            'tanggal_surat' => 'required|date',
+            'asal_instansi' => 'required|string|max:255',
+            'perihal'        => 'required|string',
+            'id_kategori'   => 'required|exists:kategori_surat,id_kategori',
+            'file_dokumen'  => 'nullable|mimes:pdf,jpg,png|max:2048', 
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            if ($request->hasFile('file_dokumen')) {
+                // Hapus file lama jika ada untuk menghemat storage
+                if ($surat->file_surat) {
+                    Storage::delete('public/dokumen_surat/' . $surat->file_surat);
+                }
+
+                $file = $request->file('file_dokumen');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->storeAs('public/dokumen_surat', $fileName);
+                $surat->file_surat = $fileName;
+            }
+
+            $surat->update([
+                'nomor_surat'   => $request->nomor_surat,
+                'perihal'       => $request->perihal,
+                'asal_instansi' => $request->asal_instansi,
+                'tanggal_surat' => $request->tanggal_surat,
+                'id_kategori'   => $request->id_kategori,
+            ]);
+
+            DB::commit();
+            
+            return redirect()->route('petugas.manajemen_surat.index')
+                             ->with('success', 'Data Surat Berhasil Diperbarui!');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Gagal update: ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
