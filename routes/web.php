@@ -67,8 +67,7 @@ Route::middleware(['auth'])->group(function () {
         // Dashboard (Statistik)
         Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
 
-        // PERBAIKAN: Route khusus untuk teruskan surat (Disesuaikan dengan pemanggilan di Blade)
-        // Diletakkan di atas resource agar tidak bentrok dengan route standar Laravel
+        // Fitur Teruskan Surat ke Pimpinan
         Route::patch('/manajemen_surat/{id}/teruskan', [PetugasController::class, 'teruskanKePimpinan'])
              ->name('teruskan_pimpinan');
 
@@ -78,11 +77,17 @@ Route::middleware(['auth'])->group(function () {
         // Route Tambahan untuk Status Surat
         Route::get('/manajemen_surat_status', [PetugasController::class, 'statusSurat'])->name('manajemen_surat.status');
 
-        // Manajemen Arsip
+        // --- MANAJEMEN ARSIP (DISEMPURNAKAN) ---
+        // Urutan diperbaiki: Static Route dulu, baru Parameter Route {id}
         Route::get('/manajemen_arsip', [PetugasController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
+        Route::get('/manajemen_arsip/create', [PetugasController::class, 'arsipCreate'])->name('manajemen_arsip.create');
+        Route::post('/manajemen_arsip/store', [PetugasController::class, 'arsipStore'])->name('manajemen_arsip.store');
         
-        // Arsip Operasional
-        Route::resource('arsip_operasional', PetugasController::class)->except(['index']);
+        // Route dengan parameter diletakkan di bawah agar tidak bentrok
+        Route::get('/manajemen_arsip/{id}', [PetugasController::class, 'arsip_show'])->name('manajemen_arsip.show');
+        Route::get('/manajemen_arsip/{id}/edit', [PetugasController::class, 'arsipEdit'])->name('manajemen_arsip.edit');
+        Route::put('/manajemen_arsip/{id}/update', [PetugasController::class, 'arsipUpdate'])->name('manajemen_arsip.update');
+        Route::delete('/manajemen_arsip/{id}/delete', [PetugasController::class, 'arsipDestroy'])->name('manajemen_arsip.destroy');
 
         // Statistik (Alias ke dashboard)
         Route::get('/statistik', [PetugasController::class, 'dashboard'])->name('statistik');

@@ -4,9 +4,9 @@
 <div class="p-8 transition-colors duration-300">
     {{-- Header --}}
     <div class="mb-10">
-        <a href="{{ route('petugas.manajemen_surat.index') }}" class="group flex items-center text-emerald-600 dark:text-emerald-400 font-semibold mb-4 transition-all">
-            <i class="fas fa-arrow-left mr-2 transform group-hover:-translate-x-1 transition-transform"></i>
-            Kembali ke Daftar Surat
+        {{-- PERBAIKAN: Tombol Kembali Abu-abu Muda --}}
+        <a href="{{ route('petugas.manajemen_surat.index') }}" class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all mb-4 gap-2 shadow-sm">
+            <i class="fas fa-arrow-left"></i> Kembali
         </a>
         <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-emerald-50 tracking-tight">Perbarui Data Surat</h1>
         <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-1">Mengedit arsip digital #{{ $surat->id_surat }}</p>

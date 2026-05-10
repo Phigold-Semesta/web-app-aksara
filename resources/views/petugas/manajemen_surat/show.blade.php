@@ -5,9 +5,9 @@
     {{-- Header --}}
     <div class="mb-10 flex justify-between items-start">
         <div>
-            <a href="{{ route('petugas.manajemen_surat.index') }}" class="group flex items-center text-emerald-600 dark:text-emerald-400 font-semibold mb-4 transition-all">
-                <i class="fas fa-arrow-left mr-2 transform group-hover:-translate-x-1 transition-transform"></i>
-                Kembali ke Daftar Surat
+            {{-- PERBAIKAN: Tombol Kembali Abu-abu Muda --}}
+            <a href="{{ route('petugas.manajemen_surat.index') }}" class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all mb-4 gap-2 shadow-sm">
+                <i class="fas fa-arrow-left"></i> Kembali
             </a>
             <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-emerald-50 tracking-tight">Detail Arsip Digital</h1>
             <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-1">Informasi lengkap dokumen #{{ $surat->id_surat }}</p>
@@ -76,7 +76,6 @@
                 <div class="p-6 border-b border-emerald-50 dark:border-slate-800 flex justify-between items-center bg-emerald-50/30 dark:bg-slate-800/30">
                     <span class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest">Preview Dokumen Digital</span>
                     
-                    {{-- Tombol Buka Tab Baru --}}
                     <a href="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" target="_blank" class="text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:underline">
                         <i class="fas fa-external-link-alt mr-1"></i> Buka Fullscreen
                     </a>
@@ -85,7 +84,6 @@
                     @php $extension = pathinfo($surat->file_surat, PATHINFO_EXTENSION); @endphp
                     
                     @if(strtolower($extension) == 'pdf')
-                        {{-- PERBAIKAN: Menambahkan parameter #toolbar=0 dan styling height 100% agar tidak crash/inception --}}
                         <iframe 
                             src="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}#toolbar=0" 
                             class="w-full flex-grow border-none" 

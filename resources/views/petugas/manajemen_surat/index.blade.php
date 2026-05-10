@@ -93,22 +93,22 @@
                             <div class="flex items-center justify-center gap-2">
                                 {{-- Aksi: Detail --}}
                                 <a href="{{ route('petugas.manajemen_surat.show', $item->id_surat) }}" 
-                                   class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Detail">
-                                    <i class="fas fa-eye text-sm"></i>
+                                   class="group/btn p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 dark:hover:bg-emerald-600 transition-all shadow-sm" title="Detail">
+                                    <i class="fas fa-eye text-sm group-hover/btn:text-white transition-colors"></i>
                                 </a>
 
                                 {{-- Aksi: Edit --}}
                                 <a href="{{ route('petugas.manajemen_surat.edit', $item->id_surat) }}" 
-                                   class="p-2.5 bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-500 hover:text-white transition-all shadow-sm" title="Edit">
-                                    <i class="fas fa-edit text-sm"></i>
+                                   class="group/btn p-2.5 bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-500 dark:hover:bg-amber-500 transition-all shadow-sm" title="Edit">
+                                    <i class="fas fa-edit text-sm group-hover/btn:text-white transition-colors"></i>
                                 </a>
                                 
                                 {{-- Aksi: Teruskan --}}
                                 <form action="{{ route('petugas.teruskan_pimpinan', $item->id_surat) }}" method="POST" id="form-teruskan-{{ $item->id_surat }}">
                                     @csrf @method('PATCH')
                                     <button type="button" onclick="konfirmasiTeruskan('{{ $item->id_surat }}')"
-                                            class="p-2.5 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm" title="Teruskan">
-                                        <i class="fas fa-share-square text-sm"></i>
+                                            class="group/btn p-2.5 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 dark:hover:bg-blue-600 transition-all shadow-sm" title="Teruskan">
+                                        <i class="fas fa-share-square text-sm group-hover/btn:text-white transition-colors"></i>
                                     </button>
                                 </form>
 
@@ -116,8 +116,8 @@
                                 <form action="{{ route('petugas.manajemen_surat.destroy', $item->id_surat) }}" method="POST" id="form-hapus-{{ $item->id_surat }}">
                                     @csrf @method('DELETE')
                                     <button type="button" onclick="konfirmasiHapus('{{ $item->id_surat }}')"
-                                            class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Hapus">
-                                        <i class="fas fa-trash-alt text-sm"></i>
+                                            class="group/btn p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 dark:hover:bg-red-600 transition-all shadow-sm" title="Hapus">
+                                        <i class="fas fa-trash-alt text-sm group-hover/btn:text-white transition-colors"></i>
                                     </button>
                                 </form>
                             </div>
@@ -151,8 +151,9 @@
     const isDark = document.documentElement.classList.contains('dark');
     const bgPopup = isDark ? '#0f172a' : '#ffffff';
     const textColor = isDark ? '#f1f5f9' : '#064e3b';
+    const cancelBtnColor = '#e5e7eb'; // Abu-abu muda
 
-    // 1. Notifikasi Sukses dengan Tombol Konfirmasi
+    // 1. Notifikasi Sukses
     @if(session('success'))
         Swal.fire({
             icon: 'success',
@@ -177,9 +178,9 @@
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#059669',
-            cancelButtonColor: '#64748b',
+            cancelButtonColor: cancelBtnColor,
             confirmButtonText: 'Ya, Teruskan!',
-            cancelButtonText: 'Batalkan',
+            cancelButtonText: '<span style="color: #374151">Batalkan</span>',
             background: bgPopup,
             color: textColor,
             customClass: {
@@ -199,10 +200,10 @@
             text: "Data yang dihapus tidak dapat dikembalikan! Pastikan arsip fisik sudah aman.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc2626', // red-600
-            cancelButtonColor: '#64748b',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: cancelBtnColor,
             confirmButtonText: 'Ya, Hapus Permanen!',
-            cancelButtonText: 'Batalkan',
+            cancelButtonText: '<span style="color: #374151">Batalkan</span>',
             background: bgPopup,
             color: textColor,
             customClass: {
@@ -217,7 +218,6 @@
 </script>
 
 <style>
-    /* Styling Pagination Agar Senada dengan Emerald */
     .pagination { @apply flex gap-2; }
     .page-item.active .page-link { @apply bg-emerald-600 border-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-200; }
     .page-link { @apply border-none bg-emerald-50 text-emerald-700 font-bold px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all shadow-sm; }
