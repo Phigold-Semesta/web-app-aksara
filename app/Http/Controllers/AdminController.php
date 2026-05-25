@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\AuditLog;
 use App\Models\KategoriSurat;
 use App\Models\InstruksiDisposisi;
+// Catatan: Pastikan Anda mengimpor model Surat jika sudah ada (misal: use App\Models\Surat;)
 
 class AdminController extends Controller
 {
@@ -31,19 +32,30 @@ class AdminController extends Controller
     }
 
     /**
-     * Laporan & Statistik
+     * Laporan & Statistik - PENYEMPURNAAN: Diaktifkan dengan agregasi data nyata untuk Chart.js
      */
     public function lihatStatistik()
     {
-        return view('admin.laporan.index');
+        // Mengambil hitungan nyata untuk operan ke view laporan
+        $totalPetugas = User::where('role', 'petugas')->count();
+        $totalPimpinan = User::where('role', 'pimpinan')->count();
+        $kategoriList = KategoriSurat::withCount([])->get(); // Siap dikembangkan jika ada relasi surat
+        
+        // Mengirim data penunjang agar halaman statistik bekerja dinamis
+        return view('admin.laporan.index', compact(
+            'totalPetugas',
+            'totalPimpinan',
+            'kategoriList'
+        ));
     }
 
     /**
-     * Kelola User (Read) - Diarahkan dengan tepat ke direktori view admin/master/user/index.blade.php
+     * Kelola User (Read) - PERBAIKAN: Menggunakan paginate() agar sinkron dengan template Blade
      */
     public function kelolaUser(Request $request)
     {
-        $users = User::all();
+        // Mengubah User::all() menjadi paginate(10) agar fitur halaman aktif dan tidak memicu Error 500
+        $users = User::latest()->paginate(10);
         return view('admin.master.user.index', compact('users'));
     }
 

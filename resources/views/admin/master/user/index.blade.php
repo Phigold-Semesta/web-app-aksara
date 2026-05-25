@@ -56,7 +56,9 @@
                             $userId = $user->id ?? $user->id_user ?? null; 
                         @endphp
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-emerald-950/10 transition-colors">
-                            <td class="py-4 px-6 text-center font-bold text-slate-400 dark:text-emerald-500">{{ $index + 1 }}</td>
+                            <td class="py-4 px-6 text-center font-bold text-slate-400 dark:text-emerald-500">
+                                {{ $users->firstItem() + $index }}
+                            </td>
                             <td class="py-4 px-6">
                                 <img src="https://ui-avatars.com/api/?name={{ urlencode($user->username) }}&background=008f5d&color=fff&bold=true" class="w-9 h-9 rounded-xl border border-slate-100 dark:border-emerald-700 shadow-sm" alt="Avatar">
                             </td>
@@ -111,6 +113,12 @@
                 </tbody>
             </table>
         </div>
+
+        @if($users->hasPages())
+            <div class="p-5 border-t border-slate-100 dark:border-emerald-800 bg-slate-50/30 dark:bg-emerald-950/10">
+                {{ $users->links() }}
+            </div>
+        @endif
     </div>
 
 </div>
