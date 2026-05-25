@@ -39,28 +39,128 @@ class AdminController extends Controller
     }
 
     /**
-     * Kelola User + Contoh Pencatatan Audit Log di Controller jika ada Request POST/PUT/DELETE
+     * Kelola User (Read) - Diarahkan dengan tepat ke direktori view admin/master/user/index.blade.php
      */
     public function kelolaUser(Request $request)
     {
-        // JIKA ada proses simpan user baru (POST)
-        if ($request->isMethod('post')) {
-            $user = User::create($request->all());
+        $users = User::all();
+        return view('admin.master.user.index', compact('users'));
+    }
 
-            // PERBAIKAN: Tembak Audit Log menggunakan Interpolasi String yang Valid (Bebas Error)
-            AuditLog::create([
-                'aktivitas' => 'TAMBAH USER',
-                'deskripsi' => auth()->user()->nama_lengkap . " membuat pengguna baru: {$user->nama_lengkap}",
-                'ip_address' => $request->ip(),
-                'waktu_kejadian' => now(),
-                'id_user' => auth()->id()
-            ]);
+    /**
+     * PERBAIKAN: Menampilkan Halaman Form Tambah Pengguna Baru (Create Page)
+     */
+    public function createUser()
+    {
+        return view('admin.master.user.create');
+    }
 
-            return redirect()->back()->with('success', 'User berhasil ditambahkan');
+    /**
+     * Simpan Pengguna Baru (Create Store) - Integrasi Manajemen User Baru Berpindah Halaman
+     */
+    public function storeUser(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|unique:users,username',
+            'password' => 'required|min:6',
+            'nama_lengkap' => 'required',
+            'role' => 'required'
+        ]);
+
+        $user = User::create([
+            'username' => $request->username,
+            'password' => bcrypt($request->password),
+            'nama_lengkap' => $request->nama_lengkap,
+            'role' => $request->role,
+        ]);
+
+        // Tembak Audit Log
+        AuditLog::create([
+            'aktivitas' => 'TAMBAH USER',
+            'deskripsi' => auth()->user()->nama_lengkap . " membuat pengguna baru dengan nama: {$user->nama_lengkap} (Role: {$user->role})",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
+
+        // Disempurnakan ke rute index master user
+        return redirect()->route('admin.master.user.index')->with('success', 'Pengguna baru berhasil ditambahkan!');
+    }
+
+    /**
+     * PERBAIKAN: Menampilkan Halaman Detail Pengguna (Show Page)
+     */
+    public function showUser($id)
+    {
+        $user = User::findOrFail($id);
+        return view('admin.master.user.show', compact('user'));
+    }
+
+    /**
+     * PERBAIKAN: Menampilkan Halaman Form Edit Pengguna (Edit Page)
+     */
+    public function editUser($id)
+    {
+        $user = User::findOrFail($id);
+        return view('admin.master.user.edit', compact('user'));
+    }
+
+    /**
+     * Perbarui Data Pengguna (Update) - Integrasi Manajemen User Baru Berpindah Halaman
+     */
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'username' => 'required|unique:users,username,' . $id,
+            'nama_lengkap' => 'required',
+            'role' => 'required'
+        ]);
+
+        $user->username = $request->username;
+        $user->nama_lengkap = $request->nama_lengkap;
+        $user->role = $request->role;
+
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->password);
         }
 
-        $users = User::all();
-        return view('admin.user.index', compact('users'));
+        $user->save();
+
+        // Tembak Audit Log
+        AuditLog::create([
+            'aktivitas' => 'UBAH USER',
+            'deskripsi' => auth()->user()->nama_lengkap . " mengubah data pengguna: {$user->nama_lengkap}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
+
+        // Disempurnakan ke rute index master user
+        return redirect()->route('admin.master.user.index')->with('success', 'Data pengguna berhasil diperbarui!');
+    }
+
+    /**
+     * Hapus Pengguna (Delete) - Integrasi Manajemen User Baru
+     */
+    public function destroyUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $namaUser = $user->nama_lengkap;
+        
+        $user->delete();
+
+        // Tembak Audit Log
+        AuditLog::create([
+            'aktivitas' => 'HAPUS USER',
+            'deskripsi' => auth()->user()->nama_lengkap . " menghapus pengguna bernama: {$namaUser}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
+
+        return redirect()->route('admin.master.user.index')->with('success', 'Pengguna berhasil deleted dari sistem!');
     }
 
     /**
@@ -153,7 +253,7 @@ class AdminController extends Controller
         if ($request->isMethod('post')) {
             // ... (Proses simpan data arsip milikmu sebelumnya) ...
 
-            // Tembak Audit Log langsung dari Controller
+            // PERBAIKAN TOTAL: String digabung utuh, ID menggunakan helper auth()->id() yang valid
             AuditLog::create([
                 'aktivitas' => 'MANAJEMEN ARSIP',
                 'deskripsi' => auth()->user()->nama_lengkap . ' membuat dokumen arsip baru ke dalam sistem.',

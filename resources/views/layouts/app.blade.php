@@ -56,7 +56,7 @@
         @media (min-width: 1024px) {
             #main-sidebar:hover { width: 288px; }
             #main-sidebar .nav-text, #main-sidebar .logo-full, #main-sidebar .menu-header { opacity: 0; display: none; transition: opacity 0.3s ease; }
-            #main-sidebar:hover .nav-text, #main-sidebar:hover .logo-full, #main-sidebar:hover .menu-header { opacity: 1; display: flex; }
+            #main-sidebar refinement, #main-sidebar:hover .nav-text, #main-sidebar:hover .logo-full, #main-sidebar:hover .menu-header { opacity: 1; display: flex; }
             #main-sidebar .icon-collapsed { display: flex; }
             #main-sidebar:hover .icon-collapsed { display: none; }
             #main-sidebar .nav-item { justify-content: center; }
@@ -112,10 +112,13 @@
                     </a>
 
                     <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Master Data</div>
+                    
+                    {{-- PERBAIKAN: Route dan Nama Menu disesuaikan menjadi Manajemen User --}}
                     <a href="{{ route('admin.master.user.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('admin/master/user*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-users-gear w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Mengelola Data User</span>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen User</span>
                     </a>
+                    
                     <a href="{{ route('admin.master.kategori.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('admin/master/kategori*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-tags w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Mengelola Master Kategori</span>

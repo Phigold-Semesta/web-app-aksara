@@ -44,8 +44,17 @@ Route::middleware(['auth'])->group(function () {
 
         // Master Data (Sempurna: Dipetakan tepat ke method spesifik di AdminController)
         Route::prefix('master')->name('master.')->group(function() {
-            // Manajemen User
+            
+            // ==========================================
+            // CRUD USER FULL-PAGE (SINKRON DENGAN INDEX BLADE TERBARU)
+            // ==========================================
             Route::get('/user', [AdminController::class, 'kelolaUser'])->name('user.index');
+            Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create'); // <-- PERBAIKAN: Ditambahkan agar tidak route not found
+            Route::post('/user/store', [AdminController::class, 'storeUser'])->name('user.store');
+            Route::get('/user/show/{id}', [AdminController::class, 'showUser'])->name('user.show'); // <-- PERBAIKAN: Ditambahkan untuk detail view
+            Route::get('/user/edit/{id}', [AdminController::class, 'editUser'])->name('user.edit'); // <-- PENYEMPURNAAN: Sesuai rute halaman edit terpisah
+            Route::put('/user/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
+            Route::delete('/user/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
             
             // Kategori Surat
             Route::get('/kategori', [AdminController::class, 'masterKategori'])->name('kategori.index');
