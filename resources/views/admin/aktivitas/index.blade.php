@@ -67,13 +67,16 @@
                 <tbody class="text-xs">
                     @forelse($logs as $log)
                     <tr class="bg-white dark:bg-slate-800/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        
                         <td class="px-6 py-4 rounded-l-xl">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-[#006b43] font-black text-[10px] uppercase">
-                                    {{ substr($log->user->nama_lengkap ?? 'Sys', 0, 2) }}
+                                    {{ substr($log->user->nama_lengkap ?? 'SY', 0, 2) }}
                                 </div>
                                 <div>
-                                    <p class="font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ $log->user->nama_lengkap ?? 'Sistem Otomatis' }}</p>
+                                    <p class="font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                                        {{ $log->user->nama_lengkap ?? 'Sistem Otomatis' }}
+                                    </p>
                                     <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
                                         <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-black">
                                             {{ $log->user->role ?? 'SYSTEM' }}
@@ -84,7 +87,7 @@
                         </td>
                         
                         <td class="px-6 py-4 font-bold text-slate-600 dark:text-slate-300">
-                            {{ $log->activity ?? $log->aksi ?? 'Melakukan modifikasi data master' }}
+                            {{ $log->activity ?? $log->aksi ?? 'Melakukan aktivitas sistem' }}
                         </td>
                         
                         <td class="px-6 py-4 text-center">
@@ -94,16 +97,16 @@
                         </td>
                         
                         <td class="px-6 py-4 text-right rounded-r-xl font-bold text-slate-400 italic">
-                            {{ \Carbon\Carbon::parse($log->created_at)->diffForHumans() }}
+                            {{ $log->created_at ? $log->created_at->diffForHumans() : '-' }}
                             <span class="block text-[9px] font-medium not-italic text-slate-300 dark:text-slate-500 mt-0.5 font-mono">
-                                {{ \Carbon\Carbon::parse($log->created_at)->format('Y-m-d H:i:s') }}
+                                {{ $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '-' }}
                             </span>
                         </td>
                     </tr>
                     @empty
                     <tr class="bg-white dark:bg-slate-800/40 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
                         <td colspan="4" class="px-6 py-10 text-center font-black uppercase text-slate-400 rounded-xl">
-                            Belum ada rekaman aktivitas log terdeteksi
+                            Belum ada rekaman aktivitas log di database
                         </td>
                     </tr>
                     @endforelse
@@ -122,7 +125,6 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <style>
-    /* Sembunyikan elemen default DataTables bawaan CDN */
     .dataTables_wrapper .dataTables_filter, 
     .dataTables_wrapper .dataTables_info, 
     .dataTables_wrapper .dataTables_paginate,
@@ -130,7 +132,6 @@
     
     table.dataTable.no-footer { border-bottom: none !important; }
     
-    /* Tombol Navigasi Kustom */
     .paginate_button {
         padding: 6px 14px !important;
         margin: 0 4px !important;
@@ -162,7 +163,6 @@
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
             var min = $('#logMinDate').val();
             var max = $('#logMaxDate').val();
-            // Ambil text tanggal asli (format Y-m-d) dari baris waktu tersembunyi
             var dateStr = data[3].trim().split(" ")[0]; 
 
             if ((min === "" && max === "") ||
@@ -185,18 +185,15 @@
                 paginate: { previous: "Kembali", next: "Lanjut" }
             },
             drawCallback: function() {
-                // Oper isi penomoran halaman DataTables ke UI pembungkus kita
                 $('#auditTablePagination').html($('.dataTables_paginate').html());
                 $('#auditTableInfo').text($('.dataTables_info').text());
             }
         });
 
-        // Event handler input teks cari kustom
         $('#logSearch').on('keyup', function() {
             table.search($(this).val()).draw();
         });
 
-        // Event handler rentang tanggal kustom
         $('#logMinDate, #logMaxDate').on('change', function() {
             table.draw();
         });
