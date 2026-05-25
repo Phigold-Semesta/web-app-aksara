@@ -101,12 +101,16 @@
                 <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Utama</div>
                 <a href="{{ route(auth()->user()->role . '.dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('*/dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-house-chimney w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
-                        {{ in_array(auth()->user()->role, ['admin', 'pimpinan', 'petugas']) ? 'Dashboard & Laporan' : 'Dashboard' }}
-                    </span>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Dashboard</span>
                 </a>
 
                 @if(auth()->user()->role === 'admin')
+                    {{-- TAMBAHAN: Menu Laporan & Statistik Khusus Admin Berdasarkan Use Case --}}
+                    <a href="{{ route('admin.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('admin/laporan*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-chart-pie w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan & Statistik</span>
+                    </a>
+
                     <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Master Data</div>
                     <a href="{{ route('admin.master.user.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('admin/master/user*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-users-gear w-6 text-center text-sm"></i>
@@ -144,7 +148,6 @@
                         <i class="fas fa-envelope-open-text w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Input & Digitalisasi Surat</span>
                     </a>
-                    {{-- SINKRONISASI MANAJEMEN ARSIP PETUGAS --}}
                     <a href="{{ route('petugas.manajemen_arsip.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('petugas/manajemen_arsip*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-box-archive w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Arsip</span>

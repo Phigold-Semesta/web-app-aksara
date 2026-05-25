@@ -32,35 +32,43 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     // ==========================================
-    // 1. AKTOR: ADMINISTRATOR
+    // 1. AKTOR: ADMINISTRATOR (DISEMPURNAKAN & SINKRON)
     // ==========================================
     Route::middleware(['checkrole:admin'])->prefix('admin')->name('admin.')->group(function () {
         
-        // Dashboard
+        // Dashboard Utama
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-        // Master Data
+        // Laporan & Statistik (Sinkron dengan sidebar layout terbaru)
+        Route::get('/laporan', [AdminController::class, 'lihatStatistik'])->name('laporan.index');
+
+        // Master Data (Sempurna: Dipetakan tepat ke method spesifik di AdminController)
         Route::prefix('master')->name('master.')->group(function() {
-            Route::resource('user', AdminController::class); 
-            Route::resource('kategori', AdminController::class);
-            Route::resource('instruksi', AdminController::class);
+            // Manajemen User
+            Route::get('/user', [AdminController::class, 'kelolaUser'])->name('user.index');
+            
+            // Kategori Surat
+            Route::get('/kategori', [AdminController::class, 'masterKategori'])->name('kategori.index');
+            
+            // Pilihan Instruksi Disposisi
+            Route::get('/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi.index');
         });
 
-        // Manajemen Surat
-        Route::resource('manajemen_surat', AdminController::class);
+        // Manajemen Surat Kontrol Admin
+        Route::get('/manajemen_surat', [AdminController::class, 'inputSurat'])->name('manajemen_surat.index');
 
-        // Manajemen Arsip
-        Route::resource('manajemen_arsip', AdminController::class);
+        // Manajemen Arsip Kontrol Admin
+        Route::get('/manajemen_arsip', [AdminController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
 
-        // Monitoring Audit Log
+        // Monitoring Audit Log (Mengarahkan ke view aktivitas.index)
         Route::get('/aktivitas', [AdminController::class, 'auditLog'])->name('aktivitas.index');
         
-        // Statistik Tambahan
+        // Statistik Tambahan (Tetap dipertahankan sebagai alias/cadangan rute lama)
         Route::get('/statistik', [AdminController::class, 'lihatStatistik'])->name('statistik');
     });
 
     // ==========================================
-    // 2. AKTOR: PETUGAS (Sempurna & Aktif)
+    // 2. AKTOR: PETUGAS (Sempurna & Aktif - Pertahankan Total)
     // ==========================================
     Route::middleware(['checkrole:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
         
@@ -77,7 +85,7 @@ Route::middleware(['auth'])->group(function () {
         // Route Tambahan untuk Status Surat
         Route::get('/manajemen_surat_status', [PetugasController::class, 'statusSurat'])->name('manajemen_surat.status');
 
-        // --- MANAJEMEN ARSIP (DISEMPURNAKAN) ---
+        // --- MANAJEMEN ARSIP ---
         // Urutan diperbaiki: Static Route dulu, baru Parameter Route {id}
         Route::get('/manajemen_arsip', [PetugasController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
         Route::get('/manajemen_arsip/create', [PetugasController::class, 'arsipCreate'])->name('manajemen_arsip.create');
@@ -94,7 +102,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ==========================================
-    // 3. AKTOR: PIMPINAN
+    // 3. AKTOR: PIMPINAN (Sempurna & Aktif - Pertahankan Total)
     // ==========================================
     Route::middleware(['checkrole:pimpinan'])->prefix('pimpinan')->name('pimpinan.')->group(function () {
         
