@@ -56,8 +56,15 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/user/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
             Route::delete('/user/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
             
-            // Kategori Surat
+            // ==========================================
+            // PERBAIKAN & PENYEMPURNAAN: CRUD KATEGORI SURAT HALAMAN PENUH (FULL-PAGE)
+            // ==========================================
             Route::get('/kategori', [AdminController::class, 'masterKategori'])->name('kategori.index');
+            Route::get('/kategori/create', [AdminController::class, 'createKategori'])->name('kategori.create');
+            Route::post('/kategori/store', [AdminController::class, 'storeKategori'])->name('kategori.store');
+            Route::get('/kategori/edit/{id}', [AdminController::class, 'editKategori'])->name('kategori.edit');
+            Route::put('/kategori/update/{id}', [AdminController::class, 'updateKategori'])->name('kategori.update');
+            Route::delete('/kategori/delete/{id}', [AdminController::class, 'destroyKategori'])->name('kategori.destroy');
             
             // Pilihan Instruksi Disposisi
             Route::get('/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi.index');

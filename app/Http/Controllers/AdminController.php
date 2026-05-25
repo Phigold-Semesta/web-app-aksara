@@ -176,28 +176,122 @@ class AdminController extends Controller
     }
 
     /**
-     * Master Kategori Surat + Pencatatan Audit Log saat Tambah Data
+     * =========================================================================
+     * PERBAIKAN & REFACTOR: MASTER KATEGORI SURAT (ALUR CRUD HALAMAN PENUH / FULL PAGE)
+     * =========================================================================
+     */
+
+    /**
+     * 1. INDEX: Menampilkan daftar seluruh kategori surat
      */
     public function masterKategori(Request $request)
     {
-        // JIKA ada proses simpan kategori baru (POST)
-        if ($request->isMethod('post')) {
-            $kategoriBaru = KategoriSurat::create($request->all());
-
-            // PERBAIKAN: Tembak Audit Log menggunakan Interpolasi String yang Valid (Bebas Error)
-            AuditLog::create([
-                'aktivitas' => 'MASTER KATEGORI',
-                'deskripsi' => auth()->user()->nama_lengkap . " menambahkan kategori surat baru: {$kategoriBaru->nama_kategori}",
-                'ip_address' => $request->ip(),
-                'waktu_kejadian' => now(),
-                'id_user' => auth()->id()
-            ]);
-
-            return redirect()->back()->with('success', 'Kategori berhasil ditambahkan');
-        }
-
         $kategori = KategoriSurat::all();
-        return view('admin.kategori.index', compact('kategori'));
+        return view('admin.master.kategori.index', compact('kategori'));
+    }
+
+    /**
+     * 2. CREATE: Menampilkan halaman form tambah kategori baru
+     */
+    public function createKategori()
+    {
+        return view('admin.master.kategori.create');
+    }
+
+    /**
+     * Kode ini disempurnakan agar tidak lagi error SQL 1364.
+     */
+   // FUNGSI STORE KATEGORI
+public function storeKategori(Request $request)
+{
+    $request->validate([
+        'kode_kategori' => 'required|string|max:50|unique:kategori_surat,kode_kategori',
+        'nama_kategori' => 'required|string|max:255',
+        'keterangan'    => 'nullable|string'
+    ]);
+
+    // Simpan data dari request
+    $kategoriBaru = KategoriSurat::create([
+        'kode_kategori' => $request->kode_kategori,
+        'nama_kategori' => $request->nama_kategori,
+        'keterangan'    => $request->keterangan
+    ]);
+
+    // Pencatatan Audit Log
+    AuditLog::create([
+        'aktivitas' => 'MASTER KATEGORI',
+        'deskripsi' => auth()->user()->nama_lengkap . " menambahkan kategori surat baru: {$kategoriBaru->nama_kategori} (Kode: {$kategoriBaru->kode_kategori})",
+        'ip_address' => $request->ip(),
+        'waktu_kejadian' => now(),
+        'id_user' => auth()->id()
+    ]);
+
+    return redirect()->route('admin.master.kategori.index')->with('success', 'Kategori surat berhasil ditambahkan!');
+}
+    /**
+     * 4. EDIT: Menampilkan halaman form edit kategori berdasarkan ID
+     */
+    public function editKategori($id)
+    {
+        $kategori = KategoriSurat::findOrFail($id);
+        return view('admin.master.kategori.edit', compact('kategori'));
+    }
+
+    /**
+     * 5. UPDATE: Memperbarui data kategori surat di database beserta Audit Log
+     */
+   /**
+     * 5. UPDATE: Memperbarui data kategori surat
+     * Diperbaiki untuk memastikan 'keterangan' ikut terupdate ke database.
+     */
+   // FUNGSI UPDATE KATEGORI
+public function updateKategori(Request $request, $id)
+{
+    $kategori = KategoriSurat::findOrFail($id);
+
+    $request->validate([
+        'kode_kategori' => 'required|string|max:50|unique:kategori_surat,kode_kategori,' . $id . ',id_kategori',
+        'nama_kategori' => 'required|string|max:255',
+        'keterangan'    => 'nullable|string'
+    ]);
+
+    $kategori->update([
+        'kode_kategori' => $request->kode_kategori,
+        'nama_kategori' => $request->nama_kategori,
+        'keterangan'    => $request->keterangan
+    ]);
+
+    // Pencatatan Audit Log
+    AuditLog::create([
+        'aktivitas' => 'UBAH KATEGORI',
+        'deskripsi' => auth()->user()->nama_lengkap . " mengubah kategori surat: {$kategori->nama_kategori} (Kode: {$kategori->kode_kategori})",
+        'ip_address' => $request->ip(),
+        'waktu_kejadian' => now(),
+        'id_user' => auth()->id()
+    ]);
+
+    return redirect()->route('admin.master.kategori.index')->with('success', 'Kategori surat berhasil diperbarui!');
+}
+    /**
+     * 6. DESTROY: Menghapus data kategori surat dari database beserta Audit Log
+     */
+    public function destroyKategori(Request $request, $id)
+    {
+        $kategori = KategoriSurat::findOrFail($id);
+        $namaKategori = $kategori->nama_kategori;
+
+        $kategori->delete();
+
+        // Pencatatan Audit Log otomatis
+        AuditLog::create([
+            'aktivitas' => 'HAPUS KATEGORI',
+            'deskripsi' => auth()->user()->nama_lengkap . " menghapus kategori surat: {$namaKategori}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
+
+        return redirect()->route('admin.master.kategori.index')->with('success', 'Kategori surat berhasil dihapus dari sistem!');
     }
 
     /**
@@ -222,7 +316,8 @@ class AdminController extends Controller
         }
 
         $instruksi = InstruksiDisposisi::all();
-        return view('admin.instruksi.index', compact('instruksi'));
+        // PENYEMPURNAAN JALUR VIEW: Disesuaikan dengan direktori admin/master/instruksi/index.blade.php
+        return view('admin.master.instruksi.index', compact('instruksi'));
     }
 
     /**
