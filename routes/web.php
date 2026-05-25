@@ -66,6 +66,18 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/kategori/update/{id}', [AdminController::class, 'updateKategori'])->name('kategori.update');
             Route::delete('/kategori/delete/{id}', [AdminController::class, 'destroyKategori'])->name('kategori.destroy');
             
+// Tambahkan baris ini di dalam grup master
+Route::match(['get', 'post'], '/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi');
+
+// PERBAIKAN: CRUD FULL-PAGE INSTRUKSI (Sesuai struktur AKSARA)
+            Route::get('/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi.index');
+            Route::get('/instruksi/create', [AdminController::class, 'createInstruksi'])->name('instruksi.create');
+            Route::post('/instruksi/store', [AdminController::class, 'storeInstruksi'])->name('instruksi.store');
+            Route::get('/instruksi/edit/{id}', [AdminController::class, 'editInstruksi'])->name('instruksi.edit');
+            Route::put('/instruksi/update/{id}', [AdminController::class, 'updateInstruksi'])->name('instruksi.update');
+            Route::delete('/instruksi/delete/{id}', [AdminController::class, 'destroyInstruksi'])->name('instruksi.destroy');
+        
+
             // Pilihan Instruksi Disposisi
             Route::get('/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi.index');
         });

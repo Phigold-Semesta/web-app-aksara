@@ -294,32 +294,93 @@ public function updateKategori(Request $request, $id)
         return redirect()->route('admin.master.kategori.index')->with('success', 'Kategori surat berhasil dihapus dari sistem!');
     }
 
-    /**
-     * Master Instruksi Disposisi + Pencatatan Audit Log saat Tambah Data
+  /**
+     * Menampilkan daftar instruksi
      */
-    public function masterInstruksi(Request $request)
+    public function masterInstruksi()
     {
-        // JIKA ada proses simpan instruksi baru (POST)
-        if ($request->isMethod('post')) {
-            $instruksiBaru = InstruksiDisposisi::create($request->all());
-
-            // PERBAIKAN: Tembak Audit Log menggunakan Interpolasi String yang Valid (Bebas Error)
-            AuditLog::create([
-                'aktivitas' => 'MASTER INSTRUKSI',
-                'deskripsi' => auth()->user()->nama_lengkap . " menambah instruksi disposisi baru: {$instruksiBaru->nama_instruksi}",
-                'ip_address' => $request->ip(),
-                'waktu_kejadian' => now(),
-                'id_user' => auth()->id()
-            ]);
-
-            return redirect()->back()->with('success', 'Instruksi berhasil ditambahkan');
-        }
-
         $instruksi = InstruksiDisposisi::all();
-        // PENYEMPURNAAN JALUR VIEW: Disesuaikan dengan direktori admin/master/instruksi/index.blade.php
         return view('admin.master.instruksi.index', compact('instruksi'));
     }
 
+    /**
+     * Menampilkan form tambah instruksi
+     */
+    public function createInstruksi()
+    {
+        return view('admin.master.instruksi.create');
+    }
+
+    /**
+     * Menyimpan data instruksi baru
+     */
+    public function storeInstruksi(Request $request)
+    {
+        $request->validate(['nama_instruksi' => 'required|string|max:255']);
+        
+        $instruksiBaru = InstruksiDisposisi::create($request->all());
+
+        AuditLog::create([
+            'aktivitas' => 'MASTER INSTRUKSI',
+            'deskripsi' => auth()->user()->nama_lengkap . " menambah instruksi disposisi baru: {$instruksiBaru->nama_instruksi}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
+
+        return redirect()->route('admin.master.instruksi.index')->with('success', 'Instruksi berhasil ditambahkan');
+    }
+
+    /**
+     * Menampilkan form edit instruksi
+     */
+    public function editInstruksi($id)
+    {
+        $instruksi = InstruksiDisposisi::findOrFail($id);
+        return view('admin.master.instruksi.edit', compact('instruksi'));
+    }
+
+    /**
+     * Mengupdate data instruksi
+     */
+    public function updateInstruksi(Request $request, $id)
+    {
+        $request->validate(['nama_instruksi' => 'required|string|max:255']);
+        
+        $instruksi = InstruksiDisposisi::findOrFail($id);
+        $instruksi->update($request->all());
+
+        AuditLog::create([
+            'aktivitas' => 'UPDATE INSTRUKSI',
+            'deskripsi' => auth()->user()->nama_lengkap . " mengubah instruksi menjadi: {$instruksi->nama_instruksi}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
+
+        return redirect()->route('admin.master.instruksi.index')->with('success', 'Instruksi berhasil diperbarui');
+    }
+
+    /**
+     * Menghapus data instruksi
+     */
+    public function destroyInstruksi($id)
+    {
+        $instruksi = InstruksiDisposisi::findOrFail($id);
+        $nama = $instruksi->nama_instruksi;
+        $instruksi->delete();
+
+        AuditLog::create([
+            'aktivitas' => 'HAPUS INSTRUKSI',
+            'deskripsi' => auth()->user()->nama_lengkap . " menghapus instruksi: {$nama}",
+            'ip_address' => request()->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
+
+        return redirect()->back()->with('success', 'Instruksi berhasil dihapus');
+    }
+    
     /**
      * Halaman Monitoring Seluruh Audit Log (Dinamis & Mengarah ke admin/aktivitas/index)
      */

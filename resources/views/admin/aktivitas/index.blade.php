@@ -86,8 +86,12 @@
                             </div>
                         </td>
                         
+                        {{-- Perbaikan: Menggunakan kolom 'aktivitas' dan 'deskripsi' dari database --}}
                         <td class="px-6 py-4 font-bold text-slate-600 dark:text-slate-300">
-                            {{ $log->activity ?? $log->aksi ?? 'Melakukan aktivitas sistem' }}
+                            <div class="flex flex-col">
+                                <span class="text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">{{ $log->aktivitas }}</span>
+                                <span class="text-[10px] text-slate-500 font-normal italic mt-0.5">{{ $log->deskripsi }}</span>
+                            </div>
                         </td>
                         
                         <td class="px-6 py-4 text-center">
@@ -159,7 +163,6 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Filter Pencarian Tanggal Kustom
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
             var min = $('#logMinDate').val();
             var max = $('#logMaxDate').val();
@@ -174,7 +177,6 @@
             return false;
         });
 
-        // Inisialisasi DataTables Mesin Utama
         var table = $('#auditLogTable').DataTable({
             paging: true,
             pageLength: 10,
