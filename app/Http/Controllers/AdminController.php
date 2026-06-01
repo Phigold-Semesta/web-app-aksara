@@ -392,25 +392,94 @@ public function updateKategori(Request $request, $id)
         return view('admin.aktivitas.index', compact('logs'));
     }
 
-    /**
-     * Input Surat + Log
+  /**
+     * =========================================================================
+     * MANAJEMEN SURAT (CRUD LENGKAP - AKSARA)
+     * =========================================================================
      */
-    public function inputSurat(Request $request) 
-    { 
-        if ($request->isMethod('post')) {
-            // ... (Proses simpan data surat milikmu sebelumnya) ...
 
-            // Tembak Audit Log langsung dari Controller
-            AuditLog::create([
-                'aktivitas' => 'INPUT SURAT',
-                'deskripsi' => auth()->user()->nama_lengkap . ' melakukan input surat masuk/keluar baru.',
-                'ip_address' => $request->ip(),
-                'waktu_kejadian' => now(),
-                'id_user' => auth()->id()
-            ]);
-        }
+    // 1. INDEX: Menampilkan daftar surat
+    public function indexSurat(Request $request)
+    {
+        $surats = \App\Models\Surat::latest()->paginate(10);
+        return view('admin.manajemen_surat.index', compact('surats'));
+    }
 
-        return view('admin.surat.create'); 
+    // 2. CREATE: Menampilkan form tambah
+    public function createSurat()
+    {
+        return view('admin.manajemen_surat.create');
+    }
+
+    // 3. STORE: Menyimpan data surat baru
+    public function storeSurat(Request $request)
+    {
+        $request->validate([
+            'perihal' => 'required|string|max:255',
+            'nomor_surat' => 'required|string|max:100',
+            'asal_instansi' => 'required|string|max:255',
+        ]);
+
+        $surat = \App\Models\Surat::create($request->all());
+
+        AuditLog::create([
+            'aktivitas' => 'INPUT SURAT',
+            'deskripsi' => \Illuminate\Support\Facades\Auth::user()->nama_lengkap . " melakukan input surat baru: {$surat->perihal}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => \Illuminate\Support\Facades\Auth::id()
+        ]);
+
+        return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil ditambahkan!');
+    }
+
+    // 4. SHOW: Detail surat
+    public function showSurat($id)
+    {
+        $surat = \App\Models\Surat::findOrFail($id);
+        return view('admin.manajemen_surat.show', compact('surat'));
+    }
+
+    // 5. EDIT: Form edit
+    public function editSurat($id)
+    {
+        $surat = \App\Models\Surat::findOrFail($id);
+        return view('admin.manajemen_surat.edit', compact('surat'));
+    }
+
+    // 6. UPDATE: Memperbarui data surat
+    public function updateSurat(Request $request, $id)
+    {
+        $surat = \App\Models\Surat::findOrFail($id);
+        $surat->update($request->all());
+
+        AuditLog::create([
+            'aktivitas' => 'UPDATE SURAT',
+            'deskripsi' => \Illuminate\Support\Facades\Auth::user()->nama_lengkap . " mengubah data surat: {$surat->perihal}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => \Illuminate\Support\Facades\Auth::id()
+        ]);
+
+        return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil diperbarui!');
+    }
+
+    // 7. DESTROY: Menghapus surat
+    public function destroySurat(Request $request, $id)
+    {
+        $surat = \App\Models\Surat::findOrFail($id);
+        $perihal = $surat->perihal;
+        $surat->delete();
+
+        AuditLog::create([
+            'aktivitas' => 'HAPUS SURAT',
+            'deskripsi' => \Illuminate\Support\Facades\Auth::user()->nama_lengkap . " menghapus surat: {$perihal}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => \Illuminate\Support\Facades\Auth::id()
+        ]);
+
+        return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil dihapus!');
     }
 
     /**
