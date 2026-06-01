@@ -46,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
 // ==========================================
 // 1. AKTOR: ADMINISTRATOR (DISEMPURNAKAN)
 // ==========================================
-Route::middleware(['checkrole:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['checkrole:admin,petugas'])->prefix('admin')->name('admin.')->group(function () {
     
     // Dashboard Utama
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
@@ -88,8 +88,14 @@ Route::middleware(['checkrole:admin'])->prefix('admin')->name('admin.')->group(f
     Route::get('/manajemen_surat/{id}/edit', [App\Http\Controllers\AdminController::class, 'editSurat'])->name('manajemen_surat.edit');
     Route::put('/manajemen_surat/{id}', [App\Http\Controllers\AdminController::class, 'updateSurat'])->name('manajemen_surat.update');
     Route::delete('/manajemen_surat/{id}', [App\Http\Controllers\AdminController::class, 'destroySurat'])->name('manajemen_surat.destroy');
-    Route::get('/manajemen_arsip', [AdminController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
-    
+   Route::get('/manajemen_arsip', [AdminController::class, 'arsipIndex'])->name('manajemen_arsip.index');
+    Route::get('/manajemen_arsip/create', [AdminController::class, 'arsipCreate'])->name('manajemen_arsip.create');
+    Route::post('/manajemen_arsip/store', [AdminController::class, 'arsipStore'])->name('manajemen_arsip.store');
+    Route::get('/manajemen_arsip/{id}', [AdminController::class, 'arsipShow'])->name('manajemen_arsip.show');
+    Route::get('/manajemen_arsip/{id}/edit', [AdminController::class, 'arsipEdit'])->name('manajemen_arsip.edit');
+    Route::put('/manajemen_arsip/{id}/update', [AdminController::class, 'arsipUpdate'])->name('manajemen_arsip.update');
+    Route::delete('/manajemen_arsip/{id}/delete', [AdminController::class, 'arsipDestroy'])->name('manajemen_arsip.destroy');
+
     Route::get('/aktivitas', [AdminController::class, 'auditLog'])->name('aktivitas.index');
     Route::get('/statistik', [AdminController::class, 'lihatStatistik'])->name('statistik');
 });

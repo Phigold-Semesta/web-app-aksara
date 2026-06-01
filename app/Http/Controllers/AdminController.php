@@ -482,24 +482,106 @@ public function updateKategori(Request $request, $id)
         return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil dihapus!');
     }
 
-    /**
-     * Kelola Arsip + Log
-     */
-    public function kelolaArsip(Request $request) 
-    { 
-        if ($request->isMethod('post')) {
-            // ... (Proses simpan data arsip milikmu sebelumnya) ...
+  // 1. Menampilkan Halaman List Arsip
+public function arsipIndex(Request $request) 
+{ 
+    $query = \App\Models\Arsip::query();
 
-            // PERBAIKAN TOTAL: String digabung utuh, ID menggunakan helper auth()->id() yang valid
-            AuditLog::create([
-                'aktivitas' => 'MANAJEMEN ARSIP',
-                'deskripsi' => auth()->user()->nama_lengkap . ' membuat dokumen arsip baru ke dalam sistem.',
-                'ip_address' => $request->ip(),
-                'waktu_kejadian' => now(),
-                'id_user' => auth()->id()
-            ]);
-        }
-
-        return view('admin.arsip.index'); 
+    // Fitur Pencarian
+    if ($request->has('search')) {
+        $query->whereHas('surat', function($q) use ($request) {
+            $q->where('perihal', 'like', '%' . $request->search . '%')
+              ->orWhere('nomor_surat', 'like', '%' . $request->search . '%');
+        });
     }
+
+    // Fitur Filter Status
+    if ($request->has('status') && $request->status != '') {
+        $query->where('status_retensi', $request->status);
+    }
+
+    $arsips = $query->latest()->paginate(10);
+    
+    return view('admin.manajemen_arsip.index', compact('arsips'));
+}
+
+// 2. Form Tambah Arsip (DIPERBAIKI)
+public function arsipCreate() 
+{
+    // Mengambil hanya surat yang belum diarsipkan agar tidak muncul duplikat di dropdown
+    $surats = \App\Models\Surat::whereDoesntHave('arsip')->get();
+    
+    return view('admin.manajemen_arsip.create', compact('surats'));
+}
+
+// 3. Proses Simpan Arsip (DIPERBAIKI)
+public function arsipStore(Request $request) 
+{
+    // Validasi data
+    $request->validate([
+        'id_surat'      => 'required|exists:surat,id_surat',
+        'lokasi_fisik'  => 'required|string|max:255',
+        'tanggal_arsip' => 'required|date',
+        'retensi_nilai' => 'required|numeric|min:1',
+        'retensi_satuan'=> 'required|in:days,weeks,months,years',
+    ]);
+
+    // Menghitung tanggal kadaluarsa (Masa Retensi)
+    $tanggal_arsip = \Carbon\Carbon::parse($request->tanggal_arsip);
+    $masa_retensi = $tanggal_arsip->copy()->add(
+        $request->retensi_nilai, 
+        $request->retensi_satuan
+    );
+
+    // Menyimpan data ke tabel arsip
+    $arsip = \App\Models\Arsip::create([
+        'id_surat'      => $request->id_surat,
+        'lokasi_fisik'  => $request->lokasi_fisik,
+        'tanggal_arsip' => $request->tanggal_arsip,
+        'masa_retensi'  => $masa_retensi, // Simpan hasil perhitungan
+        'status_retensi'=> 'Aktif',       // Default saat dibuat
+    ]);
+
+    // Audit Log
+    \App\Models\AuditLog::create([
+        'aktivitas'      => 'MANAJEMEN ARSIP',
+        'deskripsi'      => auth()->user()->nama_lengkap . ' membuat dokumen arsip baru untuk surat ID: ' . $request->id_surat,
+        'ip_address'     => $request->ip(),
+        'waktu_kejadian' => now(),
+        'id_user'        => auth()->id()
+    ]);
+
+    return redirect()->route('admin.manajemen_arsip.index')->with('success', 'Arsip berhasil ditambah!');
+}
+// 4. Detail Arsip
+public function arsipShow($id) 
+{
+    $arsip = \App\Models\Arsip::findOrFail($id);
+    return view('admin.manajemen_arsip.show', compact('arsip'));
+}
+
+// 5. Form Edit
+public function arsipEdit($id) 
+{
+    $arsip = \App\Models\Arsip::findOrFail($id);
+    return view('admin.manajemen_arsip.edit', compact('arsip'));
+}
+
+// 6. Proses Update
+public function arsipUpdate(Request $request, $id) 
+{
+    $arsip = \App\Models\Arsip::findOrFail($id);
+    $arsip->update($request->all());
+
+    return redirect()->route('admin.manajemen_arsip.index')->with('success', 'Arsip berhasil diupdate!');
+}
+
+// 7. Hapus Arsip
+public function arsipDestroy($id) 
+{
+    $arsip = \App\Models\Arsip::findOrFail($id);
+    $arsip->delete();
+
+    return redirect()->route('admin.manajemen_arsip.index')->with('success', 'Arsip berhasil dihapus!');
+}
 }
