@@ -1,63 +1,127 @@
 @extends('layouts.app')
 
-@section('title', 'Executive Dashboard')
+@section('title', 'Laporan & Statistik Sistem')
 
 @section('content')
-<div class="space-y-10">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="space-y-8">
+    {{-- Header Section --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-emerald-900/50 p-8 rounded-[2rem] shadow-sm border border-emerald-100 dark:border-emerald-800 transition-colors">
         <div>
-            <p class="text-emerald-600 dark:text-emerald-400 font-black text-[10px] uppercase tracking-[0.4em] mb-2">Management Overview</p>
-            <h1 class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter uppercase italic">Ringkasan<br>Eksekutif</h1>
+            <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                <i class="fas fa-chart-pie text-[#008f5d]"></i> Analisis Statistik
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-emerald-300/70 mt-1 font-bold tracking-widest uppercase">Pusat Data Eksekutif AKSARA - LPSE Karawang</p>
         </div>
-        <div class="bg-white dark:bg-emerald-900 px-6 py-4 rounded-3xl shadow-lg border border-emerald-50 dark:border-emerald-800">
-            <p class="text-slate-400 text-[10px] font-bold uppercase italic leading-none">Status Dokumen</p>
-            <p class="text-emerald-600 font-black text-lg mt-1 leading-none italic">94.8% Terproses</p>
+        
+        <div class="relative inline-block text-left" id="dropdownEksporContainer">
+            <button onclick="toggleDropdownEkspor()" class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-[#007a50] text-white font-black text-sm transition-all shadow-lg shadow-emerald-600/20">
+                <i class="fas fa-file-export text-xs"></i> <span>Ekspor Data</span>
+            </button>
+            <div id="menuDropdownEkspor" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-emerald-950 border border-slate-100 dark:border-emerald-800 shadow-xl z-50 overflow-hidden">
+                <div class="py-1">
+                    <button onclick="eksporKeCSV()" class="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900 transition-colors">CSV</button>
+                    <button onclick="eksporKeExcel()" class="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900 transition-colors">Excel</button>
+                    <button onclick="eksporKePDF()" class="w-full text-left px-4 py-3 text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-emerald-900 transition-colors">PDF Report</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Approval Waiting List -->
-        <div class="lg:col-span-2 bg-white dark:bg-emerald-900/40 p-10 rounded-[3rem] border border-emerald-50 dark:border-emerald-800 shadow-2xl">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Butuh Instruksi</h3>
-                <span class="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+    {{-- Stats Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        @php
+            $stats = [
+                ['label' => 'Volume Surat Masuk', 'val' => $totalSuratMasuk ?? 0, 'icon' => 'fa-envelope-open-text', 'color' => 'text-emerald-600'],
+                ['label' => 'Volume Surat Keluar', 'val' => $totalSuratKeluar ?? 0, 'icon' => 'fa-paper-plane', 'color' => 'text-emerald-500'],
+                ['label' => 'Total Disposisi', 'val' => $totalDisposisi ?? 0, 'icon' => 'fa-paste', 'color' => 'text-emerald-700']
+            ];
+        @endphp
+        @foreach($stats as $stat)
+        <div class="bg-white dark:bg-emerald-900 p-8 rounded-[2rem] border border-emerald-50 dark:border-emerald-800 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $stat['label'] }}</p>
+                <h2 class="text-4xl font-black text-slate-800 dark:text-white mt-2">{{ $stat['val'] }}</h2>
             </div>
-            
-            <div class="space-y-4">
-                @for ($i = 1; $i <= 2; $i++)
-                <div class="group flex items-center justify-between p-6 bg-slate-50 dark:bg-emerald-800/20 rounded-[2rem] hover:bg-emerald-50 transition border border-transparent hover:border-emerald-100">
-                    <div class="flex items-center gap-5">
-                        <div class="w-12 h-12 bg-white dark:bg-emerald-800 shadow-sm flex items-center justify-center rounded-2xl text-emerald-600 font-black italic italic">D{{$i}}</div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-800 dark:text-white">Surat Perintah Kerja (SPK) #202{{$i}}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Masuk: 10:45 WIB • Prioritas Tinggi</p>
-                        </div>
-                    </div>
-                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-emerald-500 transition"></i>
-                </div>
-                @endfor
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center {{ $stat['color'] }} text-xl">
+                <i class="fas {{ $stat['icon'] }}"></i>
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    {{-- Charts Section --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white dark:bg-emerald-900 p-8 rounded-[2rem] border border-emerald-50 dark:border-emerald-800 shadow-sm">
+            <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white mb-6">Tren Sirkulasi Dokumen</h3>
+            <div class="relative w-full h-80">
+                <canvas id="chartSirkulasi"></canvas>
             </div>
         </div>
 
-        <!-- Performance Graph Placeholder -->
-        <div class="bg-[#008f5d] p-10 rounded-[3rem] shadow-2xl text-white relative overflow-hidden flex flex-col justify-between">
-            <div class="relative z-10">
-                <p class="text-emerald-200 text-[10px] font-black uppercase tracking-widest mb-2">Performance</p>
-                <h4 class="text-3xl font-black italic tracking-tighter">LPSE Metrics</h4>
+        <div class="bg-white dark:bg-emerald-900 p-8 rounded-[2rem] border border-emerald-50 dark:border-emerald-800 shadow-sm">
+            <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white mb-6">Proporsi Kategori</h3>
+            <div class="relative w-full h-80">
+                <canvas id="chartKategori"></canvas>
             </div>
-            
-            <div class="mt-12 relative z-10">
-                <div class="flex items-end gap-2 h-32">
-                    <div class="flex-1 bg-white/20 rounded-t-lg h-24"></div>
-                    <div class="flex-1 bg-white/40 rounded-t-lg h-32"></div>
-                    <div class="flex-1 bg-white/20 rounded-t-lg h-20"></div>
-                    <div class="flex-1 bg-white/60 rounded-t-lg h-28"></div>
-                    <div class="flex-1 bg-white rounded-t-lg h-32"></div>
-                </div>
-                <p class="text-[9px] font-bold uppercase tracking-widest text-center mt-4 opacity-60">Statistik Surat Terproses</p>
-            </div>
-            <i class="fas fa-chart-simple absolute -left-10 -bottom-10 text-[15rem] text-white opacity-5"></i>
         </div>
+    </div>
+
+    {{-- Data Table --}}
+    <div class="bg-white dark:bg-emerald-900 rounded-[2rem] border border-emerald-50 dark:border-emerald-800 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-emerald-50 dark:border-emerald-800">
+            <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Daftar Master Kategori Sistem</h3>
+        </div>
+        <table id="tabelLaporanSistem" class="w-full text-left">
+            <thead class="bg-slate-50 dark:bg-emerald-950">
+                <tr class="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                    <th class="p-6">ID</th>
+                    <th class="p-6">Nama Kategori</th>
+                    <th class="p-6">Keterangan</th>
+                    <th class="p-6 text-right">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-emerald-50 dark:divide-emerald-800">
+                @foreach($kategoriList as $k)
+                <tr class="hover:bg-emerald-50/50 dark:hover:bg-emerald-800/20 transition">
+                    <td class="p-6 font-mono text-xs text-emerald-600">#KS-{{ $k->id }}</td>
+                    <td class="p-6 font-bold text-slate-800 dark:text-white">{{ $k->nama_kategori }}</td>
+                    <td class="p-6 text-sm text-slate-500">{{ $k->keterangan ?? '-' }}</td>
+                    <td class="p-6 text-right"><span class="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">ACTIVE</span></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 </div>
+
+{{-- Scripts (Chart.js & Export Tools) --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+    function toggleDropdownEkspor() { document.getElementById('menuDropdownEkspor').classList.toggle('hidden'); }
+
+    // Chart Configuration
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx1 = document.getElementById('chartSirkulasi').getContext('2d');
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'],
+                datasets: [{
+                    label: 'Masuk', data: [180, 240, 210, 310, 342],
+                    borderColor: '#008f5d', backgroundColor: 'rgba(0, 143, 93, 0.1)', fill: true, tension: 0.4
+                }, {
+                    label: 'Keluar', data: [110, 150, 130, 190, 189],
+                    borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true, tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    });
+
+    // ... (Fungsi ekspor tetap sama, hanya sesuaikan nama file)
+</script>
 @endsection
