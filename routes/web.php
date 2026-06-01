@@ -26,74 +26,65 @@ Route::middleware(['auth'])->group(function () {
     // Fitur Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Route Dashboard Universal (Redirector)
+   // Route Dashboard Universal (Redirector)
     Route::get('/dashboard', function() {
-        return redirect()->route(auth()->user()->role . '.dashboard');
+        // Menggunakan Facade Auth untuk akses yang lebih aman dan terdeteksi IDE
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Memastikan user ada sebelum mengakses properti 'role'
+        if ($user) {
+            return redirect()->route($user->role . '.dashboard');
+        }
+        
+        // Jika terjadi error sesi, arahkan kembali ke login
+        return redirect()->route('login');
     })->name('dashboard');
 
     // ==========================================
-    // 1. AKTOR: ADMINISTRATOR (DISEMPURNAKAN & SINKRON)
-    // ==========================================
-    Route::middleware(['checkrole:admin'])->prefix('admin')->name('admin.')->group(function () {
+// 1. AKTOR: ADMINISTRATOR (DISEMPURNAKAN & SINKRON)
+// ==========================================
+// ==========================================
+// 1. AKTOR: ADMINISTRATOR (DISEMPURNAKAN)
+// ==========================================
+Route::middleware(['checkrole:admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard Utama
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+
+    // Laporan & Statistik
+    Route::get('/laporan', [AdminController::class, 'lihatStatistik'])->name('laporan.index');
+
+    // Master Data (Grup ini aman karena menggunakan prefix 'master')
+    Route::prefix('master')->name('master.')->group(function() {
+        Route::get('/user', [AdminController::class, 'kelolaUser'])->name('user.index');
+        Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create');
+        Route::post('/user/store', [AdminController::class, 'storeUser'])->name('user.store');
+        Route::get('/user/show/{id}', [AdminController::class, 'showUser'])->name('user.show');
+        Route::get('/user/edit/{id}', [AdminController::class, 'editUser'])->name('user.edit');
+        Route::put('/user/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
+        Route::delete('/user/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
         
-        // Dashboard Utama
-        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
-
-        // Laporan & Statistik (Sinkron dengan sidebar layout terbaru)
-        Route::get('/laporan', [AdminController::class, 'lihatStatistik'])->name('laporan.index');
-
-        // Master Data (Sempurna: Dipetakan tepat ke method spesifik di AdminController)
-        Route::prefix('master')->name('master.')->group(function() {
-            
-            // ==========================================
-            // CRUD USER FULL-PAGE (SINKRON DENGAN INDEX BLADE TERBARU)
-            // ==========================================
-            Route::get('/user', [AdminController::class, 'kelolaUser'])->name('user.index');
-            Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create'); // <-- PERBAIKAN: Ditambahkan agar tidak route not found
-            Route::post('/user/store', [AdminController::class, 'storeUser'])->name('user.store');
-            Route::get('/user/show/{id}', [AdminController::class, 'showUser'])->name('user.show'); // <-- PERBAIKAN: Ditambahkan untuk detail view
-            Route::get('/user/edit/{id}', [AdminController::class, 'editUser'])->name('user.edit'); // <-- PENYEMPURNAAN: Sesuai rute halaman edit terpisah
-            Route::put('/user/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
-            Route::delete('/user/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
-            
-            // ==========================================
-            // PERBAIKAN & PENYEMPURNAAN: CRUD KATEGORI SURAT HALAMAN PENUH (FULL-PAGE)
-            // ==========================================
-            Route::get('/kategori', [AdminController::class, 'masterKategori'])->name('kategori.index');
-            Route::get('/kategori/create', [AdminController::class, 'createKategori'])->name('kategori.create');
-            Route::post('/kategori/store', [AdminController::class, 'storeKategori'])->name('kategori.store');
-            Route::get('/kategori/edit/{id}', [AdminController::class, 'editKategori'])->name('kategori.edit');
-            Route::put('/kategori/update/{id}', [AdminController::class, 'updateKategori'])->name('kategori.update');
-            Route::delete('/kategori/delete/{id}', [AdminController::class, 'destroyKategori'])->name('kategori.destroy');
-            
-// Tambahkan baris ini di dalam grup master
-Route::match(['get', 'post'], '/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi');
-
-// PERBAIKAN: CRUD FULL-PAGE INSTRUKSI (Sesuai struktur AKSARA)
-            Route::get('/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi.index');
-            Route::get('/instruksi/create', [AdminController::class, 'createInstruksi'])->name('instruksi.create');
-            Route::post('/instruksi/store', [AdminController::class, 'storeInstruksi'])->name('instruksi.store');
-            Route::get('/instruksi/edit/{id}', [AdminController::class, 'editInstruksi'])->name('instruksi.edit');
-            Route::put('/instruksi/update/{id}', [AdminController::class, 'updateInstruksi'])->name('instruksi.update');
-            Route::delete('/instruksi/delete/{id}', [AdminController::class, 'destroyInstruksi'])->name('instruksi.destroy');
+        Route::get('/kategori', [AdminController::class, 'masterKategori'])->name('kategori.index');
+        Route::get('/kategori/create', [AdminController::class, 'createKategori'])->name('kategori.create');
+        Route::post('/kategori/store', [AdminController::class, 'storeKategori'])->name('kategori.store');
+        Route::get('/kategori/edit/{id}', [AdminController::class, 'editKategori'])->name('kategori.edit');
+        Route::put('/kategori/update/{id}', [AdminController::class, 'updateKategori'])->name('kategori.update');
+        Route::delete('/kategori/delete/{id}', [AdminController::class, 'destroyKategori'])->name('kategori.destroy');
         
-
-            // Pilihan Instruksi Disposisi
-            Route::get('/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi.index');
-        });
-
-        // Manajemen Surat Kontrol Admin
-        Route::get('/manajemen_surat', [AdminController::class, 'inputSurat'])->name('manajemen_surat.index');
-
-        // Manajemen Arsip Kontrol Admin
-        Route::get('/manajemen_arsip', [AdminController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
-
-        // Monitoring Audit Log (Mengarahkan ke view aktivitas.index)
-        Route::get('/aktivitas', [AdminController::class, 'auditLog'])->name('aktivitas.index');
-        
-        // Statistik Tambahan (Tetap dipertahankan sebagai alias/cadangan rute lama)
-        Route::get('/statistik', [AdminController::class, 'lihatStatistik'])->name('statistik');
+        Route::get('/instruksi', [AdminController::class, 'masterInstruksi'])->name('instruksi.index');
+        Route::get('/instruksi/create', [AdminController::class, 'createInstruksi'])->name('instruksi.create');
+        Route::post('/instruksi/store', [AdminController::class, 'storeInstruksi'])->name('instruksi.store');
+        Route::get('/instruksi/edit/{id}', [AdminController::class, 'editInstruksi'])->name('instruksi.edit');
+        Route::put('/instruksi/update/{id}', [AdminController::class, 'updateInstruksi'])->name('instruksi.update');
+        Route::delete('/instruksi/delete/{id}', [AdminController::class, 'destroyInstruksi'])->name('instruksi.destroy');
     });
+
+    // Rute Penting (Pastikan ini berada di level yang sama dengan Dashboard, TIDAK dibungkus prefix lagi)
+    Route::get('/manajemen_surat', [AdminController::class, 'inputSurat'])->name('manajemen_surat.index');
+    Route::get('/manajemen_arsip', [AdminController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
+    Route::get('/aktivitas', [AdminController::class, 'auditLog'])->name('aktivitas.index');
+    Route::get('/statistik', [AdminController::class, 'lihatStatistik'])->name('statistik');
+});
 
     // ==========================================
     // 2. AKTOR: PETUGAS (Sempurna & Aktif - Pertahankan Total)
