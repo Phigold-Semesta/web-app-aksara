@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Surat;
 use App\Models\Disposisi;
 use App\Models\KategoriSurat;
+use App\Models\Arsip; 
+use Illuminate\Support\Facades\Storage;
 
 class PimpinanController extends Controller
 {
@@ -29,10 +31,7 @@ class PimpinanController extends Controller
      */
     public function indexManajemenSurat()
     {
-        // Mengambil surat yang perlu ditinjau (status 'Proses')
         $suratMasuk = Surat::where('status', 'Proses')->get();
-        
-        // Mengambil riwayat disposisi
         $riwayat = Disposisi::with(['surat', 'user'])->latest()->get();
         
         return view('pimpinan.manajemen_surat.index', compact('suratMasuk', 'riwayat'));
@@ -81,11 +80,47 @@ class PimpinanController extends Controller
     }
 
     /**
-     * Monitoring arsip surat
+     * Monitoring arsip surat (Index)
      */
     public function monitoringArsip()
     {
-        return view('pimpinan.monitoring.arsip');
+        $arsipSurat = Arsip::with('surat')->latest()->paginate(10);
+        return view('pimpinan.monitoring_arsip.index', compact('arsipSurat'));
+    }
+
+    /**
+     * Menampilkan detail arsip untuk Pimpinan
+     */
+    public function showArsip($id)
+    {
+        $arsip = Arsip::with('surat')->findOrFail($id);
+        return view('pimpinan.monitoring_arsip.show', compact('arsip'));
+    }
+
+   /**
+     * Download dokumen arsip untuk Pimpinan
+     */
+    public function downloadArsip($id)
+    {
+        // 1. Ambil data arsip beserta relasi suratnya
+        $arsip = Arsip::with('surat')->findOrFail($id);
+        
+        // 2. Pastikan file_surat ada dan tidak null
+        if (!$arsip->surat || empty($arsip->surat->file_surat)) {
+            return redirect()->back()->with('error', 'Dokumen tidak ditemukan di database.');
+        }
+
+        // 3. Tentukan path yang benar (sesuaikan dengan folder penyimpanan Anda, misal: 'dokumen_surat')
+        // Pastikan path ini sinkron dengan tempat Anda menyimpan file saat upload
+        $path = storage_path('app/public/dokumen_surat/' . $arsip->surat->file_surat);
+
+        // 4. Cek apakah file fisik benar-benar ada di server
+        if (file_exists($path)) {
+            return response()->download($path);
+        }
+
+        // 5. Jika file tidak ada, kembalikan pesan error yang jelas
+        return redirect()->back()->with('error', 'File fisik dokumen tidak ditemukan di server.');
     }
 
     /**

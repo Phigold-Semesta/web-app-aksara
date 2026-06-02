@@ -5,10 +5,10 @@
 @section('content')
 <div class="space-y-10">
     {{-- Header Section --}}
-    <div class="flex justify-between items-end border-b border-emerald-100 pb-6">
+    <div class="flex justify-between items-end border-b border-emerald-100 dark:border-slate-800 pb-6">
         <div>
             <p class="text-emerald-600 font-black text-[10px] uppercase tracking-[0.3em]">Command Center</p>
-            <h1 class="text-3xl font-black text-slate-800 uppercase italic">Manajemen Surat</h1>
+            <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase italic">Manajemen Surat</h1>
         </div>
         <div class="text-right">
             <p class="text-[10px] font-black text-slate-400 uppercase">Total Perlu Ditinjau</p>
@@ -16,14 +16,14 @@
         </div>
     </div>
 
-    {{-- SECTION 1: SURAT MASUK (Tugas Disposisi) --}}
+    {{-- SECTION 1: SURAT MASUK --}}
     <section>
         <div class="flex items-center gap-3 mb-6">
             <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-            <h3 class="text-xs font-black uppercase tracking-widest text-slate-700">Butuh Instruksi Disposisi</h3>
+            <h3 class="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-emerald-400">Butuh Instruksi Disposisi</h3>
         </div>
         
-        <div class="bg-white p-6 rounded-3xl border border-emerald-50 shadow-sm">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-emerald-50 dark:border-slate-800 shadow-sm">
             <table class="w-full text-left">
                 <thead class="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                     <tr>
@@ -33,11 +33,11 @@
                         <th class="p-4 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-emerald-50">
+                <tbody class="divide-y divide-emerald-50 dark:divide-slate-800">
                     @forelse($suratMasuk as $surat)
-                    <tr class="hover:bg-emerald-50/30 transition-colors">
-                        <td class="p-4 font-bold text-sm">{{ $surat->nomor_surat }}</td>
-                        <td class="p-4 text-sm">{{ $surat->perihal }}</td>
+                    <tr class="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 transition-colors">
+                        <td class="p-4 font-bold text-sm text-slate-800 dark:text-slate-200">{{ $surat->nomor_surat }}</td>
+                        <td class="p-4 text-sm text-slate-600 dark:text-slate-400">{{ $surat->perihal }}</td>
                         <td class="p-4 text-sm text-slate-500">{{ $surat->created_at->format('d M Y') }}</td>
                         <td class="p-4 text-center">
                             <a href="{{ route('pimpinan.manajemen-surat.show', $surat->id) }}" 
@@ -58,9 +58,9 @@
 
     {{-- SECTION 2: RIWAYAT DISPOSISI --}}
     <section>
-        <h3 class="text-xs font-black uppercase tracking-widest text-slate-700 mb-6">Riwayat Tindakan</h3>
+        <h3 class="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-emerald-400 mb-6">Riwayat Tindakan</h3>
         
-        <div class="bg-white p-6 rounded-3xl border border-emerald-50 shadow-sm">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-emerald-50 dark:border-slate-800 shadow-sm">
             <table class="w-full text-left">
                 <thead class="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                     <tr>
@@ -70,21 +70,21 @@
                         <th class="p-4 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-emerald-50">
+                <tbody class="divide-y divide-emerald-50 dark:divide-slate-800">
                     @forelse($riwayat as $r)
-                    <tr class="hover:bg-emerald-50/30 transition-colors">
-                        <td class="p-4 font-bold text-sm">{{ $r->surat->nomor_surat }}</td>
-                        <td class="p-4 text-sm">{{ $r->instruksi->nama_instruksi ?? 'N/A' }}</td>
+                    <tr class="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 transition-colors">
+                        <td class="p-4 font-bold text-sm text-slate-800 dark:text-slate-200">{{ $r->surat->nomor_surat }}</td>
+                        <td class="p-4 text-sm text-slate-600 dark:text-slate-400">{{ $r->instruksi->nama_instruksi ?? 'N/A' }}</td>
                         <td class="p-4 text-sm text-slate-500">{{ $r->created_at->format('d M Y') }}</td>
                         <td class="p-4">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('pimpinan.manajemen-surat.show', $r->surat->id) }}" 
-                                   class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Lihat Detail">
+                                   class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Lihat Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <form action="{{ route('pimpinan.manajemen-surat.destroy_riwayat', $r->id) }}" method="POST">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all" 
+                                    <button type="submit" class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all" 
                                             onclick="return confirm('Apakah Anda yakin ingin menghapus riwayat ini?')" title="Hapus Riwayat">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
