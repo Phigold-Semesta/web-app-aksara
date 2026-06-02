@@ -134,25 +134,20 @@ Route::middleware(['checkrole:admin,petugas,pimpinan'])->prefix('admin')->name('
         Route::get('/statistik', [PetugasController::class, 'dashboard'])->name('statistik');
     });
 
-    // ==========================================
+  // ==========================================
 // 3. AKTOR: PIMPINAN (Sempurna & Aktif - Pertahankan Total)
 // ==========================================
 Route::middleware(['checkrole:pimpinan'])->prefix('pimpinan')->name('pimpinan.')->group(function () {
     
-    // Dashboard - Mengarah ke method dashboard di PimpinanController
+    // Dashboard
     Route::get('/dashboard', [PimpinanController::class, 'dashboard'])->name('dashboard');
 
-    // Menerima & Meninjau Surat / Instruksi
-    // Gunakan Route::get/post spesifik agar tidak konflik dengan Dashboard
-    Route::prefix('instruksi_surat')->name('instruksi_surat.')->group(function() {
-        Route::get('/', [PimpinanController::class, 'tinjauSurat'])->name('index');
-        Route::post('/simpan', [PimpinanController::class, 'simpanDisposisi'])->name('store');
-    });
-
-    // Monitoring Riwayat Surat
-    Route::prefix('monitoring_riwayat')->name('monitoring_riwayat.')->group(function() {
-        Route::get('/', [PimpinanController::class, 'monitoringRiwayat'])->name('index');
-        Route::get('/{id}', [PimpinanController::class, 'showRiwayat'])->name('show');
+    // Manajemen Surat (Penggabungan Tinjau Surat & Riwayat)
+    Route::prefix('manajemen_surat')->name('manajemen_surat.')->group(function() {
+        Route::get('/', [PimpinanController::class, 'indexManajemenSurat'])->name('index');
+        Route::get('/{id}', [PimpinanController::class, 'showManajemenSurat'])->name('show');
+        Route::post('/disposisi', [PimpinanController::class, 'simpanDisposisi'])->name('disposisi');
+        Route::delete('/riwayat/{id}', [PimpinanController::class, 'hapusRiwayat'])->name('destroy_riwayat');
     });
 
     // Monitoring Arsip Surat

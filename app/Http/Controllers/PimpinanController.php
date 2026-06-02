@@ -11,7 +11,6 @@ class PimpinanController extends Controller
 {
     /**
      * Dashboard Pimpinan
-     * Menampilkan ringkasan eksekutif dan statistik
      */
     public function dashboard()
     {
@@ -26,13 +25,26 @@ class PimpinanController extends Controller
     }
 
     /**
-     * Menampilkan daftar surat untuk ditinjau
+     * Manajemen Surat (Penggabungan Tinjau Surat & Riwayat)
      */
-    public function tinjauSurat()
+    public function indexManajemenSurat()
     {
-        // Mengambil surat yang statusnya perlu ditinjau
-        $surats = Surat::where('status', 'Proses')->get();
-        return view('pimpinan.surat.tinjau', compact('surats'));
+        // Mengambil surat yang perlu ditinjau (status 'Proses')
+        $suratMasuk = Surat::where('status', 'Proses')->get();
+        
+        // Mengambil riwayat disposisi
+        $riwayat = Disposisi::with(['surat', 'user'])->latest()->get();
+        
+        return view('pimpinan.manajemen_surat.index', compact('suratMasuk', 'riwayat'));
+    }
+
+    /**
+     * Menampilkan detail surat untuk Manajemen Surat
+     */
+    public function showManajemenSurat($id)
+    {
+        $surat = Surat::findOrFail($id);
+        return view('pimpinan.manajemen_surat.show', compact('surat'));
     }
 
     /**
@@ -40,8 +52,6 @@ class PimpinanController extends Controller
      */
     public function simpanDisposisi(Request $request)
     {
-        // Logika simpan ke tabel 'disposisi' sesuai ERD aplikasi Aksara
-        // Pimpinan memilih id_instruksi dari tabel instruksi_disposisi
         $request->validate([
             'id_surat'      => 'required|exists:surat,id_surat',
             'id_instruksi'  => 'required|exists:instruksi_disposisi,id_instruksi',
@@ -60,12 +70,14 @@ class PimpinanController extends Controller
     }
 
     /**
-     * Monitoring riwayat disposisi
+     * Menghapus riwayat disposisi
      */
-    public function monitoringRiwayat()
+    public function hapusRiwayat($id)
     {
-        $riwayat = Disposisi::with(['surat', 'user'])->latest()->get();
-        return view('pimpinan.monitoring.riwayat', compact('riwayat'));
+        $riwayat = Disposisi::findOrFail($id);
+        $riwayat->delete();
+        
+        return redirect()->back()->with('success', 'Riwayat berhasil dihapus!');
     }
 
     /**
@@ -78,7 +90,6 @@ class PimpinanController extends Controller
 
     /**
      * Laporan & Statistik
-     * Sesuai dengan halaman yang kita buat sebelumnya
      */
     public function laporan()
     {

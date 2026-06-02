@@ -154,18 +154,17 @@
                     </a>
                 @endif
 
-                @if(auth()->user()->role === 'pimpinan')
-                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Verifikasi</div>
-                    <a href="{{ route('pimpinan.instruksi_surat.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('pimpinan/instruksi_surat*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                        <i class="fas fa-file-signature w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Menerima & Meninjau Surat</span>
-                    </a>
+               @if(auth()->user()->role === 'pimpinan')
+    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">
+        Manajemen
+    </div>
+    
+    <a href="{{ route('pimpinan.manajemen_surat.index') }}" 
+       class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('pimpinan/manajemen_surat*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+        <i class="fas fa-folder-open w-6 text-center text-sm"></i>
+        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Surat</span>
+    </a>
 
-                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring</div>
-                    <a href="{{ route('pimpinan.monitoring_riwayat.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('pimpinan/monitoring_riwayat*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                        <i class="fas fa-shoe-prints w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Riwayat Surat</span>
-                    </a>
                     <a href="{{ route('pimpinan.monitoring_arsip.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('pimpinan/monitoring_arsip*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-file-shield w-6 text-center text-sm"></i>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Monitoring Arsip Surat</span>
