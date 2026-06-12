@@ -66,39 +66,44 @@ class AdminController extends Controller
     {
         return view('admin.master.user.create');
     }
+/**
+ * Simpan Pengguna Baru (Create Store) - Diperbarui untuk kestabilan
+ */
+public function storeUser(Request $request)
+{
+    // 1. Validasi: Menambahkan validasi untuk jabatan agar sinkron dengan database
+    $request->validate([
+        'username'     => 'required|string|max:255|unique:user,username',
+        'password'     => 'required|string|min:6',
+        'nama_lengkap' => 'required|string|max:255',
+        'role'         => 'required|in:admin,petugas,pimpinan',
+        'jabatan'      => 'nullable|string|max:100' // Ditambahkan karena kolom di DB bersifat wajib
+    ]);
 
-    /**
-     * Simpan Pengguna Baru (Create Store) - Integrasi Manajemen User Baru Berpindah Halaman
-     */
-    public function storeUser(Request $request)
-    {
-        $request->validate([
-            'username' => 'required|unique:users,username',
-            'password' => 'required|min:6',
-            'nama_lengkap' => 'required',
-            'role' => 'required'
-        ]);
-
+    // 2. Gunakan DB Transaction untuk memastikan integritas data
+    return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+        
+        // Simpan User dengan menyertakan jabatan
         $user = User::create([
-            'username' => $request->username,
-            'password' => bcrypt($request->password),
+            'username'     => $request->username,
+            'password'     => bcrypt($request->password),
             'nama_lengkap' => $request->nama_lengkap,
-            'role' => $request->role,
+            'role'         => $request->role,
+            'jabatan'      => $request->jabatan ?? 'Staf', // Memberikan default jika kosong
         ]);
 
-        // Tembak Audit Log
+        // 3. Tembak Audit Log
         AuditLog::create([
-            'aktivitas' => 'TAMBAH USER',
-            'deskripsi' => auth()->user()->nama_lengkap . " membuat pengguna baru dengan nama: {$user->nama_lengkap} (Role: {$user->role})",
-            'ip_address' => $request->ip(),
+            'aktivitas'      => 'TAMBAH USER',
+            'deskripsi'      => auth()->user()->nama_lengkap . " membuat pengguna baru dengan nama: {$user->nama_lengkap} (Role: {$user->role})",
+            'ip_address'     => $request->ip(),
             'waktu_kejadian' => now(),
-            'id_user' => auth()->id()
+            'id_user'        => auth()->id()
         ]);
 
-        // Disempurnakan ke rute index master user
         return redirect()->route('admin.master.user.index')->with('success', 'Pengguna baru berhasil ditambahkan!');
-    }
-
+    });
+}
     /**
      * PERBAIKAN: Menampilkan Halaman Detail Pengguna (Show Page)
      */
@@ -117,41 +122,49 @@ class AdminController extends Controller
         return view('admin.master.user.edit', compact('user'));
     }
 
-    /**
-     * Perbarui Data Pengguna (Update) - Integrasi Manajemen User Baru Berpindah Halaman
-     */
-    public function updateUser(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
+   /**
+ * Perbarui Data Pengguna (Update) - Integrasi Manajemen User Baru Berpindah Halaman
+ */
+public function updateUser(Request $request, $id)
+{
+    // 1. Pastikan findOrFail mencari berdasarkan kolom yang benar jika perlu
+    // Jika 'id' pada route adalah 'id_user', maka ini sudah aman.
+    $user = User::findOrFail($id);
 
-        $request->validate([
-            'username' => 'required|unique:users,username,' . $id,
-            'nama_lengkap' => 'required',
-            'role' => 'required'
-        ]);
+    // 2. Perbaikan Validasi Unique
+    // Syntax: unique:tabel,kolom,id_yang_dikecualikan,nama_kolom_primary_key
+    $request->validate([
+        'username' => 'required|unique:user,username,' . $id . ',id_user',
+        'nama_lengkap' => 'required',
+        'role' => 'required'
+    ]);
 
-        $user->username = $request->username;
-        $user->nama_lengkap = $request->nama_lengkap;
-        $user->role = $request->role;
+    $user->username = $request->username;
+    $user->nama_lengkap = $request->nama_lengkap;
+    $user->role = $request->role;
 
-        if ($request->filled('password')) {
-            $user->password = bcrypt($request->password);
-        }
-
-        $user->save();
-
-        // Tembak Audit Log
-        AuditLog::create([
-            'aktivitas' => 'UBAH USER',
-            'deskripsi' => auth()->user()->nama_lengkap . " mengubah data pengguna: {$user->nama_lengkap}",
-            'ip_address' => $request->ip(),
-            'waktu_kejadian' => now(),
-            'id_user' => auth()->id()
-        ]);
-
-        // Disempurnakan ke rute index master user
-        return redirect()->route('admin.master.user.index')->with('success', 'Data pengguna berhasil diperbarui!');
+    // Perbaikan: Pastikan jabatan juga diupdate jika ada di form
+    if ($request->has('jabatan')) {
+        $user->jabatan = $request->jabatan;
     }
+
+    if ($request->filled('password')) {
+        $user->password = bcrypt($request->password);
+    }
+
+    $user->save();
+
+    // 3. Tembak Audit Log
+    AuditLog::create([
+        'aktivitas' => 'UBAH USER',
+        'deskripsi' => auth()->user()->nama_lengkap . " mengubah data pengguna: {$user->nama_lengkap}",
+        'ip_address' => $request->ip(),
+        'waktu_kejadian' => now(),
+        'id_user' => auth()->id() // Pastikan kolom ini sesuai dengan struktur tabel audit_logs Anda
+    ]);
+
+    return redirect()->route('admin.master.user.index')->with('success', 'Data pengguna berhasil diperbarui!');
+}
 
     /**
      * Hapus Pengguna (Delete) - Integrasi Manajemen User Baru
@@ -172,7 +185,7 @@ class AdminController extends Controller
             'id_user' => auth()->id()
         ]);
 
-        return redirect()->route('admin.master.user.index')->with('success', 'Pengguna berhasil deleted dari sistem!');
+        return redirect()->route('admin.master.user.index')->with('success', 'Pengguna berhasil dihapus dari sistem!');
     }
 
     /**

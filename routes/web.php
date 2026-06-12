@@ -55,14 +55,19 @@ Route::middleware(['checkrole:admin,petugas,pimpinan'])->prefix('admin')->name('
     Route::get('/laporan', [AdminController::class, 'lihatStatistik'])->name('laporan.index');
 
     // Master Data (Grup ini aman karena menggunakan prefix 'master')
-    Route::prefix('master')->name('master.')->group(function() {
-        Route::get('/user', [AdminController::class, 'kelolaUser'])->name('user.index');
-        Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create');
-        Route::post('/user/store', [AdminController::class, 'storeUser'])->name('user.store');
-        Route::get('/user/show/{id}', [AdminController::class, 'showUser'])->name('user.show');
-        Route::get('/user/edit/{id}', [AdminController::class, 'editUser'])->name('user.edit');
-        Route::put('/user/update/{id}', [AdminController::class, 'updateUser'])->name('user.update');
-        Route::delete('/user/delete/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
+Route::prefix('master')->name('master.')->group(function() {
+    
+    // Rute untuk User (Disesuaikan agar lebih rapi dan standar)
+    Route::prefix('user')->name('user.')->group(function() {
+        Route::get('/', [AdminController::class, 'kelolaUser'])->name('index');
+        Route::get('/create', [AdminController::class, 'createUser'])->name('create');
+        Route::post('/store', [AdminController::class, 'storeUser'])->name('store');
+        Route::get('/{id}', [AdminController::class, 'showUser'])->name('show');
+       // Rute untuk Edit dan Update (Lebih standar)
+Route::get('/{id}/edit', [AdminController::class, 'editUser'])->name('edit');
+Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
+        Route::delete('/{id}/delete', [AdminController::class, 'destroyUser'])->name('destroy');
+    });
         
         Route::get('/kategori', [AdminController::class, 'masterKategori'])->name('kategori.index');
         Route::get('/kategori/create', [AdminController::class, 'createKategori'])->name('kategori.create');

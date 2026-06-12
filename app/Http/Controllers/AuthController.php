@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use App\Models\User; // Pastikan model User dipanggil
 
 class AuthController extends Controller
 {
@@ -24,12 +25,12 @@ class AuthController extends Controller
 
     /**
      * Proses Autentikasi.
-     * Dilengkapi dengan proteksi session fixation dan feedback pesan sukses.
+     * Menggunakan verifikasi manual agar bisa menerima password teks biasa/non-hash.
      */
     public function login(Request $request): RedirectResponse
     {
-        // Validasi input dengan pesan kustom
-        $credentials = $request->validate([
+        // Validasi input
+        $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required'],
         ], [
@@ -37,16 +38,20 @@ class AuthController extends Controller
             'password.required' => 'Password wajib diisi!',
         ]);
 
-        // Percobaan Login
-        if (Auth::attempt($credentials, $request->remember)) {
+        // Cari user berdasarkan username
+        $user = User::where('username', $request->username)->first();
+
+        // Verifikasi manual: Cek user ada dan password cocok (tanpa hashing)
+        if ($user && $user->password === $request->password) {
+            // Login user secara manual
+            Auth::login($user, $request->remember ?? false);
+            
             // Keamanan: Regenerasi session untuk mencegah session fixation
             $request->session()->regenerate();
-
-            $user = Auth::user();
             
             // Redirect ke dashboard spesifik berdasarkan folder role
             return $this->redirectByRole($user->role)
-                ->with('success', 'Selamat datang kembali, ' . ($user->nama ?? $user->username) . '! Anda masuk sebagai ' . strtoupper($user->role));
+                ->with('success', 'Selamat datang kembali, ' . ($user->nama_lengkap ?? $user->username) . '! Anda masuk sebagai ' . strtoupper($user->role));
         }
 
         // Jika gagal, kembalikan ke login dengan input username lama
@@ -57,7 +62,6 @@ class AuthController extends Controller
 
     /**
      * Helper untuk menentukan arah redirect berdasarkan role.
-     * Disesuaikan dengan struktur folder: admin/dashboard, petugas/dashboard, pimpinan/dashboard.
      */
     private function redirectByRole(string $role): RedirectResponse
     {
@@ -82,7 +86,6 @@ class AuthController extends Controller
 
     /**
      * Proses Logout.
-     * Membersihkan semua jejak session untuk keamanan maksimal.
      */
     public function logout(Request $request): RedirectResponse
     {
@@ -91,7 +94,7 @@ class AuthController extends Controller
         // Menghapus semua data session
         $request->session()->invalidate();
 
-        // Membuat token baru untuk mencegah CSRF attack setelah logout
+        // Membuat token baru
         $request->session()->regenerateToken();
         
         return redirect('/')->with('success', 'Sesi Anda telah berakhir. Sampai jumpa kembali!');

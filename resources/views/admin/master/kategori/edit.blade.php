@@ -1,40 +1,71 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Kategori Surat')
+@section('title', 'Edit Kategori Surat - AKSARA')
 
 @section('content')
-<div class="max-w-2xl mx-auto space-y-6">
-    <div class="bg-white dark:bg-emerald-900 p-8 rounded-3xl shadow-sm border border-emerald-50 dark:border-emerald-800">
-        <h2 class="text-xl font-black text-slate-800 dark:text-white uppercase mb-1">Edit Kategori</h2>
-        <p class="text-sm text-slate-500 dark:text-emerald-300/70 mb-6">
-            Perbarui informasi kategori: 
-            <span class="font-bold text-[#008f5d]">{{ $kategori->nama_kategori ?? 'Kategori Tanpa Nama' }}</span>
-        </p>
+<div class="p-4 md:p-8 max-w-4xl mx-auto animate__animated animate__fadeIn">
+    
+    {{-- Header Section --}}
+    <div class="mb-10">
+        <a href="{{ route('admin.master.kategori.index') }}" class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-2 mb-4 hover:gap-4 transition-all">
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Kategori
+        </a>
+        <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-white tracking-tight uppercase italic">Edit Kategori Surat</h1>
+        <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-1">Perbarui informasi klasifikasi: <span class="font-black italic text-emerald-800 dark:text-emerald-200">{{ $kategori->nama_kategori }}</span></p>
+    </div>
 
-        <form action="{{ route('admin.master.kategori.update', $kategori->getKey()) }}" method="POST" class="space-y-5">
+    {{-- Form Card --}}
+    <div class="bg-white dark:bg-emerald-900/40 rounded-[2.5rem] p-10 shadow-2xl shadow-emerald-900/5 dark:shadow-black/20 border border-emerald-50 dark:border-emerald-800/50">
+        <form action="{{ route('admin.master.kategori.update', $kategori->id_kategori) }}" method="POST">
             @csrf
             @method('PUT')
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                    <label class="block text-xs font-bold text-slate-400 dark:text-emerald-400 uppercase mb-2">Kode Kategori</label>
-                    <input type="text" name="kode_kategori" value="{{ old('kode_kategori', $kategori->kode_kategori) }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-emerald-700 bg-slate-50 dark:bg-emerald-950 text-slate-800 dark:text-white focus:ring-2 focus:ring-[#008f5d] outline-none transition-all">
+            <div class="space-y-8">
+                {{-- Grid Input --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {{-- Kode Kategori --}}
+                    <div>
+                        <label class="block text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-3 ml-2">Kode Kategori</label>
+                        <input type="text" 
+                               name="kode_kategori" 
+                               value="{{ old('kode_kategori', $kategori->kode_kategori) }}" 
+                               placeholder="Contoh: KTG-006" 
+                               class="w-full bg-emerald-50/50 dark:bg-emerald-950/30 border-none rounded-2xl px-6 py-4 text-emerald-900 dark:text-emerald-100 focus:ring-2 focus:ring-emerald-500 font-bold @error('kode_kategori') ring-2 ring-red-500 @enderror" 
+                               required>
+                        @error('kode_kategori')
+                            <p class="text-red-500 text-xs mt-2 ml-2 font-bold">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Nama Kategori --}}
+                    <div>
+                        <label class="block text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-3 ml-2">Nama Kategori</label>
+                        <input type="text" 
+                               name="nama_kategori" 
+                               value="{{ old('nama_kategori', $kategori->nama_kategori) }}" 
+                               placeholder="Contoh: Surat Masuk" 
+                               class="w-full bg-emerald-50/50 dark:bg-emerald-950/30 border-none rounded-2xl px-6 py-4 text-emerald-900 dark:text-emerald-100 focus:ring-2 focus:ring-emerald-500 font-bold @error('nama_kategori') ring-2 ring-red-500 @enderror" 
+                               required>
+                        @error('nama_kategori')
+                            <p class="text-red-500 text-xs mt-2 ml-2 font-bold">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
+
+                {{-- Keterangan --}}
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 dark:text-emerald-400 uppercase mb-2">Nama Kategori</label>
-                    <input type="text" name="nama_kategori" value="{{ old('nama_kategori', $kategori->nama_kategori) }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-emerald-700 bg-slate-50 dark:bg-emerald-950 text-slate-800 dark:text-white focus:ring-2 focus:ring-[#008f5d] outline-none transition-all">
+                    <label class="block text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-3 ml-2">Keterangan (Opsional)</label>
+                    <textarea name="keterangan" 
+                              rows="3" 
+                              placeholder="Deskripsi singkat mengenai kategori surat ini..." 
+                              class="w-full bg-emerald-50/50 dark:bg-emerald-950/30 border-none rounded-2xl px-6 py-4 text-emerald-900 dark:text-emerald-100 focus:ring-2 focus:ring-emerald-500 font-bold">{{ old('keterangan', $kategori->keterangan) }}</textarea>
                 </div>
-            </div>
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-400 dark:text-emerald-400 uppercase mb-2">Keterangan (Opsional)</label>
-                <textarea name="keterangan" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-emerald-700 bg-slate-50 dark:bg-emerald-950 text-slate-800 dark:text-white focus:ring-2 focus:ring-[#008f5d] outline-none transition-all">{{ old('keterangan', $kategori->keterangan) }}</textarea>
             </div>
 
-            <div class="flex items-center gap-3 pt-4">
-                <a href="{{ route('admin.master.kategori.index') }}" class="px-6 py-3 rounded-xl bg-slate-100 dark:bg-emerald-800 text-slate-600 dark:text-emerald-200 font-bold text-sm hover:bg-slate-200 dark:hover:bg-emerald-700 transition-colors">Batal</a>
-                <button type="submit" class="flex-1 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg shadow-amber-600/20 transition-all">Perbarui Data</button>
-            </div>
+            {{-- Tombol Simpan (Emerald Green) --}}
+            <button type="submit" class="w-full mt-10 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none transition-all uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i> Perbarui Data
+            </button>
         </form>
     </div>
 </div>
