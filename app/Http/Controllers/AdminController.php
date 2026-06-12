@@ -52,13 +52,41 @@ class AdminController extends Controller
     /**
      * Kelola User (Read) - PERBAIKAN: Menggunakan paginate() agar sinkron dengan template Blade
      */
-    public function kelolaUser(Request $request)
-    {
-        // Mengubah User::all() menjadi paginate(10) agar fitur halaman aktif dan tidak memicu Error 500
-        $users = User::latest()->paginate(10);
-        return view('admin.master.user.index', compact('users'));
+ 
+/**
+ * Menampilkan Daftar Pengguna dengan fitur Search, Filter, dan Pagination Dinamis
+ */
+public function kelolaUser(Request $request)
+{
+    // Mulai query dari model User
+    $query = User::query();
+
+    // 1. Logika Searching
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('nama_lengkap', 'like', '%' . $request->search . '%')
+              ->orWhere('username', 'like', '%' . $request->search . '%');
+        });
     }
 
+    // 2. Logika Filtering Role
+    if ($request->filled('role')) {
+        $query->where('role', $request->role);
+    }
+
+    // 3. Logika Filtering Per Halaman
+    // Jika 'all', kita ambil total count, jika tidak maka gunakan nilai input atau default 10
+    $perPage = $request->per_page;
+    
+    if ($perPage === 'all') {
+        $users = $query->latest()->get(); // Ambil semua data tanpa pagination
+    } else {
+        $perPage = in_array($perPage, ['5', '10', '25']) ? $perPage : 10;
+        $users = $query->latest()->paginate((int)$perPage)->withQueryString();
+    }
+
+    return view('admin.master.user.index', compact('users'));
+}
     /**
      * PERBAIKAN: Menampilkan Halaman Form Tambah Pengguna Baru (Create Page)
      */

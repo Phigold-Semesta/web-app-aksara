@@ -17,7 +17,7 @@
     {{-- Content Section --}}
     <div class="bg-white dark:bg-emerald-900/40 p-6 md:p-8 rounded-[2rem] shadow-xl border border-emerald-50 dark:border-emerald-800/50">
         
-        {{-- Toolbar: Search, Filter, & Create --}}
+        {{-- Toolbar --}}
         <div class="flex flex-col lg:flex-row justify-between items-center mb-8 gap-4">
             <h2 class="text-xl font-black text-emerald-950 dark:text-white uppercase italic">Daftar Pengguna</h2>
             
@@ -26,6 +26,13 @@
                     <input type="text" name="search" placeholder="Cari..." value="{{ request('search') }}" 
                         class="bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none w-full sm:w-40">
                     
+                    <select name="per_page" class="bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5 Baris</option>
+                        <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10 Baris</option>
+                        <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
+                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
+                    </select>
+
                     <select name="role" class="bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         <option value="">Role</option>
                         <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
@@ -38,7 +45,7 @@
                     </button>
                 </form>
 
-                <a href="{{ route('admin.master.user.create') }}" class="bg-emerald-900 dark:bg-emerald-600 text-emerald-50 px-6 py-3 rounded-xl font-black uppercase text-xs hover:bg-emerald-800 dark:hover:bg-emerald-500 transition-all flex items-center gap-2 shadow-lg shrink-0">
+                <a href="{{ route('admin.master.user.create') }}" class="bg-emerald-700 text-white px-6 py-3 rounded-xl font-black uppercase text-xs hover:bg-emerald-800 transition-all flex items-center gap-2 shadow-lg shrink-0">
                     <i class="fas fa-user-plus"></i> Tambah User
                 </a>
             </div>
@@ -59,7 +66,16 @@
                 </thead>
                 <tbody>
                     @forelse($users as $index => $user)
-                    @php $userId = $user->id ?? $user->id_user ?? null; @endphp
+                    @php 
+                        $userId = $user->id ?? $user->id_user ?? null; 
+                        // Perbaikan warna pimpinan menjadi kuning ke-oranyean
+                        $roleColors = [
+                            'petugas' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200',
+                            'admin' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                            'pimpinan' => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                        ];
+                        $badgeClass = $roleColors[$user->role] ?? 'bg-slate-100 text-slate-800';
+                    @endphp
                     <tr class="bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-300 rounded-2xl shadow-sm">
                         <td class="px-6 py-4 font-black text-emerald-600 dark:text-emerald-400 text-center rounded-l-2xl">{{ $users->firstItem() + $index }}</td>
                         <td class="px-6 py-3">
@@ -69,7 +85,7 @@
                         <td class="px-6 py-4 font-semibold text-emerald-800 dark:text-emerald-300">{{ $user->nama_lengkap }}</td>
                         <td class="px-6 py-4 font-medium text-emerald-700 dark:text-emerald-400 text-sm">{{ $user->jabatan ?? '-' }}</td>
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider {{ $badgeClass }}">
                                 {{ $user->role }}
                             </span>
                         </td>
@@ -110,7 +126,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    {{-- Notifikasi Sukses --}}
     @if(session('success'))
         Swal.fire({
             icon: 'success',
@@ -122,7 +137,6 @@
         });
     @endif
 
-    {{-- Fungsi Hapus --}}
     function confirmDeleteUser(id, name) {
         Swal.fire({
             icon: 'warning',
@@ -146,4 +160,4 @@
         });
     }
 </script>
-@endsection
+@endsection.
