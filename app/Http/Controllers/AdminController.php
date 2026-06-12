@@ -225,11 +225,30 @@ public function updateUser(Request $request, $id)
     /**
      * 1. INDEX: Menampilkan daftar seluruh kategori surat
      */
-    public function masterKategori(Request $request)
-    {
-        $kategori = KategoriSurat::all();
-        return view('admin.master.kategori.index', compact('kategori'));
+   public function masterKategori(Request $request)
+{
+    // Mengambil nilai per_page dari request, default ke 10
+    $perPage = $request->input('per_page', 5);
+    $search = $request->input('search');
+
+    // Query dasar
+    $query = KategoriSurat::query();
+
+    // Logika pencarian
+    if ($search) {
+        $query->where('nama_kategori', 'like', '%' . $search . '%')
+              ->orWhere('kode_kategori', 'like', '%' . $search . '%');
     }
+
+    // Cek apakah user memilih "Semua" atau angka tertentu
+    if ($perPage === 'all') {
+        $kategori = $query->latest()->get();
+    } else {
+        $kategori = $query->latest()->paginate((int)$perPage);
+    }
+
+    return view('admin.master.kategori.index', compact('kategori'));
+}
 
     /**
      * 2. CREATE: Menampilkan halaman form tambah kategori baru
@@ -338,11 +357,32 @@ public function updateKategori(Request $request, $id)
   /**
      * Menampilkan daftar instruksi
      */
-    public function masterInstruksi()
-    {
-        $instruksi = InstruksiDisposisi::all();
-        return view('admin.master.instruksi.index', compact('instruksi'));
+   public function masterInstruksi(Request $request)
+{
+    // Mengambil nilai filter dari request, default ke 10 baris
+    $perPage = $request->input('per_page', 10);
+    $search = $request->input('search');
+
+    // Memulai query
+    $query = InstruksiDisposisi::query();
+
+    // Menambahkan filter pencarian jika ada
+    if ($search) {
+        $query->where('nama_instruksi', 'LIKE', '%' . $search . '%');
     }
+
+    // Menangani kasus "all" pada per_page
+    if ($perPage === 'all') {
+        $instruksi = $query->get();
+        // Jika ingin tetap bisa di-looping sama seperti paginator, 
+        // kita bisa membuatnya menjadi collection. 
+        // Namun, jika data sangat banyak, disarankan tetap gunakan paginate.
+    } else {
+        $instruksi = $query->paginate((int)$perPage)->withQueryString();
+    }
+
+    return view('admin.master.instruksi.index', compact('instruksi'));
+}
 
     /**
      * Menampilkan form tambah instruksi

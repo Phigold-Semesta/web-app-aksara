@@ -160,4 +160,4 @@
         });
     }
 </script>
-@endsection.
+@endsection
