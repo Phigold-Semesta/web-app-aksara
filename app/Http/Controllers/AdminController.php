@@ -392,21 +392,28 @@ public function updateKategori(Request $request, $id)
         return view('admin.master.instruksi.create');
     }
 
-    /**
+   /**
      * Menyimpan data instruksi baru
      */
     public function storeInstruksi(Request $request)
     {
-        $request->validate(['nama_instruksi' => 'required|string|max:255']);
+        $request->validate([
+            'nama_instruksi' => 'required|string|max:255',
+            'deskripsi'      => 'nullable|string'
+        ]);
         
-        $instruksiBaru = InstruksiDisposisi::create($request->all());
+        // Simpan secara eksplisit agar aman dari Mass Assignment
+        $instruksiBaru = InstruksiDisposisi::create([
+            'nama_instruksi' => $request->nama_instruksi,
+            'deskripsi'      => $request->deskripsi
+        ]);
 
         AuditLog::create([
-            'aktivitas' => 'MASTER INSTRUKSI',
-            'deskripsi' => auth()->user()->nama_lengkap . " menambah instruksi disposisi baru: {$instruksiBaru->nama_instruksi}",
-            'ip_address' => $request->ip(),
+            'aktivitas'      => 'MASTER INSTRUKSI',
+            'deskripsi'      => auth()->user()->nama_lengkap . " menambah instruksi disposisi baru: {$instruksiBaru->nama_instruksi}",
+            'ip_address'     => $request->ip(),
             'waktu_kejadian' => now(),
-            'id_user' => auth()->id()
+            'id_user'        => auth()->id()
         ]);
 
         return redirect()->route('admin.master.instruksi.index')->with('success', 'Instruksi berhasil ditambahkan');
@@ -426,17 +433,25 @@ public function updateKategori(Request $request, $id)
      */
     public function updateInstruksi(Request $request, $id)
     {
-        $request->validate(['nama_instruksi' => 'required|string|max:255']);
+        $request->validate([
+            'nama_instruksi' => 'required|string|max:255',
+            'deskripsi'      => 'nullable|string'
+        ]);
         
         $instruksi = InstruksiDisposisi::findOrFail($id);
-        $instruksi->update($request->all());
+        
+        // Update data dengan field yang sudah disesuaikan
+        $instruksi->update([
+            'nama_instruksi' => $request->nama_instruksi,
+            'deskripsi'      => $request->deskripsi
+        ]);
 
         AuditLog::create([
-            'aktivitas' => 'UPDATE INSTRUKSI',
-            'deskripsi' => auth()->user()->nama_lengkap . " mengubah instruksi menjadi: {$instruksi->nama_instruksi}",
-            'ip_address' => $request->ip(),
+            'aktivitas'      => 'UPDATE INSTRUKSI',
+            'deskripsi'      => auth()->user()->nama_lengkap . " mengubah instruksi menjadi: {$instruksi->nama_instruksi}",
+            'ip_address'     => $request->ip(),
             'waktu_kejadian' => now(),
-            'id_user' => auth()->id()
+            'id_user'        => auth()->id()
         ]);
 
         return redirect()->route('admin.master.instruksi.index')->with('success', 'Instruksi berhasil diperbarui');
@@ -452,16 +467,15 @@ public function updateKategori(Request $request, $id)
         $instruksi->delete();
 
         AuditLog::create([
-            'aktivitas' => 'HAPUS INSTRUKSI',
-            'deskripsi' => auth()->user()->nama_lengkap . " menghapus instruksi: {$nama}",
-            'ip_address' => request()->ip(),
+            'aktivitas'      => 'HAPUS INSTRUKSI',
+            'deskripsi'      => auth()->user()->nama_lengkap . " menghapus instruksi: {$nama}",
+            'ip_address'     => request()->ip(),
             'waktu_kejadian' => now(),
-            'id_user' => auth()->id()
+            'id_user'        => auth()->id()
         ]);
 
         return redirect()->back()->with('success', 'Instruksi berhasil dihapus');
     }
-    
     /**
      * Halaman Monitoring Seluruh Audit Log (Dinamis & Mengarah ke admin/aktivitas/index)
      */

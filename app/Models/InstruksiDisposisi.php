@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class InstruksiDisposisi extends Model
 {
-    protected $table = 'instruksi_disposisi'; // Nama tabel singular
-    protected $primaryKey = 'id_instruksi';
+    protected $table = 'instruksi_disposisi'; // Nama tabel
+    protected $primaryKey = 'id_instruksi';   // Primary Key
 
     protected $fillable = [
         'nama_instruksi',
+        'deskripsi', // Field baru ditambahkan agar bisa diisi (mass assignment)
     ];
 
     // Relasi: Satu instruksi baku digunakan di banyak Disposisi

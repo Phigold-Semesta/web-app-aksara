@@ -49,6 +49,7 @@
                 <thead>
                     <tr class="text-emerald-500 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest">
                         <th class="px-6 py-3">Nama Instruksi</th>
+                        <th class="px-6 py-3">Deskripsi</th>
                         <th class="px-6 py-3">Tanggal Input</th>
                         <th class="px-6 py-3 text-center">Aksi</th>
                     </tr>
@@ -57,6 +58,7 @@
                     @forelse($instruksi as $item)
                     <tr class="bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-300 rounded-2xl shadow-sm">
                         <td class="px-6 py-4 font-bold text-emerald-900 dark:text-emerald-100 rounded-l-2xl">{{ $item->nama_instruksi }}</td>
+                        <td class="px-6 py-4 text-emerald-700 dark:text-emerald-300 text-sm italic">{{ $item->deskripsi ?? '-' }}</td>
                         <td class="px-6 py-4 text-emerald-600 dark:text-emerald-400 text-sm">{{ $item->created_at ? $item->created_at->format('d M Y') : '-' }}</td>
                         
                         <td class="px-6 py-4 text-center rounded-r-2xl">
@@ -70,13 +72,13 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="3" class="text-center py-10 text-emerald-400 font-bold italic">Data tidak ditemukan.</td></tr>
+                    <tr><td colspan="4" class="text-center py-10 text-emerald-400 font-bold italic">Data tidak ditemukan.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        {{-- Luxurious Pagination (Posisi Rata Kanan) --}}
+        {{-- Luxurious Pagination --}}
         @if($instruksi instanceof \Illuminate\Pagination\LengthAwarePaginator && $instruksi->hasPages())
             <div class="mt-6 flex justify-end">
                 <nav class="flex items-center gap-2">
