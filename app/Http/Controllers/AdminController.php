@@ -476,16 +476,94 @@ public function updateKategori(Request $request, $id)
 
         return redirect()->back()->with('success', 'Instruksi berhasil dihapus');
     }
-    /**
-     * Halaman Monitoring Seluruh Audit Log (Dinamis & Mengarah ke admin/aktivitas/index)
-     */
-    public function auditLog()
-    {
-        // Mengambil log terbaru diurutkan berdasarkan kolom waktu_kejadian asli dari phpMyAdmin
-        $logs = AuditLog::with('user')->latest('waktu_kejadian')->get();
-        
-        return view('admin.aktivitas.index', compact('logs'));
+
+ public function auditLog(Request $request)
+{
+    /*
+    |--------------------------------------------------------------------------
+    | Query Audit Log
+    |--------------------------------------------------------------------------
+    */
+    $query = AuditLog::with('user');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filter Tanggal
+    |--------------------------------------------------------------------------
+    */
+    if ($request->filled('start_date')) {
+        $query->whereDate('waktu_kejadian', '>=', $request->start_date);
     }
+
+    if ($request->filled('end_date')) {
+        $query->whereDate('waktu_kejadian', '<=', $request->end_date);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pencarian
+    |--------------------------------------------------------------------------
+    */
+    if ($request->filled('search')) {
+
+        $search = trim($request->search);
+
+        $query->where(function ($q) use ($search) {
+
+            $q->where('aktivitas', 'LIKE', "%{$search}%")
+              ->orWhere('deskripsi', 'LIKE', "%{$search}%")
+              ->orWhere('ip_address', 'LIKE', "%{$search}%")
+              ->orWhereHas('user', function ($user) use ($search) {
+
+                    $user->where('nama_lengkap', 'LIKE', "%{$search}%")
+                         ->orWhere('username', 'LIKE', "%{$search}%")
+                         ->orWhere('jabatan', 'LIKE', "%{$search}%")
+                         ->orWhere('role', 'LIKE', "%{$search}%");
+
+              });
+
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Jumlah Data Per Halaman
+    |--------------------------------------------------------------------------
+    */
+    $perPage = $request->input('per_page', 5);
+
+    // Jika memilih Semua Data
+    if ($perPage === 'all') {
+
+        $perPage = max($query->count(), 1);
+
+    } else {
+
+        $perPage = (int) $perPage;
+
+        // Hanya izinkan 5,10,25
+        if (!in_array($perPage, [5, 10, 25])) {
+            $perPage = 5;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ambil Data Audit Log
+    |--------------------------------------------------------------------------
+    */
+    $logs = $query
+        ->orderByDesc('waktu_kejadian')
+        ->paginate($perPage)
+        ->withQueryString();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Return View
+    |--------------------------------------------------------------------------
+    */
+    return view('admin.aktivitas.index', compact('logs'));
+}
 
   /**
      * =========================================================================

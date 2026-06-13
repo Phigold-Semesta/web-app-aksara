@@ -118,7 +118,7 @@
                     
                     <a href="{{ route('admin.master.kategori.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('admin/master/kategori*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-tags w-6 text-center text-sm"></i>
-                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Mengelola Master Kategori</span>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Master Kategori</span>
                     </a>
                     <a href="{{ route('admin.master.instruksi.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('admin/master/instruksi*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-list-check w-6 text-center text-sm"></i>
