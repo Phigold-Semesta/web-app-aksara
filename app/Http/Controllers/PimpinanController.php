@@ -10,6 +10,7 @@ use App\Models\Arsip;
 use App\Models\InstruksiDisposisi;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PimpinanController extends Controller
 {
@@ -52,25 +53,32 @@ class PimpinanController extends Controller
 
     /**
      * Menampilkan dokumen dengan aman
-     * Disempurnakan dengan penanganan path yang lebih robust
+     * Disempurnakan dengan penanganan path yang lebih robust (Cek Ganda)
      */
     public function tampilkanDokumen($id)
     {
         $surat = Surat::findOrFail($id);
-        
-        // Memastikan nama file bersih dari spasi atau karakter tidak valid
         $filename = trim($surat->file_surat);
         
-        // Menggunakan Storage facade untuk akses yang lebih standar di Laravel
-        $path = storage_path('app/public/' . $filename);
+        // Solusi Jenius: Cek di dua lokasi kemungkinan besar file berada
+        $paths = [
+            storage_path('app/public/' . $filename),
+            storage_path('app/public/dokumen_surat/' . $filename)
+        ];
 
-        // Jika file tidak ada, log error agar mudah dilacak
-        if (!file_exists($path)) {
-            \Log::error("File tidak ditemukan: " . $path);
+        $path = null;
+        foreach ($paths as $p) {
+            if (file_exists($p)) {
+                $path = $p;
+                break;
+            }
+        }
+
+        if (!$path) {
+            Log::error("File tidak ditemukan di semua path yang diperiksa: " . implode(' atau ', $paths));
             abort(404, 'Dokumen fisik tidak ditemukan di sistem.');
         }
 
-        // Return file dengan header yang tepat agar iframe bisa merender PDF
         return response()->file($path, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $filename . '"'
