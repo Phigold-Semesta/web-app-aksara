@@ -40,7 +40,6 @@
                         <td class="p-4 text-sm text-slate-600 dark:text-slate-400">{{ $surat->perihal }}</td>
                         <td class="p-4 text-sm text-slate-500">{{ $surat->created_at->format('d M Y') }}</td>
                         <td class="p-4 text-center">
-                            {{-- PERBAIKAN: Penamaan rute disesuaikan dengan web.php --}}
                             <a href="{{ route('pimpinan.manajemen_surat.show', $surat->id_surat) }}" 
                                class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black hover:bg-emerald-700 transition">
                                <i class="fas fa-file-signature"></i> TINJAU
@@ -75,16 +74,16 @@
                     @forelse($riwayat as $r)
                     <tr class="hover:bg-emerald-50/30 dark:hover:bg-slate-800/50 transition-colors">
                         <td class="p-4 font-bold text-sm text-slate-800 dark:text-slate-200">{{ $r->surat->nomor_surat }}</td>
-                        <td class="p-4 text-sm text-slate-600 dark:text-slate-400">{{ $r->instruksi->nama_instruksi ?? 'N/A' }}</td>
+                        <td class="p-4 text-sm text-slate-600 dark:text-slate-400">{{ $r->instruksi_disposisi->nama_instruksi ?? 'N/A' }}</td>
                         <td class="p-4 text-sm text-slate-500">{{ $r->created_at->format('d M Y') }}</td>
                         <td class="p-4">
                             <div class="flex items-center justify-center gap-2">
-                                {{-- PERBAIKAN: Penamaan rute disesuaikan dengan web.php --}}
                                 <a href="{{ route('pimpinan.manajemen_surat.show', $r->surat->id_surat) }}" 
                                    class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Lihat Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <form action="{{ route('pimpinan.manajemen_surat.destroy_riwayat', $r->id) }}" method="POST">
+                                {{-- PERBAIKAN: Menggunakan id_disposisi agar sesuai dengan schema database --}}
+                                <form action="{{ route('pimpinan.manajemen_surat.destroy_riwayat', $r->id_disposisi) }}" method="POST">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all" 
                                             onclick="return confirm('Apakah Anda yakin ingin menghapus riwayat ini?')" title="Hapus Riwayat">
