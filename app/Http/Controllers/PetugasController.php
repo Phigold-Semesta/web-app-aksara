@@ -69,7 +69,7 @@ class PetugasController extends Controller
 
     /**
      * MANAJEMEN SURAT: STORE
-     * DISEMPURNAKAN: Menangani output cerdas dari OpenCV (PDF Base64)
+     * Disesuaikan dengan alur: 'belum dikirim'
      */
     public function store(Request $request)
     {
@@ -77,7 +77,7 @@ class PetugasController extends Controller
             'nomor_surat'   => 'required|unique:surat,nomor_surat',
             'tanggal_surat' => 'required|date',
             'asal_instansi' => 'required|string|max:255',
-            'perihal'        => 'required|string',
+            'perihal'       => 'required|string',
             'id_kategori'   => 'required|exists:kategori_surat,id_kategori',
             'file_dokumen'  => 'nullable|mimes:pdf,jpg,png|max:4096', 
             'pdf_base64'    => 'nullable|string', 
@@ -86,29 +86,8 @@ class PetugasController extends Controller
         try {
             DB::beginTransaction();
 
-            $fileName = null;
-
-            // --- LOGIKA 1: Menangkap Hasil Auto-Crop OpenCV (PDF Base64) ---
-            if ($request->filled('pdf_base64')) {
-                $base64Data = $request->pdf_base64;
-                if (strpos($base64Data, ',') !== false) {
-                    $format = explode(',', $base64Data);
-                    $decodedFile = base64_decode($format[1]);
-                } else {
-                    $decodedFile = base64_decode($base64Data);
-                }
-                
-                $fileName = 'SMART_SCAN_' . time() . '_' . uniqid() . '.pdf';
-                Storage::disk('public')->put('dokumen_surat/' . $fileName, $decodedFile);
-            } 
-            // --- LOGIKA 2: Jika User Pilih Upload Manual ---
-            elseif ($request->hasFile('file_dokumen')) {
-                $file = $request->file('file_dokumen');
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeName = preg_replace('/[^A-Za-z0-9]/', '_', $originalName); 
-                $fileName = time() . '_' . $safeName . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('dokumen_surat', $fileName, 'public');
-            }
+            // Menggunakan helper private untuk menangani file
+            $fileName = $this->handleFileUpload($request);
 
             if (!$fileName) {
                 throw new \Exception("Gagal mendigitalisasi dokumen. Gunakan Smart Scan atau Upload File.");
@@ -121,7 +100,7 @@ class PetugasController extends Controller
                 'tanggal_surat'  => $request->tanggal_surat,
                 'tanggal_terima' => now(),
                 'file_surat'     => $fileName,
-                'status'         => 'pending',
+                'status'         => 'belum dikirim', // Perubahan: Status awal adalah 'belum dikirim'
                 'id_user'        => Auth::id(),
                 'id_kategori'    => $request->id_kategori,
             ]);
@@ -129,7 +108,7 @@ class PetugasController extends Controller
             DB::commit();
             
             return redirect()->route('petugas.manajemen_surat.index')
-                             ->with('success', 'Surat Berhasil Didigitalisasi dengan Smart Scanner!');
+                             ->with('success', 'Surat berhasil disimpan (Status: Belum Dikirim).');
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -137,6 +116,36 @@ class PetugasController extends Controller
         }
     }
 
+    /**
+     * Helper untuk menangani upload file atau base64
+     */
+    private function handleFileUpload(Request $request)
+    {
+        // 1. Logika OpenCV (Base64)
+        if ($request->filled('pdf_base64')) {
+            $base64Data = $request->pdf_base64;
+            $decodedFile = (strpos($base64Data, ',') !== false) 
+                           ? base64_decode(explode(',', $base64Data)[1]) 
+                           : base64_decode($base64Data);
+            
+            $fileName = 'SMART_SCAN_' . time() . '_' . uniqid() . '.pdf';
+            Storage::disk('public')->put('dokumen_surat/' . $fileName, $decodedFile);
+            return $fileName;
+        } 
+        
+        // 2. Logika Upload Manual
+        if ($request->hasFile('file_dokumen')) {
+            $file = $request->file('file_dokumen');
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeName = preg_replace('/[^A-Za-z0-9]/', '_', $originalName); 
+            $fileName = time() . '_' . $safeName . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('dokumen_surat', $fileName, 'public');
+            return $fileName;
+        }
+
+        return null;
+    }
+    
     /**
      * MANAJEMEN SURAT: SHOW
      */
@@ -156,18 +165,24 @@ class PetugasController extends Controller
         return view('petugas.manajemen_surat.edit', compact('surat', 'kategoris'));
     }
 
-    /**
+   /**
      * MANAJEMEN SURAT: UPDATE
+     * Disempurnakan dengan proteksi status & refactoring upload file
      */
     public function update(Request $request, $id)
     {
         $surat = Surat::findOrFail($id);
 
+        // PROTEKSI: Jika status bukan 'belum dikirim', maka tidak boleh diubah
+        if ($surat->status !== 'belum dikirim') {
+            return back()->with('error', 'Aksi ditolak! Surat tidak bisa diubah karena sudah dikirim atau sedang diproses.');
+        }
+
         $request->validate([
             'nomor_surat'   => 'required|unique:surat,nomor_surat,' . $id . ',id_surat',
             'tanggal_surat' => 'required|date',
             'asal_instansi' => 'required|string|max:255',
-            'perihal'        => 'required|string',
+            'perihal'       => 'required|string',
             'id_kategori'   => 'required|exists:kategori_surat,id_kategori',
             'file_dokumen'  => 'nullable|mimes:pdf,jpg,png|max:4096', 
             'pdf_base64'    => 'nullable|string',
@@ -176,32 +191,20 @@ class PetugasController extends Controller
         try {
             DB::beginTransaction();
 
+            // Jika ada file baru (upload atau smart scan), hapus file lama dan simpan yang baru
             if ($request->filled('pdf_base64') || $request->hasFile('file_dokumen')) {
                 if ($surat->file_surat) {
                     Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
                 }
 
-                if ($request->filled('pdf_base64')) {
-                    $base64Data = $request->pdf_base64;
-                    $format = explode(',', $base64Data);
-                    $decodedFile = base64_decode($format[1] ?? $format[0]);
-                    $newFileName = 'SMART_SCAN_UPDATED_' . time() . '_' . uniqid() . '.pdf';
-                    Storage::disk('public')->put('dokumen_surat/' . $newFileName, $decodedFile);
-                    $surat->file_surat = $newFileName;
-                } 
-                else {
-                    $file = $request->file('file_dokumen');
-                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                    $safeName = preg_replace('/[^A-Za-z0-9]/', '_', $originalName);
-                    $newFileName = time() . '_' . $safeName . '.' . $file->getClientOriginalExtension();
-                    $file->storeAs('dokumen_surat', $newFileName, 'public');
-                    $surat->file_surat = $newFileName;
-                }
+                // Menggunakan helper handleFileUpload yang sudah kita buat sebelumnya
+                $surat->file_surat = $this->handleFileUpload($request);
             }
 
+            // Update data surat
             $surat->update([
                 'nomor_surat'   => $request->nomor_surat,
-                'perihal'        => $request->perihal,
+                'perihal'       => $request->perihal,
                 'asal_instansi' => $request->asal_instansi,
                 'tanggal_surat' => $request->tanggal_surat,
                 'id_kategori'   => $request->id_kategori,
@@ -218,13 +221,19 @@ class PetugasController extends Controller
         }
     }
 
-    /**
+  /**
      * MANAJEMEN SURAT: DESTROY
+     * Ditambahkan proteksi: Hanya bisa hapus jika status 'belum dikirim'
      */
     public function destroy($id)
     {
         try {
             $surat = Surat::findOrFail($id);
+
+            // PROTEKSI: Jangan biarkan surat yang sudah masuk ke pimpinan dihapus
+            if ($surat->status !== 'belum dikirim') {
+                return back()->with('error', 'Aksi ditolak! Surat tidak bisa dihapus karena sudah dalam proses pimpinan.');
+            }
 
             if ($surat->file_surat) {
                 Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
@@ -239,17 +248,25 @@ class PetugasController extends Controller
         }
     }
 
-    /**
-     * UPDATE STATUS: TERUSKAN KE PIMPINAN
+   /**
+     * UPDATE STATUS: KIRIM KE PIMPINAN
+     * Disesuaikan dengan alur status baru
      */
     public function teruskanKePimpinan($id)
     {
         $surat = Surat::findOrFail($id);
-        $surat->update(['status' => 'diteruskan']);
+
+        // VALIDASI: Pastikan surat memang belum dikirim sebelumnya
+        if ($surat->status !== 'belum dikirim') {
+            return back()->with('error', 'Surat sudah diproses atau sudah diteruskan sebelumnya.');
+        }
+
+        // UPDATE ke 'pending' (menandakan surat sedang di pimpinan)
+        $surat->update(['status' => 'pending']);
         
         return back()->with('success', 'Surat berhasil diteruskan ke Pimpinan.');
     }
-
+    
     /**
      * ==========================================
      * MANAJEMEN ARSIP (DISEMPURNAKAN & DINAMIS)

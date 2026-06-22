@@ -105,7 +105,7 @@ Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
     Route::get('/statistik', [AdminController::class, 'lihatStatistik'])->name('statistik');
 });
 
-    // ==========================================
+  // ==========================================
     // 2. AKTOR: PETUGAS (Sempurna & Aktif - Pertahankan Total)
     // ==========================================
     Route::middleware(['checkrole:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
@@ -113,7 +113,8 @@ Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
         // Dashboard (Statistik)
         Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
 
-        // Fitur Teruskan Surat ke Pimpinan
+        // PERBAIKAN: Diselaraskan nama route ke 'teruskan_pimpinan' 
+        // dan method ke 'PATCH' agar sesuai dengan form di view
         Route::patch('/manajemen_surat/{id}/teruskan', [PetugasController::class, 'teruskanKePimpinan'])
              ->name('teruskan_pimpinan');
 
@@ -123,13 +124,12 @@ Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
         // Route Tambahan untuk Status Surat
         Route::get('/manajemen_surat_status', [PetugasController::class, 'statusSurat'])->name('manajemen_surat.status');
 
+
         // --- MANAJEMEN ARSIP ---
-        // Urutan diperbaiki: Static Route dulu, baru Parameter Route {id}
         Route::get('/manajemen_arsip', [PetugasController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
         Route::get('/manajemen_arsip/create', [PetugasController::class, 'arsipCreate'])->name('manajemen_arsip.create');
         Route::post('/manajemen_arsip/store', [PetugasController::class, 'arsipStore'])->name('manajemen_arsip.store');
         
-        // Route dengan parameter diletakkan di bawah agar tidak bentrok
         Route::get('/manajemen_arsip/{id}', [PetugasController::class, 'arsip_show'])->name('manajemen_arsip.show');
         Route::get('/manajemen_arsip/{id}/edit', [PetugasController::class, 'arsipEdit'])->name('manajemen_arsip.edit');
         Route::put('/manajemen_arsip/{id}/update', [PetugasController::class, 'arsipUpdate'])->name('manajemen_arsip.update');
@@ -139,33 +139,37 @@ Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
         Route::get('/statistik', [PetugasController::class, 'dashboard'])->name('statistik');
     });
 
-  // ==========================================
-// 3. AKTOR: PIMPINAN (Sempurna & Aktif - Pertahankan Total)
 // ==========================================
-Route::middleware(['checkrole:pimpinan'])->prefix('pimpinan')->name('pimpinan.')->group(function () {
-    
-    // Dashboard
-    Route::get('/dashboard', [PimpinanController::class, 'dashboard'])->name('dashboard');
+    // 3. AKTOR: PIMPINAN (Sempurna & Aktif - Pertahankan Total)
+    // ==========================================
+    Route::middleware(['checkrole:pimpinan'])->prefix('pimpinan')->name('pimpinan.')->group(function () {
+        
+        // Dashboard
+        Route::get('/dashboard', [PimpinanController::class, 'dashboard'])->name('dashboard');
 
-    // Manajemen Surat (Penggabungan Tinjau Surat & Riwayat)
-    Route::prefix('manajemen_surat')->name('manajemen_surat.')->group(function() {
-        Route::get('/', [PimpinanController::class, 'indexManajemenSurat'])->name('index');
-        Route::get('/{id}', [PimpinanController::class, 'showManajemenSurat'])->name('show');
-        Route::post('/disposisi', [PimpinanController::class, 'simpanDisposisi'])->name('disposisi');
-        Route::delete('/riwayat/{id}', [PimpinanController::class, 'hapusRiwayat'])->name('destroy_riwayat');
+        // Manajemen Surat
+        Route::prefix('manajemen_surat')->name('manajemen_surat.')->group(function() {
+            Route::get('/', [PimpinanController::class, 'indexManajemenSurat'])->name('index');
+            Route::get('/{id}', [PimpinanController::class, 'showManajemenSurat'])->name('show');
+            
+            // Route akses dokumen aman (Fix 404 & 403)
+            Route::get('/dokumen/{id}', [PimpinanController::class, 'tampilkanDokumen'])->name('tampilkan_dokumen');
+            
+            Route::post('/disposisi/store', [PimpinanController::class, 'simpanDisposisi'])->name('simpan_disposisi');
+            Route::delete('/riwayat/{id}', [PimpinanController::class, 'hapusRiwayat'])->name('destroy_riwayat');
+        });
+
+        // Monitoring Arsip Surat
+        Route::prefix('monitoring_arsip')->name('monitoring_arsip.')->group(function() {
+            Route::get('/', [PimpinanController::class, 'monitoringArsip'])->name('index');
+            Route::get('/{id}', [PimpinanController::class, 'showArsip'])->name('show');
+            Route::get('/{id}/download', [PimpinanController::class, 'downloadArsip'])->name('download');
+        });
+
+        // Monitoring Audit Log (Pastikan method auditLog ada di Controller)
+        Route::get('/audit-log', [PimpinanController::class, 'auditLog'])->name('aktivitas.index');
+        
+        // Melihat Laporan Statistik
+        Route::get('/statistik', [PimpinanController::class, 'laporan'])->name('statistik');
     });
-
-    // Monitoring Arsip Surat
-    Route::prefix('monitoring_arsip')->name('monitoring_arsip.')->group(function() {
-        Route::get('/', [PimpinanController::class, 'monitoringArsip'])->name('index');
-        Route::get('/{id}', [PimpinanController::class, 'showArsip'])->name('show');
-        Route::get('/{id}/download', [PimpinanController::class, 'downloadArsip'])->name('download');
-    });
-
-    // Monitoring Audit Log
-    Route::get('/audit-log', [PimpinanController::class, 'auditLog'])->name('aktivitas.index');
-    
-    // Melihat Laporan Statistik
-    Route::get('/statistik', [PimpinanController::class, 'laporan'])->name('statistik');
-});
 });

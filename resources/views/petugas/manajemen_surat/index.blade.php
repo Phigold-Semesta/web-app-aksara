@@ -7,7 +7,7 @@
             <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-emerald-50 tracking-tight">Manajemen Surat</h1>
             <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-1">Digitalisasi dan Pengarsipan Surat LPSE Karawang</p>
         </div>
-        <a href="{{ route('admin.manajemen_surat.create') }}" 
+        <a href="{{ route('petugas.manajemen_surat.create') }}" 
            class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20 transition-all flex items-center gap-3 transform hover:-translate-y-1">
             <i class="fas fa-plus-circle text-lg"></i>
             INPUT SURAT BARU
@@ -16,7 +16,7 @@
 
     {{-- Filter & Search Bar --}}
     <div class="mb-8 flex flex-wrap gap-4 items-center justify-between">
-        <form action="{{ route('admin.manajemen_surat.index') }}" method="GET" class="flex flex-wrap gap-4 items-center w-full lg:w-auto">
+        <form action="{{ route('petugas.manajemen_surat.index') }}" method="GET" class="flex flex-wrap gap-4 items-center w-full lg:w-auto">
             <div class="relative">
                 <select name="per_page" onchange="this.form.submit()" 
                         class="appearance-none bg-white dark:bg-slate-900 border border-emerald-100 dark:border-slate-800 text-emerald-900 dark:text-emerald-100 py-3 px-6 pr-10 rounded-2xl font-bold focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer shadow-sm">
@@ -69,13 +69,20 @@
                         </td>
                         <td class="px-8 py-6">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('admin.manajemen_surat.show', $item->id_surat) }}" class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all">
+                                <a href="{{ route('petugas.manajemen_surat.show', $item->id_surat) }}" class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all">
                                     <i class="fas fa-eye text-sm"></i>
                                 </a>
-                                <a href="{{ route('admin.manajemen_surat.edit', $item->id_surat) }}" class="p-2.5 bg-amber-50 dark:bg-slate-800 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all">
+                                <a href="{{ route('petugas.manajemen_surat.edit', $item->id_surat) }}" class="p-2.5 bg-amber-50 dark:bg-slate-800 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all">
                                     <i class="fas fa-edit text-sm"></i>
                                 </a>
-                                <form action="{{ route('admin.manajemen_surat.destroy', $item->id_surat) }}" method="POST" id="form-hapus-{{ $item->id_surat }}">
+                                {{-- PERBAIKAN: Gunakan route('petugas.teruskan_pimpinan') sesuai web.php --}}
+                                <form action="{{ route('petugas.teruskan_pimpinan', $item->id_surat) }}" method="POST" id="form-teruskan-{{ $item->id_surat }}">
+                                    @csrf @method('PATCH')
+                                    <button type="button" onclick="konfirmasiTeruskan('{{ $item->id_surat }}')" class="p-2.5 bg-blue-50 dark:bg-slate-800 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
+                                        <i class="fas fa-paper-plane text-sm"></i>
+                                    </button>
+                                </form>
+                                <form action="{{ route('petugas.manajemen_surat.destroy', $item->id_surat) }}" method="POST" id="form-hapus-{{ $item->id_surat }}">
                                     @csrf @method('DELETE')
                                     <button type="button" onclick="konfirmasiHapus('{{ $item->id_surat }}')" class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all">
                                         <i class="fas fa-trash-alt text-sm"></i>
@@ -111,6 +118,20 @@
             confirmButtonText: 'Ya, Hapus!'
         }).then((result) => {
             if (result.isConfirmed) document.getElementById('form-hapus-' + id).submit();
+        });
+    }
+
+    function konfirmasiTeruskan(id) {
+        Swal.fire({
+            title: 'Teruskan Surat?',
+            text: "Surat akan dikirimkan ke Pimpinan untuk ditinjau.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Teruskan!'
+        }).then((result) => {
+            if (result.isConfirmed) document.getElementById('form-teruskan-' + id).submit();
         });
     }
 </script>

@@ -7,30 +7,40 @@ use App\Models\User;
 use App\Models\AuditLog;
 use App\Models\KategoriSurat;
 use App\Models\InstruksiDisposisi;
+use App\Models\Arsip;
 // Catatan: Pastikan Anda mengimpor model Surat jika sudah ada (misal: use App\Models\Surat;)
 
 class AdminController extends Controller
 {
-    /**
-     * Dashboard Admin
-     */
-    public function index()
-    {
-        $totalPengguna = User::count();
-        $totalArsip = 1402; // Sesuai data dummy aman atau hitungan model arsip Anda
-        $totalKategori = KategoriSurat::count();
-        
-        // Mengambil 5 aktivitas log terbaru untuk dashboard
-        $recentLogs = AuditLog::with('user')->latest('waktu_kejadian')->take(5)->get();
+   public function index()
+{
+    $totalPengguna = User::count();
+    $totalArsip = Arsip::count(); // Gunakan model nyata
+    $totalKategori = KategoriSurat::count();
+    $recentLogs = AuditLog::with('user')->latest('created_at')->take(5)->get();
 
-        return view('admin.dashboard', compact(
-            'totalPengguna', 
-            'totalArsip', 
-            'totalKategori', 
-            'recentLogs'
-        ));
+    // Data Dinamis untuk Grafik (6 Bulan Terakhir)
+    $months = [];
+    $dataSurat = [];
+    $dataArsip = [];
+
+    for ($i = 5; $i >= 0; $i--) {
+        $date = now()->subMonths($i);
+        $months[] = $date->format('M');
+        
+        // Sesuaikan nama Model dengan aplikasi Anda
+        $dataSurat[] = \App\Models\Surat::whereMonth('created_at', $date->month)
+            ->whereYear('created_at', $date->year)->count();
+            
+        $dataArsip[] = \App\Models\Arsip::whereMonth('created_at', $date->month)
+            ->whereYear('created_at', $date->year)->count();
     }
 
+    return view('admin.dashboard', compact(
+        'totalPengguna', 'totalArsip', 'totalKategori', 'recentLogs', 
+        'months', 'dataSurat', 'dataArsip'
+    ));
+}
     /**
      * Laporan & Statistik - PENYEMPURNAAN: Diaktifkan dengan agregasi data nyata untuk Chart.js
      */
