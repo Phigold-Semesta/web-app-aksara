@@ -263,10 +263,14 @@ public function updateUser(Request $request, $id)
     /**
      * 2. CREATE: Menampilkan halaman form tambah kategori baru
      */
-    public function createKategori()
-    {
-        return view('admin.master.kategori.create');
-    }
+   public function kategoriCreate()
+{
+    // Mengambil semua data kategori untuk dropdown
+    $kategoris = KategoriSurat::all();
+
+    // Mengirim variabel $kategoris ke view
+    return view('admin.manajemen_surat.create', compact('kategoris'));
+}
 
     /**
      * Kode ini disempurnakan agar tidak lagi error SQL 1364.
