@@ -250,7 +250,6 @@ class PetugasController extends Controller
 
    /**
      * UPDATE STATUS: KIRIM KE PIMPINAN
-     * Disesuaikan dengan alur status baru
      */
     public function teruskanKePimpinan($id)
     {
@@ -267,6 +266,7 @@ class PetugasController extends Controller
         return back()->with('success', 'Surat berhasil diteruskan ke Pimpinan.');
     }
     
+
     /**
      * ==========================================
      * MANAJEMEN ARSIP (DISEMPURNAKAN & DINAMIS)
@@ -285,19 +285,12 @@ class PetugasController extends Controller
         return view('petugas.manajemen_arsip.create', compact('surats'));
     }
 
-    /**
-     * TAMPILKAN DETAIL ARSIP
-     */
     public function arsip_show($id)
     {
         $arsip = Arsip::with('surat')->findOrFail($id);
         return view('petugas.manajemen_arsip.show', compact('arsip'));
     }
 
-    /**
-     * STORE ARSIP: IMPLEMENTASI MASA RETENSI DINAMIS
-     * (Hari, Minggu, Bulan, Tahun)
-     */
     public function arsipStore(Request $request)
     {
         $request->validate([
@@ -309,25 +302,18 @@ class PetugasController extends Controller
         ]);
 
         try {
+            DB::beginTransaction();
+
             $nilai = (int) $request->retensi_nilai;
             $satuan = $request->retensi_satuan;
             $tanggalArsip = Carbon::parse($request->tanggal_arsip);
 
-            // LOGIKA DINAMIS: Menghitung tanggal kadaluarsa berdasarkan pilihan user
+            // LOGIKA DINAMIS: Menghitung tanggal kadaluarsa
             switch ($satuan) {
-                case 'days':
-                    $tglRetensi = $tanggalArsip->addDays($nilai);
-                    break;
-                case 'weeks':
-                    $tglRetensi = $tanggalArsip->addWeeks($nilai);
-                    break;
-                case 'months':
-                    $tglRetensi = $tanggalArsip->addMonths($nilai);
-                    break;
-                case 'years':
-                default:
-                    $tglRetensi = $tanggalArsip->addYears($nilai);
-                    break;
+                case 'days': $tglRetensi = $tanggalArsip->copy()->addDays($nilai); break;
+                case 'weeks': $tglRetensi = $tanggalArsip->copy()->addWeeks($nilai); break;
+                case 'months': $tglRetensi = $tanggalArsip->copy()->addMonths($nilai); break;
+                case 'years': default: $tglRetensi = $tanggalArsip->copy()->addYears($nilai); break;
             }
 
             Arsip::create([
@@ -338,10 +324,16 @@ class PetugasController extends Controller
                 'status_retensi' => 'Aktif',
             ]);
 
+            // SINKRONISASI STATUS SURAT MENJADI DIARSIPKAN
+            Surat::where('id_surat', $request->id_surat)->update(['status' => 'DIARSIPKAN']);
+
+            DB::commit();
+
             return redirect()->route('petugas.manajemen_arsip.index')
-                             ->with('success', 'Arsip fisik berhasil dicatat dengan masa retensi dinamis!');
+                             ->with('success', 'Arsip fisik berhasil dicatat!');
 
         } catch (\Exception $e) {
+            DB::rollback();
             return back()->with('error', 'Gagal mencatat arsip: ' . $e->getMessage())->withInput();
         }
     }
@@ -355,7 +347,6 @@ class PetugasController extends Controller
     public function arsipUpdate(Request $request, $id)
     {
         $arsip = Arsip::findOrFail($id);
-
         $request->validate([
             'lokasi_fisik'   => 'required|string|max:255',
             'tanggal_arsip'  => 'required|date',
@@ -371,7 +362,12 @@ class PetugasController extends Controller
     public function arsipDestroy($id)
     {
         $arsip = Arsip::findOrFail($id);
+        $id_surat = $arsip->id_surat; 
+        
         $arsip->delete();
+
+        // KEMBALIKAN STATUS JIKA DIHAPUS
+        Surat::where('id_surat', $id_surat)->update(['status' => 'pending']);
 
         return redirect()->route('petugas.manajemen_arsip.index')
                          ->with('success', 'Data arsip berhasil dihapus!');
@@ -383,9 +379,9 @@ class PetugasController extends Controller
     public function statusSurat()
     {
         $surats = Surat::with('kategori')
-                      ->where('id_user', Auth::id())
-                      ->latest()
-                      ->paginate(10);
+                       ->where('id_user', Auth::id())
+                       ->latest()
+                       ->paginate(10);
         return view('petugas.manajemen_surat.index', compact('surats'));
     }
 }

@@ -45,8 +45,10 @@
                 <tr class="bg-white dark:bg-emerald-900/20 hover:shadow-2xl hover:shadow-emerald-900/10 dark:hover:shadow-black/40 transition-all duration-300 group">
                     <td class="px-8 py-6 rounded-l-[2.5rem] border-y border-l border-emerald-50 dark:border-emerald-800/50">
                         <div class="flex flex-col">
-                            <span class="text-emerald-950 dark:text-white font-bold text-lg mb-1">{{ $arsip->surat->perihal }}</span>
-                            <span class="bg-emerald-50 dark:bg-emerald-800/40 px-2 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-100 dark:border-emerald-700 w-fit text-xs">{{ $arsip->surat->nomor_surat }}</span>
+                            <span class="text-emerald-950 dark:text-white font-bold text-lg mb-1">{{ $arsip->surat?->perihal ?? 'Surat Tidak Ditemukan' }}</span>
+                            <span class="bg-emerald-50 dark:bg-emerald-800/40 px-2 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-100 dark:border-emerald-700 w-fit text-xs">
+                                {{ $arsip->surat?->nomor_surat ?? 'N/A' }}
+                            </span>
                         </div>
                     </td>
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-emerald-800/50">
@@ -61,11 +63,11 @@
                                 class="p-3 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Lihat Detail">
                                 <i class="fas fa-eye"></i>
                             </a>
-                         <a href="{{ route('pimpinan.monitoring_arsip.download', $arsip->id_arsip) }}" 
-   class="p-3 bg-sky-50 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 rounded-xl hover:bg-sky-600 hover:text-white transition-all shadow-sm" 
-   title="Download">
-    <i class="fas fa-download"></i>
-</a>
+                            <a href="{{ route('pimpinan.monitoring_arsip.download', $arsip->id_arsip) }}" 
+                               class="p-3 bg-sky-50 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 rounded-xl hover:bg-sky-600 hover:text-white transition-all shadow-sm" 
+                               title="Download">
+                                <i class="fas fa-download"></i>
+                            </a>
                         </div>
                     </td>
                 </tr>

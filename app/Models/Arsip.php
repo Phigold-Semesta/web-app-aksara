@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Arsip extends Model
 {
-    protected $table = 'arsip'; // Nama tabel singular
+    protected $table = 'arsip'; 
     protected $primaryKey = 'id_arsip';
+
+    // Memastikan Laravel tahu bahwa ID ini adalah auto-incrementing
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'lokasi_fisik',

@@ -8,7 +8,8 @@
             <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-white tracking-tight">Manajemen Arsip Fisik</h1>
             <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-1">Monitoring lokasi penyimpanan dan masa retensi dokumen digital</p>
         </div>
-        <a href="{{ route('petugas.manajemen_arsip.create') }}" class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20 flex items-center gap-3 transform hover:-translate-y-1 active:scale-95 uppercase tracking-wider text-sm">
+        <a href="{{ route('petugas.manajemen_arsip.create') }}" 
+           class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20 flex items-center gap-3 transform hover:-translate-y-1 active:scale-95 uppercase tracking-wider text-sm">
             <i class="fas fa-box-archive text-lg"></i> Catat Arsip Baru
         </a>
     </div>
@@ -16,17 +17,16 @@
     {{-- Advanced Filter & Search Section --}}
     <div class="bg-white dark:bg-emerald-900/40 rounded-[2rem] p-6 mb-8 shadow-sm border border-emerald-50 dark:border-emerald-800/50 flex flex-wrap gap-4 items-center justify-between transition-all">
         <form action="{{ route('petugas.manajemen_arsip.index') }}" method="GET" class="flex flex-wrap gap-3 w-full lg:w-auto">
-            {{-- Search Input --}}
+            
             <div class="relative flex-grow lg:w-80">
                 <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-emerald-400"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari perihal atau nomor surat..." 
-                    class="w-full bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/50 rounded-2xl pl-12 pr-5 py-3 focus:ring-2 focus:ring-emerald-500 text-emerald-900 dark:text-emerald-100 placeholder-emerald-300 transition-all font-medium">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari perihal atau nomor surat..." autocomplete="off"
+                       class="w-full bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/50 rounded-2xl pl-12 pr-5 py-3 focus:ring-2 focus:ring-emerald-500 text-emerald-900 dark:text-emerald-100 placeholder-emerald-300 transition-all font-medium">
             </div>
 
-            {{-- Filter Status --}}
             <div class="relative">
                 <select name="status" onchange="this.form.submit()" 
-                    class="appearance-none bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/50 rounded-2xl px-6 py-3 pr-10 focus:ring-2 focus:ring-emerald-500 text-emerald-900 dark:text-emerald-100 font-bold transition-all cursor-pointer">
+                        class="appearance-none bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/50 rounded-2xl px-6 py-3 pr-10 focus:ring-2 focus:ring-emerald-500 text-emerald-900 dark:text-emerald-100 font-bold transition-all cursor-pointer">
                     <option value="">Semua Status</option>
                     <option value="Aktif" {{ request('status') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
                     <option value="Inaktif" {{ request('status') == 'Inaktif' ? 'selected' : '' }}>Inaktif</option>
@@ -36,9 +36,9 @@
                 </div>
             </div>
 
-            {{-- Reset Button --}}
             @if(request('search') || request('status'))
-                <a href="{{ route('petugas.manajemen_arsip.index') }}" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-5 py-3 rounded-2xl font-bold hover:bg-red-100 transition-all flex items-center gap-2 border border-red-100 dark:border-red-900/30">
+                <a href="{{ route('petugas.manajemen_arsip.index') }}" title="Reset Filter"
+                   class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-5 py-3 rounded-2xl font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-all flex items-center gap-2 border border-red-100 dark:border-red-900/30">
                     <i class="fas fa-times-circle"></i> Reset
                 </a>
             @endif
@@ -60,21 +60,21 @@
             <tbody>
                 @forelse($arsips as $arsip)
                 <tr class="bg-white dark:bg-emerald-900/20 hover:shadow-2xl hover:shadow-emerald-900/10 dark:hover:shadow-black/40 transition-all duration-300 group">
-                    {{-- Informasi Surat --}}
                     <td class="px-8 py-6 rounded-l-[2.5rem] border-y border-l border-emerald-50 dark:border-emerald-800/50">
                         <div class="flex flex-col">
                             <span class="text-emerald-950 dark:text-white font-bold text-lg mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
-                                {{ $arsip->surat->perihal }}
+                                {{ $arsip->surat?->perihal ?? 'Surat Tidak Ditemukan' }}
                             </span>
                             <div class="flex items-center gap-2 text-xs font-medium text-emerald-500/80 dark:text-emerald-400/60">
-                                <span class="bg-emerald-50 dark:bg-emerald-800/40 px-2 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-100 dark:border-emerald-700">{{ $arsip->surat->nomor_surat }}</span>
+                                <span class="bg-emerald-50 dark:bg-emerald-800/40 px-2 py-0.5 rounded text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-100 dark:border-emerald-700">
+                                    {{ $arsip->surat?->nomor_surat ?? 'N/A' }}
+                                </span>
                                 <span>•</span>
                                 <span class="italic">{{ \Carbon\Carbon::parse($arsip->tanggal_arsip)->translatedFormat('d M Y') }}</span>
                             </div>
                         </div>
                     </td>
 
-                    {{-- Lokasi Fisik --}}
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-emerald-800/50">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
@@ -88,20 +88,17 @@
                         </div>
                     </td>
 
-                    {{-- Masa Retensi --}}
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-emerald-800/50 text-center">
                         <span class="font-black text-emerald-950 dark:text-white">{{ \Carbon\Carbon::parse($arsip->masa_retensi)->translatedFormat('d M Y') }}</span>
                         <p class="text-[10px] text-emerald-400 dark:text-emerald-500 font-bold uppercase tracking-tighter mt-1">
                             @php
                                 $retensi = \Carbon\Carbon::parse($arsip->masa_retensi);
-                                // Paksa locale ke Bahasa Indonesia agar diffForHumans dan nama bulan sinkron
                                 $retensi->setLocale('id');
                             @endphp
                             Kadaluarsa {{ $retensi->diffForHumans() }}
                         </p>
                     </td>
 
-                    {{-- Status --}}
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-emerald-800/50 text-center">
                         @if($arsip->status_retensi == 'Aktif')
                             <span class="bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-emerald-200 dark:shadow-none uppercase tracking-widest">Aktif</span>
@@ -110,26 +107,25 @@
                         @endif
                     </td>
 
-                    {{-- Aksi --}}
                     <td class="px-8 py-6 rounded-r-[2.5rem] border-y border-r border-emerald-50 dark:border-emerald-800/50 text-center">
                         <div class="flex items-center justify-center gap-2">
                             <a href="{{ route('petugas.manajemen_arsip.show', $arsip->id_arsip) }}" 
-                                class="group/btn p-2.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 dark:hover:bg-emerald-500 transition-all shadow-sm" 
-                                title="Lihat Detail">
+                               class="group/btn p-2.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 dark:hover:bg-emerald-500 transition-all shadow-sm hover:scale-105" 
+                               title="Lihat Detail">
                                 <i class="fas fa-eye text-sm group-hover/btn:text-white transition-colors"></i>
                             </a>
 
                             <a href="{{ route('petugas.manajemen_arsip.edit', $arsip->id_arsip) }}" 
-                                class="group/btn p-2.5 bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-500 dark:hover:bg-amber-500 transition-all shadow-sm" 
-                                title="Edit Arsip">
+                               class="group/btn p-2.5 bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-500 dark:hover:bg-amber-500 transition-all shadow-sm hover:scale-105" 
+                               title="Edit Arsip">
                                 <i class="fas fa-edit text-sm group-hover/btn:text-white transition-colors"></i>
                             </a>
 
                             <form action="{{ route('petugas.manajemen_arsip.destroy', $arsip->id_arsip) }}" method="POST" id="form-hapus-{{ $arsip->id_arsip }}" class="inline">
                                 @csrf @method('DELETE')
                                 <button type="button" onclick="konfirmasiHapus('{{ $arsip->id_arsip }}')" 
-                                    class="group/btn p-2.5 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 dark:hover:bg-red-500 transition-all shadow-sm" 
-                                    title="Hapus Arsip">
+                                        class="group/btn p-2.5 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 dark:hover:bg-red-500 transition-all shadow-sm hover:scale-105" 
+                                        title="Hapus Arsip">
                                     <i class="fas fa-trash-alt text-sm group-hover/btn:text-white transition-colors"></i>
                                 </button>
                             </form>
@@ -172,12 +168,12 @@
             icon: 'success',
             title: 'Berhasil!',
             text: "{{ session('success') }}",
-            confirmButtonText: 'MANTAP, BOS!',
+            confirmButtonText: 'OK',
             confirmButtonColor: '#059669',
             background: bgPopup,
             color: textColor,
             customClass: {
-                popup: 'rounded-[2rem] border border-emerald-50 dark:border-emerald-800 shadow-2xl',
+                popup: 'rounded-[2.5rem] border border-emerald-50 dark:border-emerald-800 shadow-2xl',
                 confirmButton: 'rounded-xl px-8 py-3 font-bold uppercase tracking-wider'
             }
         });

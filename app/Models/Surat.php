@@ -29,22 +29,17 @@ class Surat extends Model
 
     /**
      * Relasi ke Model KategoriSurat
-     * Digunakan oleh: Surat::with('kategori')
      */
     public function kategori(): BelongsTo
     {
-        // Parameter 2: Foreign Key di tabel surat
-        // Parameter 3: Primary Key di tabel kategori_surat
         return $this->belongsTo(KategoriSurat::class, 'id_kategori', 'id_kategori');
     }
 
     /**
      * Relasi ke Model User
-     * Digunakan oleh: Surat::with('user')
      */
     public function user(): BelongsTo
     {
-        // PERBAIKAN: Parameter ketiga harus 'id_user' karena tabel user tidak punya kolom 'id'
         return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
@@ -62,5 +57,14 @@ class Surat extends Model
     public function arsip(): HasOne
     {
         return $this->hasOne(Arsip::class, 'id_surat', 'id_surat');
+    }
+
+    /**
+     * Relasi ke Model InstruksiPimpinan (DITAMBAHKAN)
+     * Digunakan untuk mengecek status disposisi/instruksi secara spesifik
+     */
+    public function instruksi(): HasOne
+    {
+        return $this->hasOne(InstruksiDisposisi::class, 'id_surat', 'id_surat');
     }
 }

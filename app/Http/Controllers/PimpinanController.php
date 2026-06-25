@@ -53,14 +53,12 @@ class PimpinanController extends Controller
 
     /**
      * Menampilkan dokumen dengan aman
-     * Disempurnakan dengan penanganan path yang lebih robust (Cek Ganda)
      */
     public function tampilkanDokumen($id)
     {
         $surat = Surat::findOrFail($id);
         $filename = trim($surat->file_surat);
         
-        // Solusi Jenius: Cek di dua lokasi kemungkinan besar file berada
         $paths = [
             storage_path('app/public/' . $filename),
             storage_path('app/public/dokumen_surat/' . $filename)
@@ -96,6 +94,7 @@ class PimpinanController extends Controller
             'catatan'       => 'nullable|string'
         ]);
 
+        // Simpan data ke tabel Disposisi
         Disposisi::create([
             'id_surat'         => $request->id_surat,
             'id_instruksi'     => $request->id_instruksi,
@@ -104,9 +103,30 @@ class PimpinanController extends Controller
             'tanggal_disposisi'=> now(),
         ]);
 
-        Surat::where('id_surat', $request->id_surat)->update(['status' => 'DISPOSISI']);
+        // LOGIKA PENYEMPURNAAN: Cek apakah instruksi yang dipilih adalah "Arsip" atau "Arsipkan"
+        $instruksi = InstruksiDisposisi::find($request->id_instruksi);
+        $statusBaru = 'DISPOSISI'; // Status default jika instruksinya bukan arsip
 
-        return redirect()->route('pimpinan.manajemen_surat.index')->with('success', 'Disposisi berhasil dikirim!');
+        if ($instruksi && stripos($instruksi->nama_instruksi, 'Arsip') !== false) {
+            $statusBaru = 'DIARSIPKAN'; // Jika ada kata 'Arsip', status berubah jadi DIARSIPKAN
+            
+            // Cek jika data arsip belum ada agar tidak duplikat
+            $arsipExists = Arsip::where('id_surat', $request->id_surat)->exists();
+            if (!$arsipExists) {
+                Arsip::create([
+                    'id_surat'       => $request->id_surat,
+                    'lokasi_fisik'   => 'Belum ditentukan',
+                    'tanggal_arsip'  => now(),
+                    'masa_retensi'   => 'N/A',
+                    'status_retensi' => 'Aktif'
+                ]);
+            }
+        }
+
+        // Update status surat (Sekarang menggunakan variabel $statusBaru yang dinamis)
+        Surat::where('id_surat', $request->id_surat)->update(['status' => $statusBaru]);
+
+        return redirect()->route('pimpinan.manajemen_surat.index')->with('success', 'Disposisi berhasil dikirim dengan status: ' . $statusBaru);
     }
 
     public function hapusRiwayat($id)
