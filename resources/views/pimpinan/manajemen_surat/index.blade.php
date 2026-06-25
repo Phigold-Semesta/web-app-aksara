@@ -82,11 +82,14 @@
                                    class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Lihat Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                {{-- PERBAIKAN: Menggunakan id_disposisi agar sesuai dengan schema database --}}
-                                <form action="{{ route('pimpinan.manajemen_surat.destroy_riwayat', $r->id_disposisi) }}" method="POST">
+                                
+                                {{-- PERBAIKAN: Form dengan ID unik untuk SweetAlert --}}
+                                <form action="{{ route('pimpinan.manajemen_surat.destroy_riwayat', $r->id_disposisi) }}" method="POST" id="delete-form-{{ $r->id_disposisi }}">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all" 
-                                            onclick="return confirm('Apakah Anda yakin ingin menghapus riwayat ini?')" title="Hapus Riwayat">
+                                    <button type="button" 
+                                            onclick="konfirmasiHapus('{{ $r->id_disposisi }}')" 
+                                            class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all" 
+                                            title="Hapus Riwayat">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
@@ -103,4 +106,25 @@
         </div>
     </section>
 </div>
+
+{{-- SweetAlert2 Script --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function konfirmasiHapus(id) {
+        Swal.fire({
+            title: 'Hapus Riwayat?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + id).submit();
+            }
+        });
+    }
+</script>
 @endsection

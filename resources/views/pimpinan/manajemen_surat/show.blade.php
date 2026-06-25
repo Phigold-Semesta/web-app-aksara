@@ -4,9 +4,10 @@
 
 @section('content')
 <div class="p-8 transition-colors duration-300">
-    <div class="flex items-center gap-4 mb-8">
-        <a href="{{ route('pimpinan.manajemen_surat.index') }}" class="text-emerald-600 hover:text-emerald-800 transition-all font-bold">
-            <i class="fas fa-arrow-left"></i> Kembali ke Daftar
+    {{-- Header & Tombol Kembali --}}
+    <div class="mb-10">
+        <a href="{{ route('pimpinan.manajemen_surat.index') }}" class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all mb-4 gap-2 shadow-sm">
+            <i class="fas fa-arrow-left"></i> Kembali
         </a>
         <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-emerald-50 tracking-tight uppercase italic">Detail Arsip (Pimpinan)</h1>
     </div>
@@ -90,7 +91,6 @@
                 </a>
             </div>
             
-            {{-- Disempurnakan dengan type="application/pdf" agar browser lebih mudah merender --}}
             <iframe 
                 src="{{ route('pimpinan.manajemen_surat.tampilkan_dokumen', $surat->id_surat) }}" 
                 class="w-full h-full rounded-3xl" 

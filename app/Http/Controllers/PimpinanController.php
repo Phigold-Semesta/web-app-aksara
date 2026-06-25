@@ -89,12 +89,11 @@ class PimpinanController extends Controller
     public function simpanDisposisi(Request $request)
     {
         $request->validate([
-            'id_surat'      => 'required|exists:surat,id_surat',
+            'id_surat'     => 'required|exists:surat,id_surat',
             'id_instruksi'  => 'required|exists:instruksi_disposisi,id_instruksi',
             'catatan'       => 'nullable|string'
         ]);
 
-        // Simpan data ke tabel Disposisi
         Disposisi::create([
             'id_surat'         => $request->id_surat,
             'id_instruksi'     => $request->id_instruksi,
@@ -103,14 +102,12 @@ class PimpinanController extends Controller
             'tanggal_disposisi'=> now(),
         ]);
 
-        // LOGIKA PENYEMPURNAAN: Cek apakah instruksi yang dipilih adalah "Arsip" atau "Arsipkan"
         $instruksi = InstruksiDisposisi::find($request->id_instruksi);
-        $statusBaru = 'DISPOSISI'; // Status default jika instruksinya bukan arsip
+        $statusBaru = 'DISPOSISI'; 
 
         if ($instruksi && stripos($instruksi->nama_instruksi, 'Arsip') !== false) {
-            $statusBaru = 'DIARSIPKAN'; // Jika ada kata 'Arsip', status berubah jadi DIARSIPKAN
+            $statusBaru = 'DIARSIPKAN'; 
             
-            // Cek jika data arsip belum ada agar tidak duplikat
             $arsipExists = Arsip::where('id_surat', $request->id_surat)->exists();
             if (!$arsipExists) {
                 Arsip::create([
@@ -123,7 +120,6 @@ class PimpinanController extends Controller
             }
         }
 
-        // Update status surat (Sekarang menggunakan variabel $statusBaru yang dinamis)
         Surat::where('id_surat', $request->id_surat)->update(['status' => $statusBaru]);
 
         return redirect()->route('pimpinan.manajemen_surat.index')->with('success', 'Disposisi berhasil dikirim dengan status: ' . $statusBaru);
@@ -149,21 +145,31 @@ class PimpinanController extends Controller
         return view('pimpinan.monitoring_arsip.show', compact('arsip'));
     }
 
+    /**
+     * Memperbaiki logika download agar lebih fleksibel
+     */
     public function downloadArsip($id)
     {
         $arsip = Arsip::with('surat')->findOrFail($id);
+        $filename = trim($arsip->surat->file_surat);
         
-        if (!$arsip->surat || empty($arsip->surat->file_surat)) {
+        if (empty($filename)) {
             return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
         }
 
-        $path = storage_path('app/public/' . trim($arsip->surat->file_surat));
+        // Mencari file di lokasi yang sama dengan tampilkanDokumen
+        $paths = [
+            storage_path('app/public/' . $filename),
+            storage_path('app/public/dokumen_surat/' . $filename)
+        ];
 
-        if (file_exists($path)) {
-            return response()->download($path);
+        foreach ($paths as $path) {
+            if (file_exists($path)) {
+                return response()->download($path);
+            }
         }
 
-        return redirect()->back()->with('error', 'File fisik dokumen tidak ditemukan.');
+        return redirect()->back()->with('error', 'File fisik dokumen tidak ditemukan di server.');
     }
 
     public function laporan()
