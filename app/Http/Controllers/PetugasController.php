@@ -344,20 +344,44 @@ class PetugasController extends Controller
         return view('petugas.manajemen_arsip.edit', compact('arsip'));
     }
 
-    public function arsipUpdate(Request $request, $id)
-    {
-        $arsip = Arsip::findOrFail($id);
-        $request->validate([
-            'lokasi_fisik'   => 'required|string|max:255',
-            'tanggal_arsip'  => 'required|date',
-            'status_retensi' => 'required|in:Aktif,Inaktif',
-        ]);
+   public function arsipUpdate(Request $request, $id)
+{
+    // 1. Validasi input
+    $request->validate([
+        'lokasi_fisik'   => 'required|string|max:255',
+        'tanggal_arsip'  => 'required|date',
+        'status_retensi' => 'required|in:Aktif,Inaktif',
+        'retensi_nilai'  => 'required|numeric', // pastikan numeric
+        'retensi_satuan' => 'required|in:days,weeks,months,years',
+    ]);
 
-        $arsip->update($request->all());
+    $arsip = Arsip::findOrFail($id);
 
-        return redirect()->route('petugas.manajemen_arsip.index')
-                         ->with('success', 'Data arsip berhasil diperbarui!');
+    // 2. KONVERSI KE INTEGER DI SINI
+    $nilai = (int) $request->retensi_nilai; 
+
+    // 3. Kalkulasi Tanggal Retensi
+    $tanggalArsip = \Carbon\Carbon::parse($request->tanggal_arsip);
+    $masaRetensi = $tanggalArsip->copy();
+
+    switch ($request->retensi_satuan) {
+        case 'days':   $masaRetensi->addDays($nilai); break;
+        case 'weeks':  $masaRetensi->addWeeks($nilai); break;
+        case 'months': $masaRetensi->addMonths($nilai); break;
+        case 'years':  $masaRetensi->addYears($nilai); break;
     }
+
+    // 4. Update data ke database
+    $arsip->update([
+        'lokasi_fisik'   => $request->lokasi_fisik,
+        'tanggal_arsip'  => $request->tanggal_arsip,
+        'status_retensi' => $request->status_retensi,
+        'masa_retensi'   => $masaRetensi->format('Y-m-d'),
+    ]);
+
+    return redirect()->route('petugas.manajemen_arsip.index')
+                     ->with('success', 'Data arsip berhasil diperbarui!');
+}
 
     public function arsipDestroy($id)
     {

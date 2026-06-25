@@ -17,7 +17,6 @@
     {{-- Advanced Filter & Search Section --}}
     <div class="bg-white dark:bg-emerald-900/40 rounded-[2rem] p-6 mb-8 shadow-sm border border-emerald-50 dark:border-emerald-800/50 flex flex-wrap gap-4 items-center justify-between transition-all">
         <form action="{{ route('petugas.manajemen_arsip.index') }}" method="GET" class="flex flex-wrap gap-3 w-full lg:w-auto">
-            
             <div class="relative flex-grow lg:w-80">
                 <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-emerald-400"></i>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari perihal atau nomor surat..." autocomplete="off"
@@ -70,7 +69,7 @@
                                     {{ $arsip->surat?->nomor_surat ?? 'N/A' }}
                                 </span>
                                 <span>•</span>
-                                <span class="italic">{{ \Carbon\Carbon::parse($arsip->tanggal_arsip)->translatedFormat('d M Y') }}</span>
+                                <span class="italic">{{ strtotime($arsip->tanggal_arsip) ? \Carbon\Carbon::parse($arsip->tanggal_arsip)->translatedFormat('d M Y') : 'N/A' }}</span>
                             </div>
                         </div>
                     </td>
@@ -79,7 +78,6 @@
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
                                 <i class="fas fa-vault text-sm mr-0.5"></i>
-                                <i class="fas fa-location-dot text-[10px] -ml-1 mt-2"></i>
                             </div>
                             <div class="flex flex-col">
                                 <p class="text-[10px] uppercase font-black text-emerald-400 dark:text-emerald-600 leading-none mb-1">Posisi Rak</p>
@@ -88,15 +86,27 @@
                         </div>
                     </td>
 
+                    {{-- FIXED SECTION: Menggunakan try-catch untuk mencegah error Carbon --}}
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-emerald-800/50 text-center">
-                        <span class="font-black text-emerald-950 dark:text-white">{{ \Carbon\Carbon::parse($arsip->masa_retensi)->translatedFormat('d M Y') }}</span>
-                        <p class="text-[10px] text-emerald-400 dark:text-emerald-500 font-bold uppercase tracking-tighter mt-1">
-                            @php
-                                $retensi = \Carbon\Carbon::parse($arsip->masa_retensi);
-                                $retensi->setLocale('id');
-                            @endphp
-                            Kadaluarsa {{ $retensi->diffForHumans() }}
-                        </p>
+                        @php
+                            $retensiDate = null;
+                            try {
+                                if (!empty($arsip->masa_retensi) && $arsip->masa_retensi !== 'N/A') {
+                                    $retensiDate = \Carbon\Carbon::parse($arsip->masa_retensi)->setLocale('id');
+                                }
+                            } catch (\Exception $e) {
+                                $retensiDate = null;
+                            }
+                        @endphp
+
+                        @if($retensiDate)
+                            <span class="font-black text-emerald-950 dark:text-white">{{ $retensiDate->translatedFormat('d M Y') }}</span>
+                            <p class="text-[10px] text-emerald-400 dark:text-emerald-500 font-bold uppercase tracking-tighter mt-1">
+                                Kadaluarsa {{ $retensiDate->diffForHumans() }}
+                            </p>
+                        @else
+                            <span class="text-gray-400 dark:text-gray-500 font-bold">N/A</span>
+                        @endif
                     </td>
 
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-emerald-800/50 text-center">
@@ -161,7 +171,7 @@
     const isDark = document.documentElement.classList.contains('dark');
     const bgPopup = isDark ? '#064e3b' : '#ffffff';
     const textColor = isDark ? '#f1f5f9' : '#064e3b';
-    const cancelBtnColor = '#e5e7eb';
+    const cancelBtnColor = '#9ca3af'; 
 
     @if(session('success'))
         Swal.fire({
@@ -182,13 +192,13 @@
     function konfirmasiHapus(id) {
         Swal.fire({
             title: 'Hapus Arsip Fisik?',
-            text: "Data yang dihapus tidak dapat dikembalikan! Pastikan dokumen fisik tetap terjaga.",
+            text: "Data yang dihapus tidak dapat dikembalikan!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc2626',
             cancelButtonColor: cancelBtnColor,
             confirmButtonText: 'Ya, Hapus Permanen!',
-            cancelButtonText: '<span style="color: #374151">Batalkan</span>',
+            cancelButtonText: 'Batalkan',
             background: bgPopup,
             color: textColor,
             customClass: {

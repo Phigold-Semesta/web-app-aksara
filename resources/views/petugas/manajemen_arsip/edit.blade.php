@@ -32,8 +32,8 @@
                     <label class="block text-emerald-900 dark:text-emerald-100 font-black uppercase text-[10px] tracking-[0.2em] mb-3">Dokumen Terkait (Read-Only)</label>
                     <div class="bg-emerald-50/50 dark:bg-slate-950/50 rounded-2xl px-6 py-4 border border-emerald-100 dark:border-emerald-900/20 flex items-center justify-between">
                         <div class="flex flex-col">
-                            <span class="text-emerald-950 dark:text-emerald-50 font-bold">{{ $arsip->surat->perihal }}</span>
-                            <span class="text-emerald-500 dark:text-emerald-400 text-xs font-medium">{{ $arsip->surat->nomor_surat }}</span>
+                            <span class="text-emerald-950 dark:text-emerald-50 font-bold">{{ $arsip->surat->perihal ?? 'Surat Tidak Ditemukan' }}</span>
+                            <span class="text-emerald-500 dark:text-emerald-400 text-xs font-medium">{{ $arsip->surat->nomor_surat ?? 'N/A' }}</span>
                         </div>
                         <i class="fas fa-lock text-emerald-200 dark:text-emerald-800"></i>
                     </div>
@@ -80,15 +80,17 @@
                     </div>
                 </div>
 
-                {{-- EDIT MASA RETENSI --}}
+                {{-- EDIT DURASI RETENSI (Fitur Baru Sesuai Permintaan) --}}
                 <div class="col-span-1">
-                    <label class="block text-emerald-900 dark:text-emerald-100 font-black uppercase text-[10px] tracking-[0.2em] mb-3">Masa Retensi (Hingga)</label>
-                    <div class="relative">
-                        <span class="absolute left-6 top-1/2 -translate-y-1/2 text-amber-500">
-                            <i class="fas fa-hourglass-half"></i>
-                        </span>
-                        <input type="date" name="masa_retensi" value="{{ old('masa_retensi', \Carbon\Carbon::parse($arsip->masa_retensi)->format('Y-m-d')) }}" 
-                            class="w-full bg-amber-50/30 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl pl-14 pr-6 py-4 text-amber-900 dark:text-amber-200 focus:ring-2 focus:ring-amber-500 focus:bg-white dark:focus:bg-slate-950 font-bold transition-all">
+                    <label class="block text-emerald-900 dark:text-emerald-100 font-black uppercase text-[10px] tracking-[0.2em] mb-3">Durasi Retensi</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" name="retensi_nilai" placeholder="Contoh: 5" class="w-full bg-amber-50/30 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl px-6 py-4 text-amber-900 dark:text-amber-200 font-bold focus:ring-2 focus:ring-amber-500" required>
+                        <select name="retensi_satuan" class="w-full bg-amber-50/30 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl px-6 py-4 text-amber-900 dark:text-amber-200 font-bold focus:ring-2 focus:ring-amber-500">
+                            <option value="days">Hari</option>
+                            <option value="weeks">Minggu</option>
+                            <option value="months">Bulan</option>
+                            <option value="years">Tahun</option>
+                        </select>
                     </div>
                 </div>
 
@@ -99,7 +101,12 @@
                         <div class="space-y-1">
                             <p class="text-[11px] text-amber-700 dark:text-amber-400 font-black uppercase tracking-widest">Catatan Sistem Aksara</p>
                             <p class="text-[12px] text-amber-600 dark:text-amber-500 font-medium leading-relaxed">
-                                Masa retensi saat ini dijadwalkan berakhir pada <span class="font-bold underline">{{ \Carbon\Carbon::parse($arsip->masa_retensi)->translatedFormat('d F Y') }}</span>.
+                                @php $isValid = strtotime($arsip->masa_retensi) !== false; @endphp
+                                @if($isValid)
+                                    Masa retensi saat ini berakhir pada <span class="font-bold underline">{{ \Carbon\Carbon::parse($arsip->masa_retensi)->translatedFormat('d F Y') }}</span>.
+                                @else
+                                    Masa retensi saat ini: <span class="font-bold">N/A</span>. Harap isi durasi di atas untuk memperbaruinya.
+                                @endif
                             </p>
                         </div>
                     </div>
