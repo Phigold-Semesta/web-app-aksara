@@ -12,35 +12,38 @@ use App\Models\Arsip;
 
 class AdminController extends Controller
 {
-   public function index()
-{
-    $totalPengguna = User::count();
-    $totalArsip = Arsip::count(); // Gunakan model nyata
-    $totalKategori = KategoriSurat::count();
-    $recentLogs = AuditLog::with('user')->latest('created_at')->take(5)->get();
-
-    // Data Dinamis untuk Grafik (6 Bulan Terakhir)
-    $months = [];
-    $dataSurat = [];
-    $dataArsip = [];
-
-    for ($i = 5; $i >= 0; $i--) {
-        $date = now()->subMonths($i);
-        $months[] = $date->format('M');
-        
-        // Sesuaikan nama Model dengan aplikasi Anda
-        $dataSurat[] = \App\Models\Surat::whereMonth('created_at', $date->month)
-            ->whereYear('created_at', $date->year)->count();
-            
-        $dataArsip[] = \App\Models\Arsip::whereMonth('created_at', $date->month)
-            ->whereYear('created_at', $date->year)->count();
+  public function index()
+    {
+        // Langsung arahkan ke fungsi dashboard
+        return $this->dashboard();
     }
 
-    return view('admin.dashboard', compact(
-        'totalPengguna', 'totalArsip', 'totalKategori', 'recentLogs', 
-        'months', 'dataSurat', 'dataArsip'
-    ));
-}
+    /**
+     * Logika utama dashboard
+     */
+    public function dashboard()
+    {
+        $totalPengguna = User::count();
+        $totalArsip = Arsip::count();
+        $totalKategori = KategoriSurat::count();
+        $logs = AuditLog::latest()->take(5)->get();
+
+        // Data untuk grafik
+        $labels = json_encode(['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun']);
+        $dataArsip = json_encode([90, 130, 110, 160, 145, 190]);
+        $dataSurat = json_encode([120, 185, 140, 210, 195, 245]);
+
+        return view('admin.dashboard', compact(
+            'totalPengguna', 
+            'totalArsip', 
+            'totalKategori', 
+            'logs', 
+            'labels', 
+            'dataArsip', 
+            'dataSurat'
+        ));
+    }
+
     /**
      * Laporan & Statistik - PENYEMPURNAAN: Diaktifkan dengan agregasi data nyata untuk Chart.js
      */
