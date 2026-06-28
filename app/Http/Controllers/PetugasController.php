@@ -16,20 +16,30 @@ class PetugasController extends Controller
     /**
      * DASHBOARD PETUGAS
      */
-    public function dashboard()
-    {
-        $stats = [
-            'surat_masuk'  => Surat::where('id_kategori', 1)->count(),
-            'surat_keluar' => Surat::where('id_kategori', 2)->count(),
-            'total_arsip'  => Arsip::count(),
-            'update_time'  => now()->diffForHumans(), 
-        ];
+   public function dashboard()
+{
+    // 1. Hitung stats (kode lama Anda)
+    $stats = [
+        'surat_masuk'  => \App\Models\Surat::whereHas('kategori', function($q) {
+                              $q->where('nama_kategori', 'Surat Masuk');
+                          })->count(),
+        'surat_keluar' => \App\Models\Surat::whereHas('kategori', function($q) {
+                              $q->where('nama_kategori', 'Surat Keluar');
+                          })->count(),
+        'total_arsip'  => \App\Models\Arsip::count(),
+        'update_time'  => now()->format('H:i')
+    ];
 
-        $surats = Surat::with('kategori')->latest()->take(5)->get();
-        $riwayat_surats = Surat::with(['kategori', 'user'])->latest()->get();
+    // 2. AMBIL DATA RIWAYAT SURAT (Inilah yang kurang!)
+    // Kita ambil 5 surat terbaru untuk ditampilkan di tabel dashboard
+    $riwayat_surats = \App\Models\Surat::with('kategori')
+                        ->latest()
+                        ->take(5)
+                        ->get();
 
-        return view('petugas.dashboard', compact('stats', 'surats', 'riwayat_surats'));
-    }
+    // 3. Kirim keduanya ke view
+    return view('petugas.dashboard', compact('stats', 'riwayat_surats'));
+}
 
     /**
      * MANAJEMEN SURAT: INDEX (DENGAN SEARCH & FILTER PER PAGE)
