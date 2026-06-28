@@ -69,7 +69,7 @@
                                     {{ $arsip->surat?->nomor_surat ?? 'N/A' }}
                                 </span>
                                 <span>•</span>
-                                <span class="italic">{{ strtotime($arsip->tanggal_arsip) ? \Carbon\Carbon::parse($arsip->tanggal_arsip)->translatedFormat('d M Y') : 'N/A' }}</span>
+                                <span class="italic">{{ $arsip->tanggal_arsip ? $arsip->tanggal_arsip->translatedFormat('d M Y') : 'N/A' }}</span>
                             </div>
                         </div>
                     </td>
@@ -86,23 +86,14 @@
                         </div>
                     </td>
 
-                    {{-- FIXED SECTION: Menggunakan try-catch untuk mencegah error Carbon --}}
+                    {{-- PERBAIKAN: Menggunakan langsung objek Carbon dari $casts model --}}
                     <td class="px-8 py-6 border-y border-emerald-50 dark:border-emerald-800/50 text-center">
-                        @php
-                            $retensiDate = null;
-                            try {
-                                if (!empty($arsip->masa_retensi) && $arsip->masa_retensi !== 'N/A') {
-                                    $retensiDate = \Carbon\Carbon::parse($arsip->masa_retensi)->setLocale('id');
-                                }
-                            } catch (\Exception $e) {
-                                $retensiDate = null;
-                            }
-                        @endphp
-
-                        @if($retensiDate)
-                            <span class="font-black text-emerald-950 dark:text-white">{{ $retensiDate->translatedFormat('d M Y') }}</span>
+                        @if($arsip->masa_retensi)
+                            <span class="font-black text-emerald-950 dark:text-white">
+                                {{ $arsip->masa_retensi->translatedFormat('d M Y') }}
+                            </span>
                             <p class="text-[10px] text-emerald-400 dark:text-emerald-500 font-bold uppercase tracking-tighter mt-1">
-                                Kadaluarsa {{ $retensiDate->diffForHumans() }}
+                                {{ $arsip->masa_retensi->isPast() ? 'Sudah Kadaluarsa' : 'Kadaluarsa ' . $arsip->masa_retensi->diffForHumans() }}
                             </p>
                         @else
                             <span class="text-gray-400 dark:text-gray-500 font-bold">N/A</span>

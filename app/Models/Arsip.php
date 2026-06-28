@@ -21,6 +21,17 @@ class Arsip extends Model
         'id_surat',
     ];
 
+    /**
+     * PENYEMPURNAAN: 
+     * Menambahkan $casts agar masa_retensi dan tanggal_arsip otomatis 
+     * menjadi objek Carbon. Dengan ini, Anda bisa langsung menggunakan 
+     * $arsip->masa_retensi->format('d M Y') di Blade tanpa error.
+     */
+    protected $casts = [
+        'tanggal_arsip' => 'date',
+        'masa_retensi'  => 'date',
+    ];
+
     // Relasi: Arsip merujuk pada satu Surat
     public function surat()
     {

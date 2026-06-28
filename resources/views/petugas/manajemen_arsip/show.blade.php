@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="p-8 transition-colors duration-300">
+<div class="p-8 min-h-screen transition-colors duration-300 dark:bg-emerald-950/20">
     {{-- Header & Action Buttons --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
         <div>
             <a href="{{ route('petugas.manajemen_arsip.index') }}" class="text-emerald-600 hover:text-emerald-800 transition-all font-bold flex items-center gap-2 mb-2">
                 <i class="fas fa-arrow-left"></i> Kembali ke Daftar
             </a>
-            <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-emerald-50 tracking-tight uppercase">Detail Arsip Dokumen</h1>
+            <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-white tracking-tight uppercase">Detail Arsip Dokumen</h1>
         </div>
         <div class="flex gap-3">
             <a href="{{ route('petugas.manajemen_arsip.edit', $arsip->id_arsip) }}" 
@@ -49,27 +49,20 @@
                     <div>
                         <p class="text-emerald-500 font-bold text-[10px] uppercase">Diarsipkan Pada</p>
                         <p class="text-lg font-bold mt-1">
-                            {{ strtotime($arsip->tanggal_arsip) ? \Carbon\Carbon::parse($arsip->tanggal_arsip)->translatedFormat('d F Y') : 'N/A' }}
+                            {{ $arsip->tanggal_arsip ? $arsip->tanggal_arsip->translatedFormat('d F Y') : 'N/A' }}
                         </p>
                     </div>
                     
-                    {{-- Blok Retensi Anti-Error --}}
+                    {{-- Blok Retensi - Sudah diperbaiki agar membaca properti objek cast --}}
                     <div>
                         <p class="text-emerald-500 font-bold text-[10px] uppercase">Habis Masa Retensi</p>
-                        @php
-                            $retensiDate = null;
-                            try {
-                                if (!empty($arsip->masa_retensi) && $arsip->masa_retensi !== 'N/A') {
-                                    $retensiDate = \Carbon\Carbon::parse($arsip->masa_retensi)->setLocale('id');
-                                }
-                            } catch (\Exception $e) {
-                                $retensiDate = null;
-                            }
-                        @endphp
-                        
-                        @if($retensiDate instanceof \Carbon\Carbon)
-                            <p class="text-lg font-bold text-emerald-300 mt-1">{{ $retensiDate->translatedFormat('d F Y') }}</p>
-                            <p class="text-[10px] text-emerald-400 italic opacity-70 mt-1">*{{ $retensiDate->diffForHumans() }}</p>
+                        @if(!empty($arsip->masa_retensi))
+                            <p class="text-lg font-bold text-emerald-300 mt-1">
+                                {{ $arsip->masa_retensi->translatedFormat('d F Y') }}
+                            </p>
+                            <p class="text-[10px] text-emerald-400 italic opacity-70 mt-1">
+                                *{{ $arsip->masa_retensi->isPast() ? 'Sudah Kadaluarsa' : $arsip->masa_retensi->diffForHumans() }}
+                            </p>
                         @else
                             <p class="text-lg font-bold text-gray-400 mt-1">N/A</p>
                         @endif
@@ -97,7 +90,7 @@
             </div>
         </div>
 
-        {{-- KANAN: Preview Dokumen (Fungsional & Zoomable) --}}
+        {{-- KANAN: Preview Dokumen --}}
         <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-slate-800 shadow-xl shadow-emerald-900/5 h-[800px] flex flex-col">
             <div class="flex justify-between items-center mb-4 px-2">
                 <p class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest">Preview Dokumen Digital</p>
@@ -115,7 +108,6 @@
                 @endphp
                 
                 @if(strtolower($extension) == 'pdf')
-                    {{-- Dihapus parameter #toolbar=0 agar user bisa Zoom, Print, & Search --}}
                     <iframe src="{{ asset($filePath) }}" class="w-full h-full rounded-3xl" frameborder="0"></iframe>
                 @else
                     <div class="w-full h-full rounded-3xl bg-gray-50 flex items-center justify-center overflow-auto p-4">
