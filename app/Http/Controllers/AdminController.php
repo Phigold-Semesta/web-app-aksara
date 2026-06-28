@@ -592,11 +592,14 @@ public function updateKategori(Request $request, $id)
         return view('admin.manajemen_surat.index', compact('surats'));
     }
 
-    // 2. CREATE: Menampilkan form tambah
     public function createSurat()
-    {
-        return view('admin.manajemen_surat.create');
-    }
+{
+    // 1. Ambil semua data kategori dari database
+    $kategoris = \App\Models\KategoriSurat::all();
+
+    // 2. Kirim data tersebut ke view menggunakan compact
+    return view('admin.manajemen_surat.create', compact('kategoris'));
+}
 
     // 3. STORE: Menyimpan data surat baru
     public function storeSurat(Request $request)

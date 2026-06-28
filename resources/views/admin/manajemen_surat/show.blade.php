@@ -16,13 +16,10 @@
                class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg transition-all flex items-center gap-2" title="Edit Data">
                 <i class="fas fa-edit"></i> EDIT
             </a>
-            {{-- Tombol Aksi Admin --}}
-            <form action="#" method="POST">
-                @csrf
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg transition-all flex items-center gap-2">
-                    <i class="fas fa-check-double"></i> VERIFIKASI ADMIN
-                </button>
-            </form>
+            {{-- Status Aktif Hijau --}}
+            <span class="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-6 py-3 rounded-2xl font-black text-sm uppercase tracking-widest border border-emerald-200 dark:border-emerald-800 shadow-sm flex items-center gap-2">
+                <i class="fas fa-check-circle"></i> AKTIF
+            </span>
         </div>
     </div>
 
@@ -56,29 +53,36 @@
         </div>
 
         {{-- Preview Dokumen --}}
-        <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 border border-emerald-50 dark:border-slate-800 overflow-hidden h-full flex flex-col">
-                <div class="px-6 py-4 border-b border-emerald-50 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
-                    <span class="text-emerald-800 dark:text-emerald-400 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
-                        <i class="fas fa-file-pdf text-lg"></i> Preview Dokumen Digital
-                    </span>
-                    <a href="{{ asset('storage/' . $surat->file_surat) }}" target="_blank" class="text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:text-emerald-700 flex items-center gap-2 transition-colors">
-                        Buka Layar Penuh <i class="fas fa-external-link-alt"></i>
-                    </a>
-                </div>
+       {{-- Preview Dokumen --}}
+<div class="lg:col-span-2">
+    <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 border border-emerald-50 dark:border-slate-800 overflow-hidden h-full flex flex-col">
+        <div class="px-6 py-4 border-b border-emerald-50 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+            <span class="text-emerald-800 dark:text-emerald-400 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
+                <i class="fas fa-file-pdf text-lg"></i> Preview Dokumen Digital
+            </span>
 
-                <div class="flex-grow bg-slate-200 dark:bg-slate-950 p-4 md:p-8 flex flex-col items-center overflow-y-auto custom-scrollbar" style="min-height: 700px;">
-                    @php $extension = pathinfo($surat->file_surat, PATHINFO_EXTENSION); @endphp
-                    @if(strtolower($extension) == 'pdf')
-                        <object data="{{ asset('storage/' . $surat->file_surat) }}" type="application/pdf" class="w-full max-w-4xl shadow-2xl rounded-sm" style="height: 1000px;">
-                            <iframe src="{{ asset('storage/' . $surat->file_surat) }}" class="w-full h-full border-none"></iframe>
-                        </object>
-                    @else
-                        <img src="{{ asset('storage/' . $surat->file_surat) }}" class="max-w-full shadow-2xl rounded-sm object-contain border-[12px] border-white dark:border-slate-800">
-                    @endif
-                </div>
-            </div>
+            @php
+                // Kita definisikan path-nya di sini agar tidak perlu menulis ulang berkali-kali
+                $filePath = 'storage/dokumen_surat/' . $surat->file_surat;
+                $extension = pathinfo($surat->file_surat, PATHINFO_EXTENSION);
+            @endphp
+
+            <a href="{{ asset($filePath) }}" target="_blank" class="text-emerald-600 dark:text-emerald-400 text-xs font-bold hover:text-emerald-700 flex items-center gap-2 transition-colors">
+                Buka Layar Penuh <i class="fas fa-external-link-alt"></i>
+            </a>
         </div>
+
+        <div class="flex-grow bg-slate-200 dark:bg-slate-950 p-4 md:p-8 flex flex-col items-center overflow-y-auto custom-scrollbar" style="min-height: 700px;">
+            @if(strtolower($extension) == 'pdf')
+                {{-- Menggunakan iframe dengan path yang sudah konsisten --}}
+                <iframe src="{{ asset($filePath) }}" class="w-full h-[1000px] shadow-2xl rounded-sm border-none"></iframe>
+            @else
+                {{-- Menggunakan img dengan path yang sudah konsisten --}}
+                <img src="{{ asset($filePath) }}" class="max-w-full shadow-2xl rounded-sm object-contain border-[12px] border-white dark:border-slate-800">
+            @endif
+        </div>
+    </div>
+</div>
     </div>
 </div>
 
