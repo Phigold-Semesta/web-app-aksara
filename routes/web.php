@@ -110,35 +110,38 @@ Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
     // ==========================================
     Route::middleware(['checkrole:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
         
-        // Dashboard (Statistik)
-        Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
+    // Dashboard (Statistik)
+    Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
 
-        // PERBAIKAN: Diselaraskan nama route ke 'teruskan_pimpinan' 
-        // dan method ke 'PATCH' agar sesuai dengan form di view
-        Route::patch('/manajemen_surat/{id}/teruskan', [PetugasController::class, 'teruskanKePimpinan'])
-             ->name('teruskan_pimpinan');
+    // PERBAIKAN: Diselaraskan nama route ke 'teruskan_pimpinan' 
+    // dan method ke 'PATCH' agar sesuai dengan form di view
+    Route::patch('/manajemen_surat/{id}/teruskan', [PetugasController::class, 'teruskanKePimpinan'])
+         ->name('teruskan_pimpinan');
 
-        // Manajemen Surat Resource
-        Route::resource('manajemen_surat', PetugasController::class);
-        
-        // Route Tambahan untuk Status Surat
-        Route::get('/manajemen_surat_status', [PetugasController::class, 'statusSurat'])->name('manajemen_surat.status');
+    // Manajemen Surat Resource
+    Route::resource('manajemen_surat', PetugasController::class);
+    
+    // Route Tambahan untuk Status Surat
+    Route::get('/manajemen_surat_status', [PetugasController::class, 'statusSurat'])->name('manajemen_surat.status');
 
+    // --- MANAJEMEN ARSIP ---
+    Route::get('/manajemen_arsip', [PetugasController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
+    Route::get('/manajemen_arsip/create', [PetugasController::class, 'arsipCreate'])->name('manajemen_arsip.create');
+    Route::post('/manajemen_arsip/store', [PetugasController::class, 'arsipStore'])->name('manajemen_arsip.store');
+    
+    Route::get('/manajemen_arsip/{id}', [PetugasController::class, 'arsip_show'])->name('manajemen_arsip.show');
+    Route::get('/manajemen_arsip/{id}/edit', [PetugasController::class, 'arsipEdit'])->name('manajemen_arsip.edit');
+    Route::put('/manajemen_arsip/{id}/update', [PetugasController::class, 'arsipUpdate'])->name('manajemen_arsip.update');
+    Route::delete('/manajemen_arsip/{id}/delete', [PetugasController::class, 'arsipDestroy'])->name('manajemen_arsip.destroy');
 
-        // --- MANAJEMEN ARSIP ---
-        Route::get('/manajemen_arsip', [PetugasController::class, 'kelolaArsip'])->name('manajemen_arsip.index');
-        Route::get('/manajemen_arsip/create', [PetugasController::class, 'arsipCreate'])->name('manajemen_arsip.create');
-        Route::post('/manajemen_arsip/store', [PetugasController::class, 'arsipStore'])->name('manajemen_arsip.store');
-        
-        Route::get('/manajemen_arsip/{id}', [PetugasController::class, 'arsip_show'])->name('manajemen_arsip.show');
-        Route::get('/manajemen_arsip/{id}/edit', [PetugasController::class, 'arsipEdit'])->name('manajemen_arsip.edit');
-        Route::put('/manajemen_arsip/{id}/update', [PetugasController::class, 'arsipUpdate'])->name('manajemen_arsip.update');
-        Route::delete('/manajemen_arsip/{id}/delete', [PetugasController::class, 'arsipDestroy'])->name('manajemen_arsip.destroy');
+    // --- ROUTE EXPORT DATA (Baru Ditambahkan) ---
+    Route::get('/export/excel', [PetugasController::class, 'exportExcel'])->name('export.excel');
+    Route::get('/export/pdf', [PetugasController::class, 'exportPdf'])->name('export.pdf');
+    Route::get('/export/csv', [PetugasController::class, 'exportCsv'])->name('export.csv');
 
-        // Statistik (Alias ke dashboard)
-        Route::get('/statistik', [PetugasController::class, 'dashboard'])->name('statistik');
-    });
-
+    // Statistik (Alias ke dashboard)
+    Route::get('/statistik', [PetugasController::class, 'dashboard'])->name('statistik');
+});
 // ==========================================
     // 3. AKTOR: PIMPINAN (Sempurna & Aktif - Pertahankan Total)
     // ==========================================
