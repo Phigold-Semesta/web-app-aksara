@@ -16,13 +16,12 @@
             </div>
             
             {{-- Dropdown Export (Fixed: Click-Based Toggle with .contains) --}}
-            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-[2rem] w-full md:w-auto shadow-2xl">
-                <div id="dropdownWrapper" class="relative">
-                    <button onclick="toggleDropdown(event, 'menuDropdownEkspor')" class="bg-white text-[#006b43] px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3">
-                        <i class="fas fa-file-export"></i> Ekspor Data Laporan <i class="fas fa-chevron-down text-[8px]"></i>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative group">
+                    <button class="bg-[#008f5d] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                        <i class="fas fa-file-export"></i> Export Data <i class="fas fa-chevron-down text-[8px]"></i>
                     </button>
-                    {{-- Dropdown Menu --}}
-                    <div id="menuDropdownEkspor" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-3 z-50 animate__animated animate__fadeIn">
+                    <div class="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-3 z-50 hidden group-hover:block animate__animated animate__fadeIn">
                         <a href="{{ route('petugas.export.excel') }}" class="w-full text-left px-6 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-3">
                             <i class="fas fa-file-excel text-emerald-500"></i> Excel (.xlsx)
                         </a>
@@ -36,8 +35,8 @@
                 </div>
             </div>
         </div>
-    </div>
-
+        </div>
+        
     {{-- Stats Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @php
