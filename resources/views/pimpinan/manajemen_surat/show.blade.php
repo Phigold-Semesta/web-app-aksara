@@ -1,9 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Surat')
-
 @section('content')
-<div class="p-8 transition-colors duration-300">
+<div class="p-8 min-h-screen transition-colors duration-300">
     {{-- Header & Tombol Kembali --}}
     <div class="mb-10">
         <a href="{{ route('pimpinan.manajemen_surat.index') }}" class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all mb-4 gap-2 shadow-sm">
@@ -27,16 +25,29 @@
                         <p class="text-emerald-500 font-bold text-[10px] uppercase">Lokasi Rak/Lemari</p>
                         <div class="flex items-center gap-3 mt-1">
                             <i class="fas fa-archive text-emerald-400"></i>
-                            <span class="text-lg font-bold">{{ $surat->rak->nama_rak ?? 'Tidak ditentukan' }}</span>
+                            <span class="text-lg font-bold">{{ $surat->arsip->lokasi_fisik ?? 'Tidak ditentukan' }}</span>
                         </div>
                     </div>
                     <div>
                         <p class="text-emerald-500 font-bold text-[10px] uppercase">Diarsipkan Pada</p>
-                        <p class="text-lg font-bold mt-1">{{ $surat->created_at->format('d M Y') }}</p>
+                        <p class="text-lg font-bold mt-1">
+                            {{ $surat->arsip ? $surat->arsip->tanggal_arsip->translatedFormat('d F Y') : 'N/A' }}
+                        </p>
                     </div>
+                    
+                    {{-- PERBAIKAN: Mengakses data dari relasi arsip --}}
                     <div>
                         <p class="text-emerald-500 font-bold text-[10px] uppercase">Habis Masa Retensi</p>
-                        <p class="text-lg font-bold text-emerald-300 mt-1">{{ $surat->masa_retensi ?? 'N/A' }}</p>
+                        @if(isset($surat->arsip) && !empty($surat->arsip->masa_retensi))
+                            <p class="text-lg font-bold text-emerald-300 mt-1">
+                                {{ $surat->arsip->masa_retensi->translatedFormat('d F Y') }}
+                            </p>
+                            <p class="text-[10px] text-emerald-400 italic opacity-70 mt-1">
+                                *{{ $surat->arsip->masa_retensi->isPast() ? 'Sudah Kadaluarsa' : $surat->arsip->masa_retensi->diffForHumans() }}
+                            </p>
+                        @else
+                            <p class="text-lg font-bold text-gray-400 mt-1">N/A</p>
+                        @endif
                     </div>
                 </div>
             </div>
