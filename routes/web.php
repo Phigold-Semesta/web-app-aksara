@@ -108,7 +108,7 @@ Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
   // ==========================================
     // 2. AKTOR: PETUGAS (Sempurna & Aktif - Pertahankan Total)
     // ==========================================
-    Route::middleware(['checkrole:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
+    Route::middleware(['checkrole:petugas,admin,pimpinan'])->prefix('petugas')->name('petugas.')->group(function () {
         
     // Dashboard (Statistik)
     Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');

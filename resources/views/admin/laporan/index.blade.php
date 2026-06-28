@@ -14,34 +14,37 @@
         </div>
         
         <div class="flex items-center gap-2 shrink-0">
-            <div class="relative inline-block text-left" id="dropdownEksporContainer">
-                <button onclick="toggleDropdownEkspor()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-emerald-950 dark:hover:bg-emerald-800 text-slate-700 dark:text-emerald-200 font-bold text-sm transition-all shadow-sm">
-                    <i class="fas fa-download text-xs text-[#008f5d]"></i>
-                    <span>Ekspor Data</span>
-                    <i class="fas fa-chevron-down text-[10px] ml-1"></i>
-                </button>
-                <div id="menuDropdownEkspor" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-emerald-950 border border-slate-100 dark:border-emerald-800 shadow-xl z-50 overflow-hidden transition-all">
-                    <div class="py-1">
-                        <button onclick="eksporKeCSV()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
-                            <i class="fas fa-file-csv text-blue-500 text-base w-5"></i> Ekspor ke CSV
-                        </button>
-                        <button onclick="eksporKeExcel()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
-                            <i class="fas fa-file-excel text-emerald-600 text-base w-5"></i> Ekspor ke Excel
-                        </button>
-                        <button onclick="eksporKePDF()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
-                            <i class="fas fa-file-pdf text-red-500 text-base w-5"></i> Ekspor ke PDF
-                        </button>
-                    </div>
-                </div>
+    <div class="relative inline-block text-left" id="dropdownEksporContainer">
+        <button onclick="toggleDropdownEkspor()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-emerald-950 dark:hover:bg-emerald-800 text-slate-700 dark:text-emerald-200 font-bold text-sm transition-all shadow-sm">
+            <i class="fas fa-download text-xs text-[#008f5d]"></i>
+            <span>Ekspor Data</span>
+            <i class="fas fa-chevron-down text-[10px] ml-1"></i>
+        </button>
+        
+        {{-- Dropdown Menu dengan Route Laravel --}}
+        <div id="menuDropdownEkspor" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-emerald-950 border border-slate-100 dark:border-emerald-800 shadow-xl z-50 overflow-hidden transition-all">
+            <div class="py-1">
+                <a href="{{ route('petugas.export.csv') }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
+                    <i class="fas fa-file-csv text-blue-500 text-base w-5"></i> Ekspor ke CSV
+                </a>
+                <a href="{{ route('petugas.export.excel') }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
+                    <i class="fas fa-file-excel text-emerald-600 text-base w-5"></i> Ekspor ke Excel
+                </a>
+                <a href="{{ route('petugas.export.pdf') }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
+                    <i class="fas fa-file-pdf text-red-500 text-base w-5"></i> Ekspor ke PDF
+                </a>
             </div>
         </div>
     </div>
+</div>
+        </div>
+    
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div class="bg-white dark:bg-emerald-900 p-6 rounded-3xl border border-emerald-50 dark:border-emerald-800 shadow-sm flex items-center justify-between">
             <div>
                 <span class="block text-xs font-black uppercase tracking-wider text-slate-400 dark:text-emerald-400">Volume Surat Masuk</span>
-                <span class="block text-3xl font-black text-slate-800 dark:text-white mt-1">{{ $totalSuratMasuk ?? 0 }}</span>
+                <span class="block text-3xl font-black text-slate-800 dark:text-white mt-1">1</span>
                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-2">
                     <i class="fas fa-arrow-down text-xs"></i> Dokumen Masuk Terdaftar
                 </span>

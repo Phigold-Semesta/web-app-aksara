@@ -17,17 +17,34 @@ class PimpinanController extends Controller
     /**
      * Dashboard Pimpinan
      */
-    public function dashboard()
-    {
-        $data = [
-            'totalSuratMasuk'  => Surat::where('status', 'masuk')->count(),
-            'totalSuratKeluar' => Surat::where('status', 'keluar')->count(),
-            'totalDisposisi'   => Disposisi::count(),
-            'kategoriList'     => KategoriSurat::all()
-        ];
+   public function dashboard()
+{
+    // 1. Ambil data statistik (seperti yang sudah ada)
+    $totalSuratMasuk = \App\Models\Surat::whereHas('kategori', function($q) {
+                           $q->where('nama_kategori', 'like', '%Surat Masuk%');
+                       })->count();
+                       
+    $totalSuratKeluar = \App\Models\Surat::whereHas('kategori', function($q) {
+                            $q->where('nama_kategori', 'like', '%Surat Keluar%');
+                        })->count();
+                        
+    $totalDisposisi = \App\Models\Surat::where('status', 'disposisi')->count();
 
-        return view('pimpinan.dashboard', $data);
-    }
+    // 2. AMBIL DATA SURAT UNTUK TABEL (Inilah yang kurang!)
+    $surats = \App\Models\Surat::with('kategori')->latest()->get();
+
+    // 3. Ambil data kategori untuk tabel monitoring kategori di bawah (jika masih diperlukan)
+    $kategoriList = \App\Models\KategoriSurat::all();
+
+    // 4. Kirim semua data ke view
+    return view('pimpinan.dashboard', compact(
+        'totalSuratMasuk', 
+        'totalSuratKeluar', 
+        'totalDisposisi', 
+        'surats', 
+        'kategoriList'
+    ));
+}
 
     /**
      * Manajemen Surat

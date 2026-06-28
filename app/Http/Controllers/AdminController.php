@@ -47,21 +47,28 @@ class AdminController extends Controller
     /**
      * Laporan & Statistik - PENYEMPURNAAN: Diaktifkan dengan agregasi data nyata untuk Chart.js
      */
-    public function lihatStatistik()
-    {
-        // Mengambil hitungan nyata untuk operan ke view laporan
-        $totalPetugas = User::where('role', 'petugas')->count();
-        $totalPimpinan = User::where('role', 'pimpinan')->count();
-        $kategoriList = KategoriSurat::withCount([])->get(); // Siap dikembangkan jika ada relasi surat
-        
-        // Mengirim data penunjang agar halaman statistik bekerja dinamis
-        return view('admin.laporan.index', compact(
-            'totalPetugas',
-            'totalPimpinan',
-            'kategoriList'
-        ));
-    }
+   public function lihatStatistik()
+{
+    // Gunakan 'LIKE' agar lebih fleksibel terhadap huruf kapital/kecil di database
+    $totalSuratMasuk = \App\Models\Surat::where('status', 'LIKE', '%masuk%')->count();
+    $totalSuratKeluar = \App\Models\Surat::where('status', 'LIKE', '%keluar%')->count();
+    $totalDisposisi = \App\Models\Surat::where('status', 'LIKE', '%disposisi%')->count();
 
+    // Data Surat untuk Tabel
+    $surats = \App\Models\Surat::latest()->take(10)->get();
+
+    // Data Kategori
+    $kategoriList = \App\Models\KategoriSurat::all();
+
+    // Pastikan mengembalikan view yang benar (admin.laporan.index)
+    return view('admin.laporan.index', compact(
+        'totalSuratMasuk',
+        'totalSuratKeluar',
+        'totalDisposisi',
+        'surats',
+        'kategoriList'
+    ));
+}
     /**
      * Kelola User (Read) - PERBAIKAN: Menggunakan paginate() agar sinkron dengan template Blade
      */
