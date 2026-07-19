@@ -35,7 +35,6 @@
                         </p>
                     </div>
                     
-                    {{-- PERBAIKAN: Mengakses data dari relasi arsip --}}
                     <div>
                         <p class="text-emerald-500 font-bold text-[10px] uppercase">Habis Masa Retensi</p>
                         @if(isset($surat->arsip) && !empty($surat->arsip->masa_retensi))
@@ -97,13 +96,15 @@
         <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-slate-800 shadow-xl shadow-emerald-900/5 h-[800px]">
             <div class="flex justify-between items-center mb-4 px-2">
                 <p class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest">Preview Dokumen Digital</p>
-                <a href="{{ route('pimpinan.manajemen_surat.tampilkan_dokumen', $surat->id_surat) }}" target="_blank" class="text-emerald-600 font-bold text-xs hover:underline">
+                {{-- Perbaikan: Menggunakan asset() agar langsung mengakses file publik --}}
+                <a href="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" target="_blank" class="text-emerald-600 font-bold text-xs hover:underline">
                     BUKA LAYAR PENUH <i class="fas fa-external-link-alt ml-1"></i>
                 </a>
             </div>
             
+            {{-- Perbaikan: Menggunakan asset() untuk menghindari rute controller yang sering bermasalah --}}
             <iframe 
-                src="{{ route('pimpinan.manajemen_surat.tampilkan_dokumen', $surat->id_surat) }}" 
+                src="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" 
                 class="w-full h-full rounded-3xl" 
                 frameborder="0" 
                 type="application/pdf"

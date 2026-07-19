@@ -703,6 +703,24 @@ public function updateKategori(Request $request, $id)
         return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil dihapus!');
     }
 
+    public function teruskanKePimpinan(Request $request, $id)
+{
+    $surat = \App\Models\Surat::findOrFail($id);
+    
+    // Pastikan status disamakan menjadi 'pending'
+    $surat->update(['status' => 'pending']); 
+
+    AuditLog::create([
+        'aktivitas'      => 'TERUSKAN SURAT',
+        'deskripsi'      => auth()->user()->nama_lengkap . " meneruskan surat ke pimpinan: {$surat->perihal}",
+        'ip_address'     => $request->ip(),
+        'waktu_kejadian' => now(),
+        'id_user'        => auth()->id()
+    ]);
+
+    return redirect()->back()->with('success', 'Surat berhasil diteruskan ke pimpinan!');
+}
+
   // 1. Menampilkan Halaman List Arsip
 public function arsipIndex(Request $request) 
 { 

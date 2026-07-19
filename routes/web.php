@@ -100,7 +100,9 @@ Route::put('/{id}', [AdminController::class, 'updateUser'])->name('update');
     Route::get('/manajemen_arsip/{id}/edit', [AdminController::class, 'arsipEdit'])->name('manajemen_arsip.edit');
     Route::put('/manajemen_arsip/{id}/update', [AdminController::class, 'arsipUpdate'])->name('manajemen_arsip.update');
     Route::delete('/manajemen_arsip/{id}/delete', [AdminController::class, 'arsipDestroy'])->name('manajemen_arsip.destroy');
-
+// Di dalam route group admin:
+Route::patch('/manajemen_surat/{id}/teruskan', [AdminController::class, 'teruskanKePimpinan'])
+     ->name('manajemen_surat.teruskan');
     Route::get('/aktivitas', [AdminController::class, 'auditLog'])->name('aktivitas.index');
     Route::get('/statistik', [AdminController::class, 'lihatStatistik'])->name('statistik');
 });

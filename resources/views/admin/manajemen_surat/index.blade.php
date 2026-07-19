@@ -93,6 +93,13 @@
                             <a href="{{ route('admin.manajemen_surat.edit', $item->id_surat) }}" class="group/btn p-2.5 bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-600 dark:hover:bg-amber-500 transition-all shadow-sm" title="Edit">
                                 <i class="fas fa-edit text-sm group-hover/btn:text-white"></i>
                             </a>
+                            {{-- Form Teruskan ke Pimpinan --}}
+                            <form action="{{ route('admin.manajemen_surat.teruskan', $item->id_surat) }}" method="POST" id="form-teruskan-{{ $item->id_surat }}" class="inline">
+                                @csrf @method('PATCH')
+                                <button type="button" onclick="konfirmasiTeruskan('{{ $item->id_surat }}')" class="group/btn p-2.5 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-600 dark:hover:bg-blue-500 transition-all shadow-sm" title="Teruskan ke Pimpinan">
+                                    <i class="fas fa-paper-plane text-sm group-hover/btn:text-white"></i>
+                                </button>
+                            </form>
                             <form action="{{ route('admin.manajemen_surat.destroy', $item->id_surat) }}" method="POST" id="form-hapus-{{ $item->id_surat }}" class="inline">
                                 @csrf @method('DELETE')
                                 <button type="button" onclick="konfirmasiHapus('{{ $item->id_surat }}')" class="group/btn p-2.5 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 dark:hover:bg-red-500 transition-all shadow-sm" title="Hapus">
@@ -129,6 +136,23 @@
     @if(session('success'))
         Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", confirmButtonColor: '#059669', background: bgPopup, color: textColor, customClass: { popup: 'rounded-[2.5rem]' } });
     @endif
+
+    function konfirmasiTeruskan(id) {
+        Swal.fire({ 
+            title: 'Teruskan Surat?', 
+            text: "Surat akan diteruskan ke pimpinan untuk proses disposisi.", 
+            icon: 'question', 
+            showCancelButton: true, 
+            confirmButtonColor: '#2563eb', 
+            cancelButtonColor: '#9ca3af', 
+            confirmButtonText: 'Ya, Teruskan!', 
+            background: bgPopup, 
+            color: textColor, 
+            customClass: { popup: 'rounded-[2.5rem]' } 
+        }).then((result) => {
+            if (result.isConfirmed) document.getElementById('form-teruskan-' + id).submit();
+        });
+    }
 
     function konfirmasiHapus(id) {
         Swal.fire({ 

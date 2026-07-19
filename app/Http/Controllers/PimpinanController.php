@@ -71,35 +71,31 @@ class PimpinanController extends Controller
     /**
      * Menampilkan dokumen dengan aman
      */
-    public function tampilkanDokumen($id)
-    {
-        $surat = Surat::findOrFail($id);
-        $filename = trim($surat->file_surat);
-        
-        $paths = [
-            storage_path('app/public/' . $filename),
-            storage_path('app/public/dokumen_surat/' . $filename)
-        ];
+   public function tampilkanDokumen($id)
+{
+    $surat = \App\Models\Surat::findOrFail($id);
+    // Pastikan kita mendapatkan string yang bersih
+    $filename = trim($surat->file_surat);
+    
+    // Path fisik absolut
+    $path = storage_path('app/public/dokumen_surat/' . $filename);
 
-        $path = null;
-        foreach ($paths as $p) {
-            if (file_exists($p)) {
-                $path = $p;
-                break;
-            }
-        }
-
-        if (!$path) {
-            Log::error("File tidak ditemukan di semua path yang diperiksa: " . implode(' atau ', $paths));
-            abort(404, 'Dokumen fisik tidak ditemukan di sistem.');
-        }
-
-        return response()->file($path, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"'
-        ]);
+    if (!file_exists($path)) {
+        // Coba path alternatif jika file tersimpan langsung di public
+        $path = storage_path('app/public/' . $filename);
     }
 
+    if (!file_exists($path)) {
+        abort(404, "File tidak ditemukan di server: " . $path);
+    }
+
+    // Solusi Jenius: Gunakan fungsi file() dengan header yang aman
+    // Ini mengalirkan isi file langsung ke browser tanpa via path URL publik
+    return response()->file($path, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="' . basename($filename) . '"'
+    ]);
+}
     /**
      * Menyimpan disposisi
      */
