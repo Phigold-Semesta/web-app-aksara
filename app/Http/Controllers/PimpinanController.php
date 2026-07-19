@@ -96,47 +96,47 @@ class PimpinanController extends Controller
         'Content-Disposition' => 'inline; filename="' . basename($filename) . '"'
     ]);
 }
-    /**
-     * Menyimpan disposisi
-     */
-    public function simpanDisposisi(Request $request)
-    {
-        $request->validate([
-            'id_surat'     => 'required|exists:surat,id_surat',
-            'id_instruksi'  => 'required|exists:instruksi_disposisi,id_instruksi',
-            'catatan'       => 'nullable|string'
-        ]);
+   /**
+ * Menyimpan disposisi
+ */
+public function simpanDisposisi(Request $request)
+{
+    $request->validate([
+        'id_surat'     => 'required|exists:surat,id_surat',
+        'id_instruksi'  => 'required|exists:instruksi_disposisi,id_instruksi',
+        'catatan'       => 'nullable|string'
+    ]);
 
-        Disposisi::create([
-            'id_surat'         => $request->id_surat,
-            'id_instruksi'     => $request->id_instruksi,
-            'catatan_pimpinan' => $request->catatan,
-            'id_user'          => Auth::id(),
-            'tanggal_disposisi'=> now(),
-        ]);
+    Disposisi::create([
+        'id_surat'         => $request->id_surat,
+        'id_instruksi'     => $request->id_instruksi,
+        'catatan_pimpinan' => $request->catatan,
+        'id_user'          => Auth::id(),
+        'tanggal_disposisi'=> now(),
+    ]);
 
-        $instruksi = InstruksiDisposisi::find($request->id_instruksi);
-        $statusBaru = 'DISPOSISI'; 
+    $instruksi = InstruksiDisposisi::find($request->id_instruksi);
+    $statusBaru = 'DISPOSISI'; 
 
-        if ($instruksi && stripos($instruksi->nama_instruksi, 'Arsip') !== false) {
-            $statusBaru = 'DIARSIPKAN'; 
-            
-            $arsipExists = Arsip::where('id_surat', $request->id_surat)->exists();
-            if (!$arsipExists) {
-                Arsip::create([
-                    'id_surat'       => $request->id_surat,
-                    'lokasi_fisik'   => 'Belum ditentukan',
-                    'tanggal_arsip'  => now(),
-                    'masa_retensi'   => 'N/A',
-                    'status_retensi' => 'Aktif'
-                ]);
-            }
+    if ($instruksi && stripos($instruksi->nama_instruksi, 'Arsip') !== false) {
+        $statusBaru = 'DIARSIPKAN'; 
+        
+        $arsipExists = Arsip::where('id_surat', $request->id_surat)->exists();
+        if (!$arsipExists) {
+            Arsip::create([
+                'id_surat'       => $request->id_surat,
+                'lokasi_fisik'   => 'Belum ditentukan',
+                'tanggal_arsip'  => now(),
+                'masa_retensi'   => now()->addYears(5), // Diperbaiki: null, bukan 'N/A' (kolom ini bertipe date/datetime, Carbon gagal parse string 'N/A')
+                'status_retensi' => 'Aktif'
+            ]);
         }
-
-        Surat::where('id_surat', $request->id_surat)->update(['status' => $statusBaru]);
-
-        return redirect()->route('pimpinan.manajemen_surat.index')->with('success', 'Disposisi berhasil dikirim dengan status: ' . $statusBaru);
     }
+
+    Surat::where('id_surat', $request->id_surat)->update(['status' => $statusBaru]);
+
+    return redirect()->route('pimpinan.manajemen_surat.index')->with('success', 'Disposisi berhasil dikirim dengan status: ' . $statusBaru);
+}
 
     public function hapusRiwayat($id)
     {

@@ -602,7 +602,7 @@ public function updateKategori(Request $request, $id)
         return view('admin.manajemen_surat.index', compact('surats'));
     }
 
-    public function createSurat()
+   public function createSurat()
 {
     // 1. Ambil semua data kategori dari database
     $kategoris = \App\Models\KategoriSurat::all();
@@ -611,10 +611,10 @@ public function updateKategori(Request $request, $id)
     return view('admin.manajemen_surat.create', compact('kategoris'));
 }
 
-    // 3. STORE: Menyimpan data surat baru
-   public function storeSurat(Request $request)
+// 3. STORE: Menyimpan data surat baru
+public function storeSurat(Request $request)
 {
-    // 1. Validasi Input dari Form
+    // 1. Validasi Input dari Form (file_surat ditambahkan di sini)
     $validatedData = $request->validate([
         'perihal'       => 'required|string|max:255',
         'nomor_surat'   => 'required|string|max:100',
@@ -622,28 +622,40 @@ public function updateKategori(Request $request, $id)
         'id_kategori'   => 'required|exists:kategori_surat,id_kategori', 
         'tanggal_surat' => 'required|date',
         'tanggal_terima'=> 'nullable|date',
+        'file_surat'    => 'nullable|file|mimes:pdf|max:5120', // maksimal 5MB, hanya PDF
     ]);
 
-    // 2. Suntik Data Wajib yang Tidak Ada di Form (Mencegah Error 1364)
-
-    // Tangani Tanggal Terima
+    // 2. Tangani Tanggal Terima
     if (empty($validatedData['tanggal_terima'])) {
         $validatedData['tanggal_terima'] = now()->format('Y-m-d');
     }
 
-    // Tangani File Surat (Beri teks default jika belum ada fitur upload file fisik)
-    $validatedData['file_surat'] = 'Belum ada berkas terlampir'; 
+    // 3. Tangani Upload File Surat (SOLUSI JENIUS: upload file asli, bukan teks placeholder)
+    if ($request->hasFile('file_surat')) {
+        $file = $request->file('file_surat');
+        
+        // Nama file unik: timestamp + nama asli, biar tidak ada bentrok nama file
+        $namaFile = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+        
+        // Simpan ke storage/app/public/dokumen_surat
+        $file->storeAs('dokumen_surat', $namaFile, 'public');
+        
+        $validatedData['file_surat'] = $namaFile;
+    } else {
+        // Jangan pakai string placeholder — biarkan null agar mudah dicek di view
+        $validatedData['file_surat'] = null;
+    }
 
-    // Tangani Status (Beri status awal untuk sistem disposisi)
+    // 4. Tangani Status (Beri status awal untuk sistem disposisi)
     $validatedData['status'] = 'surat masuk'; 
 
-    // Tangani ID User (Ambil dari sesi admin/petugas yang sedang login)
+    // 5. Tangani ID User (Ambil dari sesi admin/petugas yang sedang login)
     $validatedData['id_user'] = \Illuminate\Support\Facades\Auth::id();
 
-    // 3. Eksekusi Simpan Data
+    // 6. Eksekusi Simpan Data
     $surat = \App\Models\Surat::create($validatedData);
 
-    // 4. Catat Audit Log
+    // 7. Catat Audit Log
     AuditLog::create([
         'aktivitas'      => 'INPUT SURAT',
         'deskripsi'      => auth()->user()->nama_lengkap . " melakukan input surat baru: {$surat->perihal}",
@@ -652,8 +664,64 @@ public function updateKategori(Request $request, $id)
         'id_user'        => auth()->id()
     ]);
 
-    return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil ditambahkan tanpa error!');
+    return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil ditambahkan!');
 }
+
+// 6. UPDATE: Memperbarui data surat
+public function updateSurat(Request $request, $id)
+{
+    $surat = \App\Models\Surat::findOrFail($id);
+
+    // 1. Validasi Input dari Form (sama seperti storeSurat, file_surat opsional)
+    $validatedData = $request->validate([
+        'perihal'       => 'required|string|max:255',
+        'nomor_surat'   => 'required|string|max:100',
+        'asal_instansi' => 'required|string|max:255',
+        'id_kategori'   => 'required|exists:kategori_surat,id_kategori',
+        'tanggal_surat' => 'required|date',
+        'tanggal_terima'=> 'nullable|date',
+        'file_surat'    => 'nullable|file|mimes:pdf|max:5120', // maksimal 5MB, hanya PDF
+    ]);
+
+    // 2. Tangani Tanggal Terima
+    if (empty($validatedData['tanggal_terima'])) {
+        $validatedData['tanggal_terima'] = $surat->tanggal_terima ?? now()->format('Y-m-d');
+    }
+
+    // 3. Tangani Upload File Surat (SOLUSI JENIUS: hanya proses kalau ADA file baru)
+    if ($request->hasFile('file_surat')) {
+        $file = $request->file('file_surat');
+        $namaFile = time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+        $file->storeAs('dokumen_surat', $namaFile, 'public');
+
+        // Hapus file lama dari storage supaya tidak menumpuk file "sampah"
+        if (!empty($surat->file_surat) && \Illuminate\Support\Facades\Storage::disk('public')->exists('dokumen_surat/' . $surat->file_surat)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
+        }
+
+        $validatedData['file_surat'] = $namaFile;
+    } else {
+        // PENTING: Kalau admin tidak upload file baru saat edit,
+        // JANGAN sentuh field file_surat sama sekali —
+        // supaya file lama yang sudah ada tidak ikut tertimpa/kosong.
+        unset($validatedData['file_surat']);
+    }
+
+    // 4. Eksekusi Update Data (mengganti $request->all() yang berbahaya)
+    $surat->update($validatedData);
+
+    // 5. Catat Audit Log
+    AuditLog::create([
+        'aktivitas' => 'UPDATE SURAT',
+        'deskripsi' => \Illuminate\Support\Facades\Auth::user()->nama_lengkap . " mengubah data surat: {$surat->perihal}",
+        'ip_address' => $request->ip(),
+        'waktu_kejadian' => now(),
+        'id_user' => \Illuminate\Support\Facades\Auth::id()
+    ]);
+
+    return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil diperbarui!');
+}
+
     // 4. SHOW: Detail surat
     public function showSurat($id)
     {
@@ -668,22 +736,8 @@ public function updateKategori(Request $request, $id)
         return view('admin.manajemen_surat.edit', compact('surat'));
     }
 
-    // 6. UPDATE: Memperbarui data surat
-    public function updateSurat(Request $request, $id)
-    {
-        $surat = \App\Models\Surat::findOrFail($id);
-        $surat->update($request->all());
-
-        AuditLog::create([
-            'aktivitas' => 'UPDATE SURAT',
-            'deskripsi' => \Illuminate\Support\Facades\Auth::user()->nama_lengkap . " mengubah data surat: {$surat->perihal}",
-            'ip_address' => $request->ip(),
-            'waktu_kejadian' => now(),
-            'id_user' => \Illuminate\Support\Facades\Auth::id()
-        ]);
-
-        return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil diperbarui!');
-    }
+    
+    
 
     // 7. DESTROY: Menghapus surat
     public function destroySurat(Request $request, $id)

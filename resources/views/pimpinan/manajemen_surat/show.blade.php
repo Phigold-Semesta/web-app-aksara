@@ -94,22 +94,42 @@
 
         {{-- KANAN: Preview Dokumen --}}
         <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-slate-800 shadow-xl shadow-emerald-900/5 h-[800px]">
+
+            {{-- PERBAIKAN: Cek dulu apakah file_surat terisi DAN file-nya benar-benar
+                 ada secara fisik di storage. Ini mencegah error 403 Forbidden yang
+                 muncul saat file_surat kosong/placeholder/tidak ditemukan di disk. --}}
+            @php
+                $fileExists = !empty($surat->file_surat)
+                    && \Illuminate\Support\Facades\Storage::disk('public')->exists('dokumen_surat/' . $surat->file_surat);
+            @endphp
+
             <div class="flex justify-between items-center mb-4 px-2">
                 <p class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest">Preview Dokumen Digital</p>
-                {{-- Perbaikan: Menggunakan asset() agar langsung mengakses file publik --}}
-                <a href="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" target="_blank" class="text-emerald-600 font-bold text-xs hover:underline">
-                    BUKA LAYAR PENUH <i class="fas fa-external-link-alt ml-1"></i>
-                </a>
+                @if($fileExists)
+                    {{-- Perbaikan: Menggunakan asset() agar langsung mengakses file publik --}}
+                    <a href="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" target="_blank" class="text-emerald-600 font-bold text-xs hover:underline">
+                        BUKA LAYAR PENUH <i class="fas fa-external-link-alt ml-1"></i>
+                    </a>
+                @endif
             </div>
-            
-            {{-- Perbaikan: Menggunakan asset() untuk menghindari rute controller yang sering bermasalah --}}
-            <iframe 
-                src="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" 
-                class="w-full h-full rounded-3xl" 
-                frameborder="0" 
-                type="application/pdf"
-                title="Preview Dokumen">
-            </iframe>
+
+            @if($fileExists)
+                {{-- Perbaikan: Menggunakan asset() untuk menghindari rute controller yang sering bermasalah --}}
+                <iframe 
+                    src="{{ asset('storage/dokumen_surat/' . $surat->file_surat) }}" 
+                    class="w-full h-full rounded-3xl" 
+                    frameborder="0" 
+                    type="application/pdf"
+                    title="Preview Dokumen">
+                </iframe>
+            @else
+                {{-- Tampilan fallback: tidak ada file, jadi tidak lagi memicu 403 --}}
+                <div class="w-full h-[90%] flex flex-col items-center justify-center text-emerald-300 dark:text-slate-600 gap-3">
+                    <i class="fas fa-file-circle-exclamation text-6xl"></i>
+                    <p class="font-bold text-emerald-800 dark:text-emerald-200">Dokumen digital belum tersedia untuk surat ini.</p>
+                    <p class="text-xs text-emerald-500 dark:text-slate-500">Silakan hubungi petugas/admin untuk mengunggah berkas fisik.</p>
+                </div>
+            @endif
         </div>
     </div>
 </div>
