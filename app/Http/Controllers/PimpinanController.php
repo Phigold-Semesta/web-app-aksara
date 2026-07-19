@@ -102,38 +102,114 @@ class PimpinanController extends Controller
 public function simpanDisposisi(Request $request)
 {
     $request->validate([
-        'id_surat'     => 'required|exists:surat,id_surat',
-        'id_instruksi'  => 'required|exists:instruksi_disposisi,id_instruksi',
-        'catatan'       => 'nullable|string'
+        'id_surat'        => 'required|exists:surat,id_surat',
+        'id_instruksi'    => 'required|exists:instruksi_disposisi,id_instruksi',
+        'catatan'         => 'nullable|string',
+        'signature_data'  => 'nullable|string',
+        'signature_x'     => 'nullable|numeric',
+        'signature_y'     => 'nullable|numeric',
+        'signature_width' => 'nullable|numeric',
+        'signature_page'  => 'nullable|integer',
+        'stempel_x'       => 'nullable|numeric',
+        'stempel_y'       => 'nullable|numeric',
+        'stempel_width'   => 'nullable|numeric',
     ]);
+
+    $surat = Surat::findOrFail($request->id_surat);
 
     Disposisi::create([
-        'id_surat'         => $request->id_surat,
-        'id_instruksi'     => $request->id_instruksi,
-        'catatan_pimpinan' => $request->catatan,
-        'id_user'          => Auth::id(),
-        'tanggal_disposisi'=> now(),
+        'id_surat'          => $request->id_surat,
+        'id_instruksi'      => $request->id_instruksi,
+        'catatan_pimpinan'  => $request->catatan,
+        'id_user'           => Auth::id(),
+        'tanggal_disposisi' => now(),
     ]);
 
+    // ==========================================================
+    // PROSES TANDA TANGAN DIGITAL + STEMPEL (kalau disertakan)
+    // ==========================================================
+    if ($request->filled('signature_data') && !empty($surat->file_surat)) {
+
+        $pathFileLama = storage_path('app/public/dokumen_surat/' . $surat->file_surat);
+
+        if (file_exists($pathFileLama)) {
+            // 1. Decode gambar TTD dari base64 jadi file sementara
+            $signatureBase64 = str_replace('data:image/png;base64,', '', $request->signature_data);
+            $tempSignaturePath = storage_path('app/temp_ttd_' . $surat->id_surat . '_' . time() . '.png');
+            file_put_contents($tempSignaturePath, base64_decode($signatureBase64));
+
+            $pathStempel = storage_path('app/public/stempel/stempel_lpse_karawang.png');
+
+            // 2. Proses tempel pakai FPDI
+            $pdf = new \setasign\Fpdi\Fpdi();
+            $pageCount = $pdf->setSourceFile($pathFileLama);
+            $halamanTtd = (int) ($request->signature_page ?? $pageCount);
+
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $tplId = $pdf->importPage($i);
+                $size = $pdf->getTemplateSize($tplId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($tplId);
+
+                if ($i == $halamanTtd) {
+                    // Konversi posisi persentase (dari drag di layar) ke satuan PDF asli
+                    if ($request->filled('signature_x')) {
+                        $sigW = ($request->signature_width / 100) * $size['width'];
+                        $sigX = ($request->signature_x / 100) * $size['width'];
+                        $sigY = ($request->signature_y / 100) * $size['height'];
+                        $pdf->Image($tempSignaturePath, $sigX, $sigY, $sigW);
+                    }
+
+                    if ($request->filled('stempel_x') && file_exists($pathStempel)) {
+                        $stW = ($request->stempel_width / 100) * $size['width'];
+                        $stX = ($request->stempel_x / 100) * $size['width'];
+                        $stY = ($request->stempel_y / 100) * $size['height'];
+                        $pdf->Image($pathStempel, $stX, $stY, $stW);
+                    }
+                }
+            }
+
+            // 3. Simpan sebagai file BARU
+            $namaFileBaru = 'surat_' . $surat->id_surat . '_ttd_' . time() . '.pdf';
+            $pathFileBaru = storage_path('app/public/dokumen_surat/' . $namaFileBaru);
+            $pdf->Output($pathFileBaru, 'F');
+
+            // 4. Hapus file LAMA (supaya tetap satu file saja)
+            \Illuminate\Support\Facades\Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
+
+            // 5. Update referensi file di objek surat (belum disimpan ke DB dulu)
+            $surat->file_surat          = $namaFileBaru;
+            $surat->tanggal_ttd         = now();
+            $surat->ditandatangani_oleh = Auth::id();
+
+            // 6. Bersihkan file sementara
+            unlink($tempSignaturePath);
+        }
+    }
+
+    // ==========================================================
+    // Logika status & arsip (SUDAH ADA, tidak diubah)
+    // ==========================================================
     $instruksi = InstruksiDisposisi::find($request->id_instruksi);
-    $statusBaru = 'DISPOSISI'; 
+    $statusBaru = 'DISPOSISI';
 
     if ($instruksi && stripos($instruksi->nama_instruksi, 'Arsip') !== false) {
-        $statusBaru = 'DIARSIPKAN'; 
-        
+        $statusBaru = 'DIARSIPKAN';
+
         $arsipExists = Arsip::where('id_surat', $request->id_surat)->exists();
         if (!$arsipExists) {
             Arsip::create([
                 'id_surat'       => $request->id_surat,
                 'lokasi_fisik'   => 'Belum ditentukan',
                 'tanggal_arsip'  => now(),
-                'masa_retensi'   => now()->addYears(5), // Diperbaiki: null, bukan 'N/A' (kolom ini bertipe date/datetime, Carbon gagal parse string 'N/A')
+                'masa_retensi'   => now()->addYears(5),
                 'status_retensi' => 'Aktif'
             ]);
         }
     }
 
-    Surat::where('id_surat', $request->id_surat)->update(['status' => $statusBaru]);
+    $surat->status = $statusBaru;
+    $surat->save();
 
     return redirect()->route('pimpinan.manajemen_surat.index')->with('success', 'Disposisi berhasil dikirim dengan status: ' . $statusBaru);
 }
