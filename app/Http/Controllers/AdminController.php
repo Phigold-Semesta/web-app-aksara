@@ -612,27 +612,48 @@ public function updateKategori(Request $request, $id)
 }
 
     // 3. STORE: Menyimpan data surat baru
-    public function storeSurat(Request $request)
-    {
-        $request->validate([
-            'perihal' => 'required|string|max:255',
-            'nomor_surat' => 'required|string|max:100',
-            'asal_instansi' => 'required|string|max:255',
-        ]);
+   public function storeSurat(Request $request)
+{
+    // 1. Validasi Input dari Form
+    $validatedData = $request->validate([
+        'perihal'       => 'required|string|max:255',
+        'nomor_surat'   => 'required|string|max:100',
+        'asal_instansi' => 'required|string|max:255',
+        'id_kategori'   => 'required|exists:kategori_surat,id_kategori', 
+        'tanggal_surat' => 'required|date',
+        'tanggal_terima'=> 'nullable|date',
+    ]);
 
-        $surat = \App\Models\Surat::create($request->all());
+    // 2. Suntik Data Wajib yang Tidak Ada di Form (Mencegah Error 1364)
 
-        AuditLog::create([
-            'aktivitas' => 'INPUT SURAT',
-            'deskripsi' => \Illuminate\Support\Facades\Auth::user()->nama_lengkap . " melakukan input surat baru: {$surat->perihal}",
-            'ip_address' => $request->ip(),
-            'waktu_kejadian' => now(),
-            'id_user' => \Illuminate\Support\Facades\Auth::id()
-        ]);
-
-        return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil ditambahkan!');
+    // Tangani Tanggal Terima
+    if (empty($validatedData['tanggal_terima'])) {
+        $validatedData['tanggal_terima'] = now()->format('Y-m-d');
     }
 
+    // Tangani File Surat (Beri teks default jika belum ada fitur upload file fisik)
+    $validatedData['file_surat'] = 'Belum ada berkas terlampir'; 
+
+    // Tangani Status (Beri status awal untuk sistem disposisi)
+    $validatedData['status'] = 'surat masuk'; 
+
+    // Tangani ID User (Ambil dari sesi admin/petugas yang sedang login)
+    $validatedData['id_user'] = \Illuminate\Support\Facades\Auth::id();
+
+    // 3. Eksekusi Simpan Data
+    $surat = \App\Models\Surat::create($validatedData);
+
+    // 4. Catat Audit Log
+    AuditLog::create([
+        'aktivitas'      => 'INPUT SURAT',
+        'deskripsi'      => auth()->user()->nama_lengkap . " melakukan input surat baru: {$surat->perihal}",
+        'ip_address'     => $request->ip(),
+        'waktu_kejadian' => now(),
+        'id_user'        => auth()->id()
+    ]);
+
+    return redirect()->route('admin.manajemen_surat.index')->with('success', 'Surat berhasil ditambahkan tanpa error!');
+}
     // 4. SHOW: Detail surat
     public function showSurat($id)
     {
