@@ -123,12 +123,7 @@ Route::patch('/manajemen_surat/{id}/teruskan', [AdminController::class, 'teruska
     // Manajemen Surat Resource
     Route::resource('manajemen_surat', PetugasController::class);
     
-// [PERBAIKAN] Route stempel nomor surat dimasukkan ke dalam jalur manajemen_surat agar namanya menjadi: petugas.manajemen_surat.stempel_nomor
-    Route::post('/manajemen_surat/{id}/stempel-nomor', [PetugasController::class, 'simpanStempelNomor'])->name('manajemen_surat.stempel_nomor');
     
-    
-
-
     // Route Tambahan untuk Status Surat
     Route::get('/manajemen_surat_status', [PetugasController::class, 'statusSurat'])->name('manajemen_surat.status');
 

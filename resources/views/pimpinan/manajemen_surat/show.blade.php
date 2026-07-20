@@ -108,7 +108,7 @@
                             <i class="fas fa-upload"></i> Upload TTD & Stempel
                         </button>
 
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-2xl font-black uppercase text-sm shadow-lg shadow-emerald-600/30 transition-all">
+                        <button type="submit" id="btnKirimDisposisi" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-2xl font-black uppercase text-sm shadow-lg shadow-emerald-600/30 transition-all">
                             Kirim Disposisi
                         </button>
                     </div>
@@ -181,7 +181,6 @@
                                 <label class="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Gambar Tanda Tangan</label>
                                 <input type="file" id="fileSignatureUpload" accept="image/png,image/jpeg" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
                                 <div id="previewSignatureUpload" class="hidden mt-3 p-3 border border-emerald-100 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 relative">
-                                    {{-- BARU: Tombol hapus preview upload TTD --}}
                                     <button type="button" id="hapusPreviewSignatureUpload" title="Hapus gambar ini" class="absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full text-xs font-black flex items-center justify-center">×</button>
                                     <img id="imgPreviewSignatureUpload" src="" class="max-h-24 mx-auto object-contain" alt="Preview tanda tangan">
                                 </div>
@@ -191,7 +190,6 @@
                                 <label class="block text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-2">Gambar Stempel Resmi</label>
                                 <input type="file" id="fileStempelUpload" accept="image/png,image/jpeg" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer">
                                 <div id="previewStempelUpload" class="hidden mt-3 p-3 border border-emerald-100 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 relative">
-                                    {{-- BARU: Tombol hapus preview upload Stempel --}}
                                     <button type="button" id="hapusPreviewStempelUpload" title="Hapus gambar ini" class="absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full text-xs font-black flex items-center justify-center">×</button>
                                     <img id="imgPreviewStempelUpload" src="" class="max-h-24 mx-auto object-contain" alt="Preview stempel">
                                 </div>
@@ -262,11 +260,6 @@ function clearSignaturePad() {
     signaturePad.clear();
 }
 
-// ===== DIPERBAIKI: Tulis Tanda Tangan (manual, pakai mouse/cursor) =====
-// Sebelumnya fungsi ini otomatis menampilkan dragStempel juga, padahal
-// tombol "Tulis Tanda Tangan" seharusnya HANYA menerapkan gambar tanda
-// tangan hasil coretan manual. Stempel tidak boleh muncul otomatis di sini.
-// Stempel tetap bisa ditambahkan lewat menu terpisah "Upload TTD & Stempel".
 function terapkanTandaTangan() {
     if (signaturePad.isEmpty()) {
         alert('Silakan gambar tanda tangan terlebih dahulu!');
@@ -277,8 +270,6 @@ function terapkanTandaTangan() {
     document.getElementById('input_signature_data').value = dataUrl;
 
     document.getElementById('dragSignature').classList.remove('hidden');
-    // Catatan: dragStempel SENGAJA tidak ditampilkan di sini.
-    // Stempel hanya muncul jika diunggah lewat modal "Upload TTD & Stempel".
 
     ttdAktif = true;
     document.getElementById('labelTombolTtd').innerText = 'Tanda Tangan Aktif — Geser Posisinya';
@@ -340,7 +331,6 @@ bacaFileGambar(
     function (dataUrl) { base64StempelUpload = dataUrl; }
 );
 
-// ===== BARU: Hapus preview upload sebelum diterapkan =====
 document.getElementById('hapusPreviewSignatureUpload').addEventListener('click', function () {
     base64SignatureUpload = null;
     document.getElementById('fileSignatureUpload').value = '';
@@ -355,8 +345,6 @@ document.getElementById('hapusPreviewStempelUpload').addEventListener('click', f
     document.getElementById('previewStempelUpload').classList.add('hidden');
 });
 
-// Fungsi ini TIDAK diubah: upload memang boleh menampilkan
-// signature dan/atau stempel sesuai gambar yang diunggah user.
 function terapkanUpload() {
     if (!base64SignatureUpload && !base64StempelUpload) {
         alert('Silakan upload minimal satu gambar (tanda tangan atau stempel)!');
@@ -380,13 +368,11 @@ function terapkanUpload() {
     tutupModalUpload();
 }
 
-// ===== BARU: Hapus TTD/Stempel yang SUDAH ditempel di atas dokumen =====
 function perbaruiStatusTtdAktif() {
     const sigTersembunyi = document.getElementById('dragSignature').classList.contains('hidden');
     const stTersembunyi = document.getElementById('dragStempel').classList.contains('hidden');
 
     if (sigTersembunyi && stTersembunyi) {
-        // Kalau keduanya sudah dihapus, matikan status TTD aktif & kosongkan data terkirim
         ttdAktif = false;
         document.getElementById('labelTombolTtd').innerText = 'Gambar Tanda Tangan & Stempel';
         document.getElementById('input_signature_data').value = '';
@@ -395,7 +381,7 @@ function perbaruiStatusTtdAktif() {
 }
 
 document.getElementById('hapusSignature').addEventListener('click', function (e) {
-    e.stopPropagation(); // supaya tidak memicu drag saat tombol × diklik
+    e.stopPropagation();
     document.getElementById('dragSignature').classList.add('hidden');
     document.getElementById('input_signature_data').value = '';
     perbaruiStatusTtdAktif();
@@ -408,7 +394,6 @@ document.getElementById('hapusStempel').addEventListener('click', function (e) {
     perbaruiStatusTtdAktif();
 });
 
-// ===== Drag & Resize (dipakai oleh KEDUA sumber: gambar manual maupun upload) =====
 function jadikanBisaDigeser(elemenId) {
     const el = document.getElementById(elemenId);
     const container = document.getElementById('pdfPageContainer');
@@ -467,17 +452,14 @@ function jadikanBisaResize(handleId, elemenId) {
 jadikanBisaResize('resizeSignature', 'dragSignature');
 jadikanBisaResize('resizeStempel', 'dragStempel');
 
-// ===== Hitung posisi persentase sebelum submit =====
+// ===== Kalkulasi Koordinat Drag & Drop Sebelum Form Disubmit ke Backend =====
 document.getElementById('formDisposisi').addEventListener('submit', function (e) {
-    if (!ttdAktif) return;
-
     const container = document.getElementById('pdfPageContainer');
     const cW = container.offsetWidth;
     const cH = container.offsetHeight;
 
-    // BARU: hanya kirim posisi kalau elemen memang masih terlihat (belum dihapus)
     const sig = document.getElementById('dragSignature');
-    if (!sig.classList.contains('hidden')) {
+    if (ttdAktif && !sig.classList.contains('hidden')) {
         document.getElementById('input_signature_x').value = (sig.offsetLeft / cW) * 100;
         document.getElementById('input_signature_y').value = (sig.offsetTop / cH) * 100;
         document.getElementById('input_signature_width').value = (sig.offsetWidth / cW) * 100;

@@ -647,7 +647,7 @@ public function storeSurat(Request $request)
     }
 
     // 4. Tangani Status (Beri status awal untuk sistem disposisi)
-    $validatedData['status'] = 'surat masuk'; 
+    $validatedData['status'] = 'Belum Dikirim'; 
 
     // 5. Tangani ID User (Ambil dari sesi admin/petugas yang sedang login)
     $validatedData['id_user'] = \Illuminate\Support\Facades\Auth::id();
