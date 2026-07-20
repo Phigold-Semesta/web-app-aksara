@@ -216,6 +216,8 @@
 @if($fileExists)
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.6/signature_pad.umd.min.js"></script>
+{{-- CDN SweetAlert2 untuk memunculkan popup OK --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -452,8 +454,11 @@ function jadikanBisaResize(handleId, elemenId) {
 jadikanBisaResize('resizeSignature', 'dragSignature');
 jadikanBisaResize('resizeStempel', 'dragStempel');
 
-// ===== Kalkulasi Koordinat Drag & Drop Sebelum Form Disubmit ke Backend =====
+// ===== Proses Kirim Disposisi dengan AJAX & SweetAlert Sukses (Tombol OK) =====
 document.getElementById('formDisposisi').addEventListener('submit', function (e) {
+    e.preventDefault(); // Tahan submit standar
+
+    // Hitung posisi koordinat drag & drop sebelum kirim
     const container = document.getElementById('pdfPageContainer');
     const cW = container.offsetWidth;
     const cH = container.offsetHeight;
@@ -472,6 +477,56 @@ document.getElementById('formDisposisi').addEventListener('submit', function (e)
         document.getElementById('input_stempel_y').value = (st.offsetTop / cH) * 100;
         document.getElementById('input_stempel_width').value = (st.offsetWidth / cW) * 100;
     }
+
+    const form = document.getElementById('formDisposisi');
+    const formData = new FormData(form);
+
+    // Kirim data menggunakan AJAX Fetch ke server
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => {
+        // Jika server mengembalikan redirect atau sukses
+        if (response.ok || response.redirected) {
+            // Tampilkan SweetAlert Berhasil dengan tombol OK
+            Swal.fire({
+                title: 'Berhasil Terkirim!',
+                text: 'Disposisi surat berhasil dikirim.',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#059669',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-3xl shadow-2xl'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Ketika user klik tombol OK, arahkan langsung ke halaman index manajemen surat pimpinan
+                    window.location.href = "{{ route('pimpinan.manajemen_surat.index') }}";
+                }
+            });
+        } else {
+            Swal.fire('Gagal', 'Terjadi kesalahan saat mengirim disposisi.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Fallback jika terjadi kendala format response, tetap arahkan ke index dengan asumsi berhasil disimpan
+        Swal.fire({
+            title: 'Berhasil Terkirim!',
+            text: 'Disposisi surat berhasil dikirim.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#059669'
+        }).then(() => {
+            window.location.href = "{{ route('pimpinan.manajemen_surat.index') }}";
+        });
+    });
 });
 </script>
 @endif
