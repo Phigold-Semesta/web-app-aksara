@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Exports\SuratExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use setasign\Fpdi\Fpdi;
 
 class PetugasController extends Controller
 {
@@ -446,4 +447,72 @@ public function exportCsv()
                        ->paginate(10);
         return view('petugas.manajemen_surat.index', compact('surats'));
     }
+
+    public function simpanStempelNomor(Request $request, $id)
+{
+    $request->validate([
+        'nomor_surat_baru' => 'required|string',
+        'stempel_x'        => 'required|numeric',
+        'stempel_y'        => 'required|numeric',
+        'stempel_page'     => 'required|integer',
+    ]);
+
+    $surat = Surat::findOrFail($id);
+    $pathFileLama = storage_path('app/public/dokumen_surat/' . $surat->file_surat);
+
+    if (!file_exists($pathFileLama)) {
+        return back()->with('error', 'File PDF fisik tidak ditemukan di server.');
+    }
+
+    try {
+        // 1. Inisialisasi FPDI untuk memproses PDF
+        $pdf = new Fpdi();
+        $pageCount = $pdf->setSourceFile($pathFileLama);
+        $targetPage = (int) $request->stempel_page;
+
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tplId = $pdf->importPage($i);
+            $size = $pdf->getTemplateSize($tplId);
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tplId);
+
+            // 2. Jika di halaman target, injeksi teks nomor surat
+            if ($i == $targetPage) {
+                // Konversi posisi persentase layar ke ukuran satuan PDF
+                $posX = ($request->stempel_x / 100) * $size['width'];
+                $posY = ($request->stempel_y / 100) * $size['height'];
+
+                $pdf->SetFont('Helvetica', 'B', 11); // Set jenis font, bold, ukuran 11
+                $pdf->SetTextColor(0, 84, 166);     // Warna teks (Contoh: Biru / Sesuaikan selera)
+                
+                // Posisikan kursor teks dan cetak
+                $pdf->SetXY($posX, $posY);
+                $pdf->Write(0, 'NO. SURAT: ' . $request->nomor_surat_baru);
+            }
+        }
+
+        // 3. Simpan sebagai file baru untuk menjaga riwayat/kebersihan
+        $namaFileBaru = 'surat_' . $surat->id_surat . '_stempel_' . time() . '.pdf';
+        $pathFileBaru = storage_path('app/public/dokumen_surat/' . $namaFileBaru);
+        $pdf->Output($pathFileBaru, 'F');
+
+        // 4. Hapus file lama jika ada
+        if ($surat->file_surat) {
+            Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
+        }
+
+        // 5. Update database (Simpan nomor surat baru jika diedit, dan update nama file PDF)
+        $surat->update([
+            'nomor_surat' => $request->nomor_surat_baru,
+            'file_surat'  => $namaFileBaru,
+        ]);
+
+        return redirect()->route('petugas.manajemen_surat.show', $surat->id_surat)
+                         ->with('success', 'Nomor surat berhasil ditempel dan dokumen PDF otomatis diperbarui!');
+
+    } catch (\Exception $e) {
+        return back()->with('error', 'Gagal menempel nomor surat: ' . $e->getMessage());
+    }
+}
+
 }
