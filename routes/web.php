@@ -157,6 +157,8 @@ Route::patch('/manajemen_surat/{id}/teruskan', [AdminController::class, 'teruska
             Route::get('/', [PimpinanController::class, 'indexManajemenSurat'])->name('index');
             Route::get('/{id}', [PimpinanController::class, 'showManajemenSurat'])->name('show');
             
+Route::get('/riwayat/{id}', [PimpinanController::class, 'showRiwayat'])->name('riwayat');
+
             // Route akses dokumen aman (Fix 404 & 403)
             Route::get('/dokumen/{id}', [PimpinanController::class, 'tampilkanDokumen'])->name('tampilkan_dokumen');
             

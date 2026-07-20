@@ -78,10 +78,10 @@
                         <td class="p-4 text-sm text-slate-500">{{ $r->created_at->format('d M Y') }}</td>
                         <td class="p-4">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('pimpinan.manajemen_surat.show', $r->surat->id_surat) }}" 
-                                   class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Lihat Detail">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+    <a href="{{ route('pimpinan.manajemen_surat.riwayat', $r->surat->id_surat) }}" 
+       class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Lihat Detail Riwayat">
+        <i class="fas fa-eye"></i>
+    </a>
                                 
                                 {{-- PERBAIKAN: Form dengan ID unik untuk SweetAlert --}}
                                 <form action="{{ route('pimpinan.manajemen_surat.destroy_riwayat', $r->id_disposisi) }}" method="POST" id="delete-form-{{ $r->id_disposisi }}">

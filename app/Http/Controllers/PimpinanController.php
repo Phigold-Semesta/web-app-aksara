@@ -68,6 +68,18 @@ class PimpinanController extends Controller
         return view('pimpinan.manajemen_surat.show', compact('surat', 'instruksi'));
     }
 
+/**
+     * Menampilkan detail riwayat tindakan (Read-Only)
+     */
+    public function showRiwayat($id)
+    {
+        // Solusi Jenius: Gunakan Eager Loading (with) untuk menarik semua relasi sekaligus.
+        // Ini mencegah database dipanggil berulang-ulang di dalam looping view (N+1 Problem).
+        $surat = Surat::with(['kategori', 'disposisi.instruksi_disposisi', 'arsip'])->findOrFail($id);
+        
+        return view('pimpinan.manajemen_surat.riwayat_show', compact('surat'));
+    }
+
     /**
      * Menampilkan dokumen dengan aman
      */
