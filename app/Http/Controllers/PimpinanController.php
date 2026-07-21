@@ -111,6 +111,7 @@ class PimpinanController extends Controller
    /**
  * Menyimpan disposisi
  */
+
 public function simpanDisposisi(Request $request)
 {
     $request->validate([
@@ -122,6 +123,7 @@ public function simpanDisposisi(Request $request)
         'signature_y'     => 'nullable|numeric',
         'signature_width' => 'nullable|numeric',
         'signature_page'  => 'nullable|integer',
+        'stempel_data'    => 'nullable|string',
         'stempel_x'       => 'nullable|numeric',
         'stempel_y'       => 'nullable|numeric',
         'stempel_width'   => 'nullable|numeric',
@@ -138,71 +140,95 @@ public function simpanDisposisi(Request $request)
     ]);
 
     // ==========================================================
-    // PROSES TANDA TANGAN DIGITAL + STEMPEL (kalau disertakan)
+    // PROSES TANDA TANGAN DIGITAL + STEMPEL DINAMIS
     // ==========================================================
-    if ($request->filled('signature_data') && !empty($surat->file_surat)) {
+    $adaTtd     = $request->filled('signature_data');
+    $adaStempel = $request->filled('stempel_data');
+
+    if (($adaTtd || $adaStempel) && !empty($surat->file_surat)) {
 
         $pathFileLama = storage_path('app/public/dokumen_surat/' . $surat->file_surat);
 
         if (file_exists($pathFileLama)) {
-            // 1. Decode gambar TTD dari base64 jadi file sementara
-            $signatureBase64 = str_replace('data:image/png;base64,', '', $request->signature_data);
-            $tempSignaturePath = storage_path('app/temp_ttd_' . $surat->id_surat . '_' . time() . '.png');
-            file_put_contents($tempSignaturePath, base64_decode($signatureBase64));
+            $tempSignaturePath = null;
+            $tempStempelPath   = null;
 
-            $pathStempel = storage_path('app/public/stempel/stempel_lpse_karawang.png');
+            // 1. Decode gambar TTD dari Base64 (baik dari canvas mouse maupun upload)
+            if ($adaTtd) {
+                $signatureBase64   = preg_replace('#^data:image/\w+;base64,#i', '', $request->signature_data);
+                $tempSignaturePath = storage_path('app/temp_ttd_' . $surat->id_surat . '_' . time() . '.png');
+                file_put_contents($tempSignaturePath, base64_decode($signatureBase64));
+            }
 
-            // 2. Proses tempel pakai FPDI
+            // 2. Decode gambar STEMPEL Dinamis dari Base64 (atau fallback ke default)
+            if ($adaStempel) {
+                $stempelBase64   = preg_replace('#^data:image/\w+;base64,#i', '', $request->stempel_data);
+                $tempStempelPath = storage_path('app/temp_stempel_' . $surat->id_surat . '_' . time() . '.png');
+                file_put_contents($tempStempelPath, base64_decode($stempelBase64));
+            } else {
+                $defaultStempel = storage_path('app/public/stempel/stempel_lpse_karawang.png');
+                if (file_exists($defaultStempel)) {
+                    $tempStempelPath = $defaultStempel;
+                }
+            }
+
+            // 3. Proses tempel menggunakan FPDI
             $pdf = new \setasign\Fpdi\Fpdi();
             $pageCount = $pdf->setSourceFile($pathFileLama);
             $halamanTtd = (int) ($request->signature_page ?? $pageCount);
 
             for ($i = 1; $i <= $pageCount; $i++) {
                 $tplId = $pdf->importPage($i);
-                $size = $pdf->getTemplateSize($tplId);
+                $size  = $pdf->getTemplateSize($tplId);
                 $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
                 $pdf->useTemplate($tplId);
 
                 if ($i == $halamanTtd) {
-                    // Konversi posisi persentase (dari drag di layar) ke satuan PDF asli
-                    if ($request->filled('signature_x')) {
+                    // Tempel TTD jika tersedia
+                    if ($tempSignaturePath && file_exists($tempSignaturePath) && $request->filled('signature_x')) {
                         $sigW = ($request->signature_width / 100) * $size['width'];
                         $sigX = ($request->signature_x / 100) * $size['width'];
                         $sigY = ($request->signature_y / 100) * $size['height'];
                         $pdf->Image($tempSignaturePath, $sigX, $sigY, $sigW);
                     }
 
-                    if ($request->filled('stempel_x') && file_exists($pathStempel)) {
+                    // Tempel STEMPEL jika tersedia
+                    if ($tempStempelPath && file_exists($tempStempelPath) && $request->filled('stempel_x')) {
                         $stW = ($request->stempel_width / 100) * $size['width'];
                         $stX = ($request->stempel_x / 100) * $size['width'];
                         $stY = ($request->stempel_y / 100) * $size['height'];
-                        $pdf->Image($pathStempel, $stX, $stY, $stW);
+                        $pdf->Image($tempStempelPath, $stX, $stY, $stW);
                     }
                 }
             }
 
-            // 3. Simpan sebagai file BARU
+            // 4. Simpan sebagai file BARU
             $namaFileBaru = 'surat_' . $surat->id_surat . '_ttd_' . time() . '.pdf';
             $pathFileBaru = storage_path('app/public/dokumen_surat/' . $namaFileBaru);
             $pdf->Output($pathFileBaru, 'F');
 
-            // 4. Hapus file LAMA (supaya tetap satu file saja)
+            // 5. Hapus file LAMA (supaya tetap satu file saja)
             \Illuminate\Support\Facades\Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
 
-            // 5. Update referensi file di objek surat (belum disimpan ke DB dulu)
+            // 6. Update referensi file di objek surat
             $surat->file_surat          = $namaFileBaru;
             $surat->tanggal_ttd         = now();
             $surat->ditandatangani_oleh = Auth::id();
 
-            // 6. Bersihkan file sementara
-            unlink($tempSignaturePath);
+            // 7. Bersihkan file sementara
+            if ($tempSignaturePath && file_exists($tempSignaturePath)) {
+                unlink($tempSignaturePath);
+            }
+            if ($adaStempel && $tempStempelPath && file_exists($tempStempelPath)) {
+                unlink($tempStempelPath);
+            }
         }
     }
 
     // ==========================================================
-    // Logika status & arsip (SUDAH ADA, tidak diubah)
+    // Logika status & arsip
     // ==========================================================
-    $instruksi = InstruksiDisposisi::find($request->id_instruksi);
+    $instruksi  = InstruksiDisposisi::find($request->id_instruksi);
     $statusBaru = 'DISPOSISI';
 
     if ($instruksi && stripos($instruksi->nama_instruksi, 'Arsip') !== false) {
@@ -222,6 +248,13 @@ public function simpanDisposisi(Request $request)
 
     $surat->status = $statusBaru;
     $surat->save();
+
+    if ($request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Disposisi berhasil dikirim dengan status: ' . $statusBaru
+        ]);
+    }
 
     return redirect()->route('pimpinan.manajemen_surat.index')->with('success', 'Disposisi berhasil dikirim dengan status: ' . $statusBaru);
 }
