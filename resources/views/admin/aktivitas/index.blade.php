@@ -281,94 +281,66 @@
 
         </div>
 
-      {{-- Pagination --}}
-<div class="mt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      {{-- Pagination (Disempurnakan dengan overflow-x-auto agar tidak keluar dari card) --}}
+      <div class="mt-6 pt-2 pb-2 flex flex-col md:flex-row justify-between items-center gap-4">
 
-    <div class="text-[10px] font-black uppercase text-slate-400">
+          <div class="text-[10px] font-black uppercase text-slate-400 shrink-0">
+              Menampilkan
+              {{ $logs->firstItem() ?? 0 }}
+              -
+              {{ $logs->lastItem() ?? 0 }}
+              dari
+              {{ $logs->total() }}
+              data
+          </div>
 
-        Menampilkan
-        {{ $logs->firstItem() ?? 0 }}
-        -
-        {{ $logs->lastItem() ?? 0 }}
-        dari
-        {{ $logs->total() }}
-        data
+          @if($logs->hasPages())
+              {{-- Bungkus dengan div overflow-x-auto agar aman dan tidak pernah menembus batas card --}}
+              <div class="w-full md:w-auto overflow-x-auto pb-2">
+                  <div class="flex items-center justify-end gap-2 min-w-max">
+
+                      {{-- Prev --}}
+                      @if($logs->onFirstPage())
+                          <span class="px-4 py-2 rounded-xl bg-emerald-100 text-emerald-300 text-xs font-black cursor-not-allowed shrink-0">
+                              Prev
+                          </span>
+                      @else
+                          <a href="{{ $logs->previousPageUrl() }}" class="px-4 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-black transition-all duration-300 shadow-sm shrink-0">
+                              Prev
+                          </a>
+                      @endif
+
+                      {{-- Nomor Halaman --}}
+                      @foreach ($logs->getUrlRange(1, $logs->lastPage()) as $page => $url)
+                          @if ($page == $logs->currentPage())
+                              <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#006b43] text-white text-xs font-black shadow-lg shrink-0">
+                                  {{ $page }}
+                              </span>
+                          @else
+                              <a href="{{ $url }}" class="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-black transition-all duration-300 shadow-sm shrink-0">
+                                  {{ $page }}
+                              </a>
+                          @endif
+                      @endforeach
+
+                      {{-- Next --}}
+                      @if($logs->hasMorePages())
+                          <a href="{{ $logs->nextPageUrl() }}" class="px-4 py-2 rounded-xl bg-[#006b43] hover:bg-emerald-800 text-white text-xs font-black transition-all duration-300 shadow-lg shrink-0">
+                              Next
+                          </a>
+                      @else
+                          <span class="px-4 py-2 rounded-xl bg-emerald-100 text-emerald-300 text-xs font-black cursor-not-allowed shrink-0">
+                              Next
+                          </span>
+                      @endif
+
+                  </div>
+              </div>
+          @endif
+
+      </div>
 
     </div>
-
-    @if($logs->hasPages())
-
-        <div class="flex items-center justify-center gap-2">
-
-            {{-- Prev --}}
-            @if($logs->onFirstPage())
-
-                <span
-                    class="px-4 py-2 rounded-xl bg-emerald-100 text-emerald-300 text-xs font-black cursor-not-allowed">
-                    Prev
-                </span>
-
-            @else
-
-                <a
-                    href="{{ $logs->previousPageUrl() }}"
-                    class="px-4 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-black transition-all duration-300 shadow-sm">
-                    Prev
-                </a>
-
-            @endif
-
-            {{-- Nomor Halaman --}}
-            @foreach ($logs->getUrlRange(1, $logs->lastPage()) as $page => $url)
-
-                @if ($page == $logs->currentPage())
-
-                    <span
-                        class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#006b43] text-white text-xs font-black shadow-lg">
-
-                        {{ $page }}
-
-                    </span>
-
-                @else
-
-                    <a
-                        href="{{ $url }}"
-                        class="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-black transition-all duration-300 shadow-sm">
-
-                        {{ $page }}
-
-                    </a>
-
-                @endif
-
-            @endforeach
-
-            {{-- Next --}}
-            @if($logs->hasMorePages())
-
-                <a
-                    href="{{ $logs->nextPageUrl() }}"
-                    class="px-4 py-2 rounded-xl bg-[#006b43] hover:bg-emerald-800 text-white text-xs font-black transition-all duration-300 shadow-lg">
-
-                    Next
-
-                </a>
-
-            @else
-
-                <span
-                    class="px-4 py-2 rounded-xl bg-emerald-100 text-emerald-300 text-xs font-black cursor-not-allowed">
-
-                    Next
-
-                </span>
-
-            @endif
-
-        </div>
-
-    @endif
 
 </div>
 

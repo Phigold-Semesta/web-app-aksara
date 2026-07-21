@@ -47,28 +47,81 @@ class AdminController extends Controller
     /**
      * Laporan & Statistik - PENYEMPURNAAN: Diaktifkan dengan agregasi data nyata untuk Chart.js
      */
-   public function lihatStatistik()
-{
-    // Gunakan 'LIKE' agar lebih fleksibel terhadap huruf kapital/kecil di database
-    $totalSuratMasuk = \App\Models\Surat::where('status', 'LIKE', '%masuk%')->count();
-    $totalSuratKeluar = \App\Models\Surat::where('status', 'LIKE', '%keluar%')->count();
-    $totalDisposisi = \App\Models\Surat::where('status', 'LIKE', '%disposisi%')->count();
+   
+public function lihatStatistik()
+    {
+        // 1. Data Card: Menggunakan relasi kategori (Meniru PetugasController yang akurat 100%)
+        $totalSuratMasuk = \App\Models\Surat::whereHas('kategori', function($q) {
+            $q->where('nama_kategori', 'LIKE', '%Surat Masuk%');
+        })->count();
 
-    // Data Surat untuk Tabel
-    $surats = \App\Models\Surat::latest()->take(10)->get();
+        $totalSuratKeluar = \App\Models\Surat::whereHas('kategori', function($q) {
+            $q->where('nama_kategori', 'LIKE', '%Surat Keluar%');
+        })->count();
 
-    // Data Kategori
-    $kategoriList = \App\Models\KategoriSurat::all();
+        // Untuk total disposisi tetap melacak status surat atau instruksi disposisi
+        $totalDisposisi = \App\Models\Surat::where('status', 'LIKE', '%disposisi%')->count();
 
-    // Pastikan mengembalikan view yang benar (admin.laporan.index)
-    return view('admin.laporan.index', compact(
-        'totalSuratMasuk',
-        'totalSuratKeluar',
-        'totalDisposisi',
-        'surats',
-        'kategoriList'
-    ));
-}
+        // 2. Data Surat untuk Tabel
+        $surats = \App\Models\Surat::with('kategori')->latest()->take(10)->get();
+
+        // 3. Data Kategori
+        $kategoriList = \App\Models\KategoriSurat::all();
+
+        // ============================================================
+        // 4. PENYEMPURNAAN: GENERATE DATA ARRAY UNTUK GRAFIK VIEW
+        // ============================================================
+        
+        // A. Data untuk Grafik Donut (Hitung jumlah surat per masing-masing kategori berdasarkan relasi)
+        $dataKategoriCounts = [];
+        foreach ($kategoriList as $kategori) {
+            $dataKategoriCounts[] = \App\Models\Surat::where('id_kategori', $kategori->id_kategori)->count();
+        }
+
+        // B. Data untuk Grafik Garis (Tren Sirkulasi 5 Bulan Terakhir)
+        $labelsBulan = [];
+        $dataSuratMasukChart = [];
+        $dataSuratKeluarChart = [];
+
+        for ($i = 4; $i >= 0; $i--) {
+            $bulan = \Carbon\Carbon::now()->subMonths($i);
+            $labelsBulan[] = $bulan->translatedFormat('M'); // Contoh: Jan, Feb, Mar
+
+            // Hitung total surat masuk per bulan berdasarkan kategori
+            $dataSuratMasukChart[] = \App\Models\Surat::whereHas('kategori', function($q) {
+                $q->where('nama_kategori', 'LIKE', '%Surat Masuk%');
+            })
+            ->whereMonth('created_at', $bulan->month)
+            ->whereYear('created_at', $bulan->year)
+            ->count();
+
+            // Hitung total surat keluar per bulan berdasarkan kategori
+            $dataSuratKeluarChart[] = \App\Models\Surat::whereHas('kategori', function($q) {
+                $q->where('nama_kategori', 'LIKE', '%Surat Keluar%');
+            })
+            ->whereMonth('created_at', $bulan->month)
+            ->whereYear('created_at', $bulan->year)
+            ->count();
+        }
+
+        // Penyelarasan variabel array grafik
+        $dataSuratMasuk = $dataSuratMasukChart;
+        $dataSuratKeluar = $dataSuratKeluarChart;
+
+        // Pastikan mengembalikan view yang benar beserta data grafiknya
+        return view('admin.laporan.index', compact(
+            'totalSuratMasuk',
+            'totalSuratKeluar',
+            'totalDisposisi',
+            'surats',
+            'kategoriList',
+            'labelsBulan',
+            'dataSuratMasuk',
+            'dataSuratKeluar',
+            'dataKategoriCounts'
+        ));
+    }
+    
     /**
      * Kelola User (Read) - PERBAIKAN: Menggunakan paginate() agar sinkron dengan template Blade
      */

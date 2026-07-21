@@ -44,7 +44,7 @@
         <div class="bg-white dark:bg-emerald-900 p-6 rounded-3xl border border-emerald-50 dark:border-emerald-800 shadow-sm flex items-center justify-between">
             <div>
                 <span class="block text-xs font-black uppercase tracking-wider text-slate-400 dark:text-emerald-400">Volume Surat Masuk</span>
-                <span class="block text-3xl font-black text-slate-800 dark:text-white mt-1">1</span>
+                <span class="block text-3xl font-black text-slate-800 dark:text-white mt-1">{{ $totalSuratMasuk ?? 0 }}</span>
                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-2">
                     <i class="fas fa-arrow-down text-xs"></i> Dokumen Masuk Terdaftar
                 </span>
@@ -223,7 +223,7 @@
     }
 
     // ==========================================
-    // INISIALISASI GRAFIK CHART.JS
+    // INISIALISASI GRAFIK CHART.JS (DINAMIS DARI DATABASE)
     // ==========================================
     document.addEventListener("DOMContentLoaded", function() {
         const isDarkMode = document.documentElement.classList.contains('dark');
@@ -234,11 +234,11 @@
         new Chart(ctxSirkulasi, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'],
+                labels: {!! json_encode($labelsBulan ?? []) !!},
                 datasets: [
                     {
                         label: 'Surat Masuk',
-                        data: [180, 240, 210, 310, 342],
+                        data: {!! json_encode($dataSuratMasuk ?? []) !!},
                         borderColor: '#008f5d',
                         backgroundColor: 'rgba(0, 143, 93, 0.1)',
                         fill: true,
@@ -246,7 +246,7 @@
                     },
                     {
                         label: 'Surat Keluar',
-                        data: [110, 150, 130, 190, 189],
+                        data: {!! json_encode($dataSuratKeluar ?? []) !!},
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         fill: true,
@@ -271,7 +271,14 @@
         @if(!$kategoriList->isEmpty())
             const ctxKategori = document.getElementById('chartKategori').getContext('2d');
             const kategoriLabels = {!! json_encode($kategoriList->pluck('nama_kategori')) !!};
-            const dataCounts = Array({{ $kategoriList->count() }}).fill(1).map(() => Math.floor(Math.random() * 40) + 10);
+            const dataCounts = {!! json_encode($dataKategoriCounts ?? []) !!};
+
+            // Fallback apabila controller tidak mengirim $dataKategoriCounts maka isi dengan 0
+            if (dataCounts.length === 0) {
+                for (let i = 0; i < kategoriLabels.length; i++) {
+                    dataCounts.push(0);
+                }
+            }
 
             new Chart(ctxKategori, {
                 type: 'doughnut',
