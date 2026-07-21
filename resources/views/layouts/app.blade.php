@@ -10,7 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') | AKSARA LPSE Karawang</title>
+    <title>@yield('title', 'Dashboard') | AKSARA LPSE Kab. Karawang</title>
     
     <script>
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -54,13 +54,19 @@
         #main-sidebar { width: 88px; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         
         @media (min-width: 1024px) {
-            #main-sidebar:hover { width: 288px; }
+            /* Support Hover & Expanded State lewat Tombol Burger Desktop */
+            #main-sidebar:hover, #main-sidebar.desktop-expanded { width: 288px; }
+            
             #main-sidebar .nav-text, #main-sidebar .logo-full, #main-sidebar .menu-header { opacity: 0; display: none; transition: opacity 0.3s ease; }
-            #main-sidebar refinement, #main-sidebar:hover .nav-text, #main-sidebar:hover .logo-full, #main-sidebar:hover .menu-header { opacity: 1; display: flex; }
+            
+            #main-sidebar:hover .nav-text, #main-sidebar:hover .logo-full, #main-sidebar:hover .menu-header,
+            #main-sidebar.desktop-expanded .nav-text, #main-sidebar.desktop-expanded .logo-full, #main-sidebar.desktop-expanded .menu-header { opacity: 1; display: flex; }
+            
             #main-sidebar .icon-collapsed { display: flex; }
-            #main-sidebar:hover .icon-collapsed { display: none; }
+            #main-sidebar:hover .icon-collapsed, #main-sidebar.desktop-expanded .icon-collapsed { display: none; }
+            
             #main-sidebar .nav-item { justify-content: center; }
-            #main-sidebar:hover .nav-item { justify-content: flex-start; }
+            #main-sidebar:hover .nav-item, #main-sidebar.desktop-expanded .nav-item { justify-content: flex-start; }
         }
 
         @media (max-width: 1024px) {
@@ -155,15 +161,15 @@
                 @endif
 
                @if(auth()->user()->role === 'pimpinan')
-    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">
-        Manajemen
-    </div>
-    
-    <a href="{{ route('pimpinan.manajemen_surat.index') }}" 
-       class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('pimpinan/manajemen_surat*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-        <i class="fas fa-folder-open w-6 text-center text-sm"></i>
-        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Surat</span>
-    </a>
+                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">
+                        Manajemen
+                    </div>
+                    
+                    <a href="{{ route('pimpinan.manajemen_surat.index') }}" 
+                       class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('pimpinan/manajemen_surat*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-folder-open w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Surat</span>
+                    </a>
 
                     <a href="{{ route('pimpinan.monitoring_arsip.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Request::is('pimpinan/monitoring_arsip*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <i class="fas fa-file-shield w-6 text-center text-sm"></i>
@@ -180,7 +186,7 @@
 
             <div class="p-4 mb-4">
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
-                <button onclick="confirmLogout(event)" class="w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 text-red-100 transition-all border border-white/5 group">
+                <button onclick="confirmLogout(event)" class="nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 text-red-100 transition-all border border-white/5 group">
                     <i class="fas fa-power-off w-6 text-center group-hover:scale-110"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Keluar</span>
                 </button>
@@ -190,7 +196,12 @@
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
             <header class="h-20 bg-white dark:bg-emerald-900 border-b border-emerald-50 dark:border-emerald-800 shadow-sm flex justify-between items-center px-4 sm:px-8 z-20 shrink-0 transition-colors">
                 <div class="flex items-center gap-3 sm:gap-4">
+                    <!-- Tombol Burger Mobile -->
                     <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-[#008f5d] dark:bg-emerald-800 dark:text-emerald-100">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <!-- Tombol Burger Desktop (Toggle Perma-Expand) -->
+                    <button onclick="toggleDesktopSidebar()" class="hidden lg:flex w-10 h-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-800 text-[#008f5d] dark:text-emerald-400 hover:bg-emerald-100 transition-all">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="flex flex-col leading-none">
@@ -239,6 +250,11 @@
                 overlay.classList.add('hidden');
                 document.body.style.overflow = 'auto';
             }
+        }
+
+        // Fungsi Toggle untuk Desktop Burger Menu
+        function toggleDesktopSidebar() {
+            document.getElementById('main-sidebar').classList.toggle('desktop-expanded');
         }
 
         function confirmLogout(event) {
