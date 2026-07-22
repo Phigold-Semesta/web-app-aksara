@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="p-8 min-h-screen transition-colors duration-300 dark:bg-emerald-950/20">
+    
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
         <div>
@@ -13,19 +14,42 @@
         </div>
     </div>
 
-    {{-- Filter Section --}}
+    {{-- Control Bar Section (Search Box & Filter Jumlah Baris) --}}
     <div class="bg-white dark:bg-emerald-900/40 rounded-[2rem] p-6 mb-8 shadow-sm border border-emerald-50 dark:border-emerald-800/50 flex flex-wrap gap-4 items-center justify-between transition-all">
-        <form action="{{ route('pimpinan.monitoring_arsip.index') }}" method="GET" class="flex flex-wrap gap-3 w-full lg:w-auto">
-            <div class="relative flex-grow lg:w-80">
-                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-emerald-400"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari perihal atau nomor surat..." 
-                    class="w-full bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/50 rounded-2xl pl-12 pr-5 py-3 focus:ring-2 focus:ring-emerald-500 text-emerald-900 dark:text-emerald-100 placeholder-emerald-300 transition-all font-medium">
+        
+        <form action="{{ route('pimpinan.monitoring_arsip.index') }}" method="GET" id="filterForm" class="flex flex-wrap gap-4 w-full items-center justify-between">
+            
+            {{-- Filter Jumlah Baris --}}
+            <div class="flex items-center gap-3">
+                <span class="text-[11px] font-bold text-emerald-900 dark:text-emerald-200 uppercase">Tampilkan:</span>
+                <div class="relative">
+                    <select name="per_page" onchange="document.getElementById('filterForm').submit()" 
+                        class="appearance-none bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/50 rounded-xl px-5 py-2.5 pr-8 text-xs font-bold text-emerald-900 dark:text-emerald-100 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                        <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>5 Baris</option>
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 Baris</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
+                        <option value="-1" {{ request('per_page') == -1 ? 'selected' : '' }}>Semua Data</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-emerald-500 pointer-events-none"></i>
+                </div>
             </div>
-            @if(request('search'))
-                <a href="{{ route('pimpinan.monitoring_arsip.index') }}" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-5 py-3 rounded-2xl font-bold hover:bg-red-100 transition-all flex items-center gap-2 border border-red-100 dark:border-red-900/30">
-                    <i class="fas fa-times-circle"></i> Reset
-                </a>
-            @endif
+
+            {{-- Input Searching --}}
+            <div class="flex items-center gap-3 w-full sm:w-80">
+                <div class="relative w-full">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400 text-xs"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari perihal atau nomor surat..." 
+                        class="w-full bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100/50 dark:border-emerald-800/50 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-emerald-900 dark:text-emerald-100 placeholder-emerald-300 outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                
+                @if(request('search') || request('per_page'))
+                    <a href="{{ route('pimpinan.monitoring_arsip.index') }}" 
+                       class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-100 transition-all flex items-center gap-2 border border-red-100 dark:border-red-900/30 shrink-0">
+                        <i class="fas fa-times-circle"></i> Reset
+                    </a>
+                @endif
+            </div>
+            
         </form>
     </div>
 
@@ -80,11 +104,55 @@
         </table>
     </div>
 
-    {{-- Pagination --}}
-    @if($arsipSurat->hasPages())
-    <div class="mt-10">
-        {{ $arsipSurat->links() }}
+    {{-- CUSTOM PAGINATION CONTAINER (SESUAI GAMBAR) --}}
+    <div class="mt-8 bg-white dark:bg-emerald-900/40 rounded-[2.5rem] p-4 sm:p-5 shadow-sm border border-emerald-50 dark:border-emerald-800/50 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all">
+        
+        {{-- Teks Informasi Data --}}
+        <div class="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 pl-4">
+            MENAMPILKAN {{ $arsipSurat->firstItem() ?? 0 }} – {{ $arsipSurat->lastItem() ?? 0 }} DARI {{ $arsipSurat->total() }} DATA
+        </div>
+
+        {{-- Navigasi Tombol Pagination --}}
+        <div class="flex items-center gap-2 pr-2">
+            
+            {{-- Tombol Prev --}}
+            @if ($arsipSurat->onFirstPage())
+                <span class="px-4 py-2 rounded-full text-xs font-bold bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-300 dark:text-emerald-700/50 cursor-not-allowed">
+                    Prev
+                </span>
+            @else
+                <a href="{{ $arsipSurat->previousPageUrl() }}" class="px-4 py-2 rounded-full text-xs font-bold bg-emerald-100/70 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 transition-all">
+                    Prev
+                </a>
+            @endif
+
+            {{-- Nomor Halaman --}}
+            @foreach ($arsipSurat->getUrlRange(1, $arsipSurat->lastPage()) as $page => $url)
+                @if ($page == $arsipSurat->currentPage())
+                    <span class="w-9 h-9 flex items-center justify-center rounded-full text-xs font-black bg-[#006b43] text-white shadow-md shadow-emerald-900/20">
+                        {{ $page }}
+                    </span>
+                @else
+                    <a href="{{ $url }}" class="w-9 h-9 flex items-center justify-center rounded-full text-xs font-bold bg-emerald-100/70 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 transition-all">
+                        {{ $page }}
+                    </a>
+                @endif
+            @endforeach
+
+            {{-- Tombol Next --}}
+            @if ($arsipSurat->hasMorePages())
+                <a href="{{ $arsipSurat->nextPageUrl() }}" class="px-5 py-2 rounded-full text-xs font-black bg-[#006b43] text-white hover:bg-emerald-800 transition-all shadow-md shadow-emerald-900/20">
+                    Next
+                </a>
+            @else
+                <span class="px-5 py-2 rounded-full text-xs font-black bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-300 dark:text-emerald-700/50 cursor-not-allowed">
+                    Next
+                </span>
+            @endif
+
+        </div>
+
     </div>
-    @endif
+
 </div>
 @endsection

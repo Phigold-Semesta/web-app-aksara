@@ -14,38 +14,36 @@ use Illuminate\Support\Facades\Log;
 
 class PimpinanController extends Controller
 {
-    /**
-     * Dashboard Pimpinan
+   /**
+     * DASHBOARD PIMPINAN (EKSEKUTIF)
+     * Menyiapkan Data Statistik Utama dan Seluruh Riwayat Surat untuk DataTables Frontend
      */
-   public function dashboard()
-{
-    // 1. Ambil data statistik (seperti yang sudah ada)
-    $totalSuratMasuk = \App\Models\Surat::whereHas('kategori', function($q) {
-                           $q->where('nama_kategori', 'like', '%Surat Masuk%');
-                       })->count();
-                       
-    $totalSuratKeluar = \App\Models\Surat::whereHas('kategori', function($q) {
-                            $q->where('nama_kategori', 'like', '%Surat Keluar%');
-                        })->count();
-                        
-    $totalDisposisi = \App\Models\Surat::where('status', 'disposisi')->count();
+    public function dashboard()
+    {
+        // 1. Ambil data statistik ringkasan pimpinan
+        $totalSuratMasuk = Surat::whereHas('kategori', function($q) {
+                                $q->where('nama_kategori', 'like', '%Surat Masuk%');
+                            })->count();
+                            
+        $totalSuratKeluar = Surat::whereHas('kategori', function($q) {
+                                 $q->where('nama_kategori', 'like', '%Surat Keluar%');
+                             })->count();
+                            
+        $totalDisposisi = Surat::where('status', 'disposisi')->count();
 
-    // 2. AMBIL DATA SURAT UNTUK TABEL (Inilah yang kurang!)
-    $surats = \App\Models\Surat::with('kategori')->latest()->get();
+        // 2. Ambil SELURUH data surat beserta relasinya untuk DataTables Frontend
+        $surats = Surat::with(['kategori', 'user'])
+                        ->latest()
+                        ->get();
 
-    // 3. Ambil data kategori untuk tabel monitoring kategori di bawah (jika masih diperlukan)
-    $kategoriList = \App\Models\KategoriSurat::all();
-
-    // 4. Kirim semua data ke view
-    return view('pimpinan.dashboard', compact(
-        'totalSuratMasuk', 
-        'totalSuratKeluar', 
-        'totalDisposisi', 
-        'surats', 
-        'kategoriList'
-    ));
-}
-
+        // 3. Kirim data ke view dashboard pimpinan
+        return view('pimpinan.dashboard', compact(
+            'totalSuratMasuk', 
+            'totalSuratKeluar', 
+            'totalDisposisi', 
+            'surats'
+        ));
+    }
     /**
      * Manajemen Surat
      */
@@ -267,9 +265,34 @@ public function simpanDisposisi(Request $request)
         return redirect()->back()->with('success', 'Riwayat berhasil dihapus!');
     }
 
-    public function monitoringArsip()
+    /**
+     * Monitoring Arsip Surat Pimpinan
+     * Dilengkapi Filter Search & Dinamis Pagination (Per Page)
+     */
+    public function monitoringArsip(Request $request)
     {
-        $arsipSurat = Arsip::with('surat')->latest()->paginate(10);
+        // 1. Ambil query pencarian & limit per baris
+        $search  = $request->input('search');
+        $perPage = $request->input('per_page', 5); // Default 5 baris
+
+        // 2. Query data Arsip dengan eager loading relasi Surat
+        $query = Arsip::with('surat')->latest();
+
+        // 3. Filter Pencarian (Cari berdasarkan Perihal atau Nomor Surat)
+        if (!empty($search)) {
+            $query->whereHas('surat', function ($q) use ($search) {
+                $q->where('perihal', 'like', "%{$search}%")
+                  ->orWhere('nomor_surat', 'like', "%{$search}%");
+            })->orWhere('lokasi_fisik', 'like', "%{$search}%");
+        }
+
+        // 4. Handle Opsi 'Semua Data' (-1)
+        if ($perPage == -1) {
+            $arsipSurat = $query->paginate($query->count() ?: 1)->appends($request->all());
+        } else {
+            $arsipSurat = $query->paginate((int)$perPage)->appends($request->all());
+        }
+
         return view('pimpinan.monitoring_arsip.index', compact('arsipSurat'));
     }
 
