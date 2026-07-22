@@ -5,6 +5,7 @@
 @section('content')
 <div class="p-2 md:p-4 space-y-8 animate__animated animate__fadeIn">
     
+    {{-- Banner Utama Workflow --}}
     <div class="relative overflow-hidden bg-[#006b43] rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl border border-emerald-400/20">
         <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
             <div class="space-y-4 text-center md:text-left">
@@ -36,6 +37,7 @@
         </div>
     </div>
 
+    {{-- Stats Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-50 dark:border-slate-800 text-center flex flex-col items-center group hover:translate-y-[-5px] transition-all">
             <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-inner group-hover:rotate-6 transition-transform">
@@ -65,91 +67,30 @@
         </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-slate-50 dark:border-slate-800 mt-12">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-            <div>
-                <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter italic">Laporan Data Komprehensif</h2>
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Cetak & Unduh Dokumen Pelaporan Master Data</p>
+    {{-- Widget Akses Pintas & Navigasi Operasional --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div class="bg-gradient-to-r from-[#006b43] to-emerald-800 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center justify-between">
+            <div class="space-y-2">
+                <p class="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">Manajemen Surat</p>
+                <h3 class="text-2xl font-black uppercase tracking-tight">Kelola Seluruh Arsip Dokumen</h3>
+                <p class="text-xs text-emerald-100/80 font-medium">Akses cepat pencarian, filtering, dan pengorganisasian data surat.</p>
             </div>
-            
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="relative group">
-                    <button class="bg-[#008f5d] text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-emerald-500/20">
-                        <i class="fas fa-file-export"></i> Export Data <i class="fas fa-chevron-down text-[8px]"></i>
-                    </button>
-                    <div class="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-3 z-50 hidden group-hover:block animate__animated animate__fadeIn">
-                        <a href="{{ route('petugas.export.excel') }}" class="w-full text-left px-6 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-3">
-                            <i class="fas fa-file-excel text-emerald-500"></i> Excel (.xlsx)
-                        </a>
-                        <a href="{{ route('petugas.export.pdf') }}" class="w-full text-left px-6 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-3">
-                            <i class="fas fa-file-pdf text-red-500"></i> PDF (.pdf)
-                        </a>
-                        <a href="{{ route('petugas.export.csv') }}" class="w-full text-left px-6 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 flex items-center gap-3">
-                            <i class="fas fa-file-csv text-blue-500"></i> CSV (.csv)
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <a href="{{ route('petugas.manajemen_surat.index') }}" class="w-14 h-14 bg-white text-[#006b43] rounded-2xl flex items-center justify-center text-xl hover:scale-110 transition-transform shadow-lg shrink-0">
+                <i class="fas fa-arrow-right"></i>
+            </a>
         </div>
 
-        <div class="overflow-x-auto">
-            <table id="masterReportTable" class="w-full text-left border-separate border-spacing-y-4">
-                <thead>
-                    <tr class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                        <th class="px-6 py-4">Nomor Dokumen</th>
-                        <th class="px-6 py-4">Asal Instansi</th>
-                        <th class="px-6 py-4 text-center">Kategori</th>
-                        <th class="px-6 py-4 text-center">Tanggal</th>
-                        <th class="px-6 py-4 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="text-xs">
-                    @foreach($riwayat_surats as $surat)
-                    <tr class="bg-white dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all rounded-[1.5rem] shadow-sm border border-slate-100 dark:border-slate-800">
-                        <td class="px-6 py-5 rounded-l-[1.5rem]">
-                            <p class="font-black text-slate-800 dark:text-white uppercase">{{ $surat->nomor_surat }}</p>
-                        </td>
-                        <td class="px-6 py-5 font-bold text-slate-600 dark:text-slate-300 uppercase italic">{{ $surat->asal_instansi }}</td>
-                        <td class="px-6 py-5 text-center">
-                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-black uppercase text-[9px]">
-                                {{ $surat->kategori->nama_kategori ?? 'UMUM' }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-5 text-center font-bold text-slate-500 italic">
-                            {{ \Carbon\Carbon::parse($surat->tanggal_surat)->format('Y-m-d') }}
-                        </td>
-                        <td class="px-6 py-5 text-center rounded-r-[1.5rem]">
-                            <span class="inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase italic {{ $surat->status == 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600' }}">
-                                {{ $surat->status }}
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center justify-between">
+            <div class="space-y-2">
+                <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Pusat Arsip Fisik</p>
+                <h3 class="text-2xl font-black uppercase tracking-tight">Kelola Tempat & Retensi Arsip</h3>
+                <p class="text-xs text-slate-300/80 font-medium">Monitoring lokasi fisik, tanggal retensi, dan keamanan arsip.</p>
+            </div>
+            <a href="{{ route('petugas.manajemen_arsip.index') }}" class="w-14 h-14 bg-emerald-400 text-slate-900 rounded-2xl flex items-center justify-center text-xl hover:scale-110 transition-transform shadow-lg shrink-0">
+                <i class="fas fa-box-archive"></i>
+            </a>
         </div>
     </div>
+
 </div>
 @endsection
-
-@push('styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<style>
-    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { display: none; }
-</style>
-@endpush
-
-@push('scripts')
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // DataTables hanya untuk fitur pencarian (search) dan pagination saja
-        $('#masterReportTable').DataTable({
-            paging: true,
-            pageLength: 5,
-            ordering: true
-        });
-    });
-</script>
-@endpush

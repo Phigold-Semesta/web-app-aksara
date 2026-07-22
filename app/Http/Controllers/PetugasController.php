@@ -20,56 +20,60 @@ class PetugasController extends Controller
     /**
      * DASHBOARD PETUGAS
      */
-  public function dashboard()
-{
-    // 1. Hitung stats dengan query yang lebih fleksibel
-    $stats = [
-        // Menggunakan 'like' agar jika di DB ada spasi tambahan atau huruf besar/kecil tetap terbaca
-        'surat_masuk'  => \App\Models\Surat::whereHas('kategori', function($q) {
-                              $q->where('nama_kategori', 'like', '%Surat Masuk%');
-                          })->count(),
-        
-        'surat_keluar' => \App\Models\Surat::whereHas('kategori', function($q) {
-                              $q->where('nama_kategori', 'like', '%Surat Keluar%');
-                          })->count(),
-                          
-        'total_arsip'  => \App\Models\Arsip::count(),
-        'update_time'  => now()->format('H:i')
-    ];
+ 
+public function dashboard()
+    {
+        // 1. Hitung statistik umum
+        $stats = [
+            'surat_masuk'  => Surat::whereHas('kategori', function($q) {
+                                  $q->where('nama_kategori', 'like', '%Surat Masuk%');
+                              })->count(),
+            
+            'surat_keluar' => Surat::whereHas('kategori', function($q) {
+                                  $q->where('nama_kategori', 'like', '%Surat Keluar%');
+                              })->count(),
+                              
+            'total_arsip'  => Arsip::count(),
+            'update_time'  => now()->format('H:i')
+        ];
 
-    // 2. Ambil 5 data surat terbaru beserta kategorinya untuk tabel
-    $riwayat_surats = \App\Models\Surat::with('kategori')
-                        ->latest()
-                        ->take(5)
-                        ->get();
+        // 2. Data Label Bulan (Jan - Des)
+        $labelsBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        $dataSuratMasuk = [];
+        $dataSuratKeluar = [];
 
-    // 3. Kirim data ke view
-    return view('petugas.dashboard', compact('stats', 'riwayat_surats'));
-}
+        // Loop menghitung volume per bulan di tahun berjalan
+        for ($bulan = 1; $bulan <= 12; $bulan++) {
+            $dataSuratMasuk[] = Surat::whereHas('kategori', function($q) {
+                $q->where('nama_kategori', 'like', '%Surat Masuk%');
+            })->whereYear('tanggal_surat', date('Y'))->whereMonth('tanggal_surat', $bulan)->count();
 
-public function exportExcel()
-{
-    return Excel::download(new SuratExport, 'Laporan_Surat_'.date('Y-m-d').'.xlsx');
-}
+            $dataSuratKeluar[] = Surat::whereHas('kategori', function($q) {
+                $q->where('nama_kategori', 'like', '%Surat Keluar%');
+            })->whereYear('tanggal_surat', date('Y'))->whereMonth('tanggal_surat', $bulan)->count();
+        }
 
-public function exportPdf()
-{
-    $surats = Surat::all();
-    $pdf = Pdf::loadView('petugas.exports.pdf', compact('surats'));
-    return $pdf->download('Laporan_Surat_'.date('Y-m-d').'.pdf');
-}
+        // 3. Data Distribusi Kategori Surat untuk Chart Doughnut
+        $kategoriList = KategoriSurat::all();
+        $dataKategoriCounts = [];
 
-// Tambahkan method ini di dalam class PetugasController
-public function exportCsv()
-{
-    // Menggunakan class SuratExport yang sama dengan Excel
-    return \Maatwebsite\Excel\Facades\Excel::download(
-        new \App\Exports\SuratExport, 
-        'Laporan_Surat_'.date('Y-m-d').'.csv', 
-        \Maatwebsite\Excel\Excel::CSV
-    );
-}
+        foreach ($kategoriList as $kat) {
+            $dataKategoriCounts[] = Surat::where('id_kategori', $kat->id_kategori ?? $kat->id)->count();
+        }
 
+        // 4. Kirim data ke view dashboard petugas
+        return view('petugas.dashboard', compact(
+            'stats', 
+            'labelsBulan', 
+            'dataSuratMasuk', 
+            'dataSuratKeluar', 
+            'kategoriList', 
+            'dataKategoriCounts'
+        ));
+    }
+
+
+   
     /**
      * MANAJEMEN SURAT: INDEX (DENGAN SEARCH & FILTER PER PAGE)
      */
