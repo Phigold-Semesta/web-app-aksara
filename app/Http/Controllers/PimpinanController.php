@@ -44,14 +44,63 @@ class PimpinanController extends Controller
             'surats'
         ));
     }
+ 
     /**
-     * Manajemen Surat
+     * Manajemen Surat Pimpinan (Surat Masuk & Riwayat Disposisi)
+     * Dilengkapi Filter Searching, Limit Baris Dinamis, & Pagination Independen
      */
-    public function indexManajemenSurat()
+    public function indexManajemenSurat(Request $request)
     {
-        $suratMasuk = Surat::where('status', 'pending')->get();
-        $riwayat = Disposisi::with(['surat', 'user'])->latest()->get();
-        
+        // 1. Ambil Parameter Filter untuk SECTION 1: SURAT MASUK
+        $searchMasuk  = $request->input('search_masuk');
+        $perPageMasuk = $request->input('per_page_masuk', 5); // Default 5 baris
+
+        // Query Surat Masuk (Status Pending / Butuh Arahan)
+        $queryMasuk = Surat::where('status', 'pending')->latest();
+
+        if (!empty($searchMasuk)) {
+            $queryMasuk->where(function($q) use ($searchMasuk) {
+                $q->where('nomor_surat', 'like', "%{$searchMasuk}%")
+                  ->orWhere('perihal', 'like', "%{$searchMasuk}%");
+            });
+        }
+
+        // Handle Opsi 'Semua Data' (-1) untuk Surat Masuk
+        if ($perPageMasuk == -1) {
+            $suratMasuk = $queryMasuk->paginate($queryMasuk->count() ?: 1, ['*'], 'page_masuk')->appends($request->all());
+        } else {
+            $suratMasuk = $queryMasuk->paginate((int)$perPageMasuk, ['*'], 'page_masuk')->appends($request->all());
+        }
+
+
+        // 2. Ambil Parameter Filter untuk SECTION 2: RIWAYAT DISPOSISI
+        $searchRiwayat  = $request->input('search_riwayat');
+        $perPageRiwayat = $request->input('per_page_riwayat', 5); // Default 5 baris
+
+        // Query Riwayat Disposisi beserta Relasi Surat, User, dan Instruksi
+        $queryRiwayat = Disposisi::with(['surat', 'user', 'instruksi_disposisi'])->latest();
+
+        if (!empty($searchRiwayat)) {
+            $queryRiwayat->where(function($q) use ($searchRiwayat) {
+                $q->whereHas('surat', function($subQ) use ($searchRiwayat) {
+                    $subQ->where('nomor_surat', 'like', "%{$searchRiwayat}%")
+                         ->orWhere('perihal', 'like', "%{$searchRiwayat}%");
+                })
+                ->orWhereHas('instruksi_disposisi', function($subQ) use ($searchRiwayat) {
+                    $subQ->where('nama_instruksi', 'like', "%{$searchRiwayat}%");
+                });
+            });
+        }
+
+        // Handle Opsi 'Semua Data' (-1) untuk Riwayat Disposisi
+        if ($perPageRiwayat == -1) {
+            $riwayat = $queryRiwayat->paginate($queryRiwayat->count() ?: 1, ['*'], 'page_riwayat')->appends($request->all());
+        } else {
+            $riwayat = $queryRiwayat->paginate((int)$perPageRiwayat, ['*'], 'page_riwayat')->appends($request->all());
+        }
+
+
+        // 3. Kirim data yang telah di-paginate ke view
         return view('pimpinan.manajemen_surat.index', compact('suratMasuk', 'riwayat'));
     }
 
