@@ -24,33 +24,38 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {{-- Kartu Informasi --}}
-        <div class="lg:col-span-1 space-y-6">
-            <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-900/5 border border-emerald-50 dark:border-slate-800">
-                <h3 class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-6 pb-4 border-b border-emerald-50 dark:border-slate-800">Metadata Surat</h3>
-                
-                <div class="space-y-6">
-                    <div>
-                        <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Perihal</p>
-                        <p class="text-emerald-950 dark:text-emerald-50 font-bold text-lg leading-tight">{{ $surat->perihal }}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Asal Instansi</p>
-                        <p class="text-emerald-950 dark:text-emerald-50 font-bold text-lg leading-tight">{{ $surat->asal_instansi }}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Tanggal Surat</p>
-                        <p class="text-emerald-950 dark:text-emerald-50 font-bold text-sm">{{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}</p>
-                    </div>
-                    <div class="pt-4 mt-4 border-t border-emerald-50 dark:border-slate-800">
-                        <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider mb-2">Status Saat Ini</p>
-                        <span class="inline-flex items-center gap-2 text-emerald-600 font-black text-xs uppercase bg-emerald-50 px-3 py-1 rounded-lg">
-                            <i class="fas fa-tag"></i> {{ strtoupper($surat->status) }}
-                        </span>
-                    </div>
+    {{-- Kartu Informasi --}}
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-900/5 border border-emerald-50 dark:border-slate-800">
+            <h3 class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-6 pb-4 border-b border-emerald-50 dark:border-slate-800">Metadata Surat</h3>
+            
+            <div class="space-y-6">
+                <div>
+                    <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Perihal</p>
+                    <p class="text-emerald-950 dark:text-emerald-50 font-bold text-lg leading-tight">{{ $surat->perihal }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Asal Instansi</p>
+                    <p class="text-emerald-950 dark:text-emerald-50 font-bold text-lg leading-tight">{{ $surat->asal_instansi }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Kategori Surat</p>
+                    <p class="text-emerald-950 dark:text-emerald-50 font-bold text-base leading-tight">{{ $surat->kategori->nama_kategori ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Tanggal Surat</p>
+                    <p class="text-emerald-950 dark:text-emerald-50 font-bold text-sm">{{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}</p>
+                </div>
+                <div class="pt-4 mt-4 border-t border-emerald-50 dark:border-slate-800">
+                    <p class="text-[10px] font-black text-emerald-400 uppercase tracking-wider mb-2">Status Saat Ini</p>
+                    <span class="inline-flex items-center gap-2 text-emerald-600 font-black text-xs uppercase bg-emerald-50 px-3 py-1 rounded-lg">
+                        <i class="fas fa-tag"></i> {{ strtoupper($surat->status) }}
+                    </span>
                 </div>
             </div>
         </div>
+    </div>
+
 
         {{-- Preview Dokumen --}}
        {{-- Preview Dokumen --}}

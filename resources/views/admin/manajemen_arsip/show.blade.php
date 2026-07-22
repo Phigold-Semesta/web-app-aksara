@@ -67,7 +67,7 @@
                 </div>
             </div>
 
-            {{-- Metadata Surat --}}
+          {{-- Metadata Surat --}}
             <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-emerald-50 dark:border-slate-800 shadow-xl shadow-emerald-900/5">
                 <p class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-6">Metadata Surat</p>
                 <div class="space-y-6">
@@ -78,6 +78,10 @@
                     <div>
                         <p class="text-emerald-400 font-bold text-[10px] uppercase">Asal Instansi</p>
                         <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->asal_instansi ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-emerald-400 font-bold text-[10px] uppercase">Kategori Surat</p>
+                        <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->kategori->nama_kategori ?? 'N/A' }}</p>
                     </div>
                     <div>
                         <p class="text-emerald-400 font-bold text-[10px] uppercase">Perihal</p>

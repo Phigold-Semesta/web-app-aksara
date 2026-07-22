@@ -5,9 +5,7 @@
 <div class="p-8 max-w-4xl mx-auto transition-colors duration-300 min-h-screen">
     <div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-            <a href="{{ route('admin.manajemen_arsip.index') }}" class="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mb-4 hover:gap-4 transition-all">
-                <i class="fas fa-arrow-left"></i> Kembali ke Daftar
-            </a>
+           
             <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-emerald-50 tracking-tight">Edit Data Arsip</h1>
             <p class="text-emerald-500 dark:text-emerald-400 font-medium mt-1">Perbarui informasi lokasi fisik dan masa retensi dokumen Aksara (Administrator)</p>
         </div>

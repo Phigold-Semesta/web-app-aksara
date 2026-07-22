@@ -650,9 +650,29 @@ public function updateKategori(Request $request, $id)
      */
 
     // 1. INDEX: Menampilkan daftar surat
-    public function indexSurat(Request $request)
+   public function indexSurat(Request $request)
     {
-        $surats = \App\Models\Surat::latest()->paginate(10);
+        $query = \App\Models\Surat::latest();
+
+        // Fitur Pencarian (Search)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('perihal', 'LIKE', "%{$search}%")
+                  ->orWhere('asal_instansi', 'LIKE', "%{$search}%")
+                  ->orWhere('nomor_surat', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Fitur Filter Jumlah Baris per Halaman (Per Page)
+        $perPage = $request->input('per_page', 10);
+        
+        if ($perPage === 'all' || $perPage == -1) {
+            $surats = $query->get(); // Ambil semua data tanpa pagination
+        } else {
+            $surats = $query->paginate((int) $perPage)->appends($request->query());
+        }
+
         return view('admin.manajemen_surat.index', compact('surats'));
     }
 
@@ -783,13 +803,14 @@ public function updateSurat(Request $request, $id)
         return view('admin.manajemen_surat.show', compact('surat'));
     }
 
-    // 5. EDIT: Form edit
+   // 5. EDIT: Form edit
     public function editSurat($id)
     {
         $surat = \App\Models\Surat::findOrFail($id);
-        return view('admin.manajemen_surat.edit', compact('surat'));
+        $kategoris = \App\Models\KategoriSurat::all(); // Ambil semua data kategori surat
+        
+        return view('admin.manajemen_surat.edit', compact('surat', 'kategoris'));
     }
-
     
     
 

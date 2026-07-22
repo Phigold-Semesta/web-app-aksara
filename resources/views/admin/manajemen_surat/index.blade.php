@@ -5,7 +5,7 @@
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
         <div>
-            <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-white tracking-tight">Manajemen Surat (Admin)</h1>
+            <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-white tracking-tight">Manajemen Surat</h1>
             <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-1">Digitalisasi dan Pengarsipan Surat LPSE Karawang</p>
         </div>
         <a href="{{ route('admin.manajemen_surat.create') }}" 
@@ -116,11 +116,40 @@
         </table>
     </div>
 
-    {{-- Pagination --}}
-    @if($surats instanceof \Illuminate\Pagination\LengthAwarePaginator && $surats->hasPages())
+    {{-- CUSTOM PAGINATION CONTAINER (Sesuai Referensi Gambar) --}}
+    @if($surats instanceof \Illuminate\Pagination\LengthAwarePaginator)
     <div class="mt-10 px-4">
-        <div class="bg-white dark:bg-emerald-900/20 p-4 rounded-[2rem] border border-emerald-50 dark:border-emerald-800/50 shadow-sm flex justify-center">
-            {{ $surats->appends(request()->query())->links() }}
+        <div class="bg-white dark:bg-emerald-900/20 p-4 sm:p-5 rounded-[2rem] border border-emerald-50 dark:border-emerald-800/50 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 pl-2">
+                MENAMPILKAN {{ $surats->firstItem() ?? 0 }} – {{ $surats->lastItem() ?? 0 }} DARI {{ $surats->total() }} DATA
+            </div>
+
+            @if($surats->hasPages())
+            <div class="flex items-center gap-2">
+                {{-- Prev --}}
+                @if ($surats->onFirstPage())
+                    <span class="px-4 py-2 rounded-full text-xs font-bold bg-emerald-100/30 text-emerald-300 cursor-not-allowed">Prev</span>
+                @else
+                    <a href="{{ $surats->previousPageUrl() }}" class="px-4 py-2 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all">Prev</a>
+                @endif
+
+                {{-- Numbered Pages --}}
+                @foreach ($surats->getUrlRange(1, $surats->lastPage()) as $page => $url)
+                    @if ($page == $surats->currentPage())
+                        <span class="w-9 h-9 flex items-center justify-center rounded-full text-xs font-black bg-[#006b43] text-white shadow-md">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}" class="w-9 h-9 flex items-center justify-center rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-all">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                {{-- Next --}}
+                @if ($surats->hasMorePages())
+                    <a href="{{ $surats->nextPageUrl() }}" class="px-5 py-2 rounded-full text-xs font-black bg-[#006b43] text-white hover:bg-emerald-800 transition-all shadow-md">Next</a>
+                @else
+                    <span class="px-5 py-2 rounded-full text-xs font-black bg-emerald-100/30 text-emerald-300 cursor-not-allowed">Next</span>
+                @endif
+            </div>
+            @endif
         </div>
     </div>
     @endif
@@ -171,12 +200,4 @@
         });
     }
 </script>
-
-<style>
-    .pagination { @apply flex gap-2; }
-    .pagination li { @apply list-none; }
-    .page-item.active .page-link { @apply bg-emerald-600 border-emerald-600 text-white rounded-xl shadow-lg; }
-    .page-link { @apply border-none bg-emerald-50 text-emerald-700 font-bold px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all; }
-    .dark .page-link { @apply bg-emerald-900/40 text-emerald-400 hover:bg-emerald-800; }
-</style>
 @endsection

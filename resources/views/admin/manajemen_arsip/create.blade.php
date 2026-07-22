@@ -4,9 +4,9 @@
 <div class="p-8 max-w-4xl mx-auto">
     {{-- Header Section --}}
     <div class="mb-10">
-        <a href="{{ route('admin.manajemen_arsip.index') }}" class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-2 mb-4 hover:gap-4 transition-all">
-            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Arsip
-        </a>
+     <a href="{{ route('admin.manajemen_arsip.index') }}" class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all mb-4 gap-2 shadow-sm">
+    <i class="fas fa-arrow-left"></i> Kembali
+</a>
         <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-white tracking-tight">Catat Arsip Fisik</h1>
         <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-1">Input data penyimpanan dokumen baru untuk sistem AKSARA (Administrator)</p>
     </div>
