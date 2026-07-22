@@ -323,48 +323,49 @@ public function updateUser(Request $request, $id)
     return view('admin.master.kategori.index', compact('kategori'));
 }
 
-    /**
+  /**
      * 2. CREATE: Menampilkan halaman form tambah kategori baru
      */
-   public function kategoriCreate()
-{
-    // Mengambil semua data kategori untuk dropdown
-    $kategoris = KategoriSurat::all();
+    public function createKategori()
+    {
+        // Mengambil semua data kategori untuk dropdown
+        $kategoris = KategoriSurat::all();
 
-    // Mengirim variabel $kategoris ke view
-    return view('admin.manajemen_surat.create', compact('kategoris'));
-}
+        // Mengirim variabel $kategoris ke view
+        return view('admin.master.kategori.create', compact('kategoris'));
+    }
 
     /**
      * Kode ini disempurnakan agar tidak lagi error SQL 1364.
      */
-   // FUNGSI STORE KATEGORI
-public function storeKategori(Request $request)
-{
-    $request->validate([
-        'kode_kategori' => 'required|string|max:50|unique:kategori_surat,kode_kategori',
-        'nama_kategori' => 'required|string|max:255',
-        'keterangan'    => 'nullable|string'
-    ]);
+    // FUNGSI STORE KATEGORI
+    public function storeKategori(Request $request)
+    {
+        $request->validate([
+            'kode_kategori' => 'required|string|max:50|unique:kategori_surat,kode_kategori',
+            'nama_kategori' => 'required|string|max:255',
+            'keterangan'    => 'nullable|string'
+        ]);
 
-    // Simpan data dari request
-    $kategoriBaru = KategoriSurat::create([
-        'kode_kategori' => $request->kode_kategori,
-        'nama_kategori' => $request->nama_kategori,
-        'keterangan'    => $request->keterangan
-    ]);
+        // Simpan data dari request
+        $kategoriBaru = KategoriSurat::create([
+            'kode_kategori' => $request->kode_kategori,
+            'nama_kategori' => $request->nama_kategori,
+            'keterangan'    => $request->keterangan
+        ]);
 
-    // Pencatatan Audit Log
-    AuditLog::create([
-        'aktivitas' => 'MASTER KATEGORI',
-        'deskripsi' => auth()->user()->nama_lengkap . " menambahkan kategori surat baru: {$kategoriBaru->nama_kategori} (Kode: {$kategoriBaru->kode_kategori})",
-        'ip_address' => $request->ip(),
-        'waktu_kejadian' => now(),
-        'id_user' => auth()->id()
-    ]);
+        // Pencatatan Audit Log
+        AuditLog::create([
+            'aktivitas' => 'MASTER KATEGORI',
+            'deskripsi' => auth()->user()->nama_lengkap . " menambahkan kategori surat baru: {$kategoriBaru->nama_kategori} (Kode: {$kategoriBaru->kode_kategori})",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id()
+        ]);
 
-    return redirect()->route('admin.master.kategori.index')->with('success', 'Kategori surat berhasil ditambahkan!');
-}
+        return redirect()->route('admin.master.kategori.index')->with('success', 'Kategori surat berhasil ditambahkan!');
+    }
+
     /**
      * 4. EDIT: Menampilkan halaman form edit kategori berdasarkan ID
      */

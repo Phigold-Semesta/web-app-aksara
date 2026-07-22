@@ -12,9 +12,7 @@
                 <h1 class="text-3xl font-black uppercase tracking-tight italic text-white">TAMBAH USER</h1>
                 <p class="text-emerald-200 font-bold tracking-widest mt-1 uppercase text-xs">AKSARA - Sistem Informasi Digital LPSE Karawang</p>
             </div>
-            <a href="{{ route('admin.master.user.index') }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs transition-all flex items-center gap-2 shrink-0 border border-white/10">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </a>
+            
         </div>
         <div class="absolute -top-10 -right-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
     </div>

@@ -233,21 +233,21 @@
                             <td class="p-6 text-slate-500 font-semibold">
                                 {{ $r->created_at ? $r->created_at->format('d M Y') : '-' }}
                             </td>
-                            <td class="p-6 rounded-r-[1.5rem]">
-                                <div class="flex items-center justify-center gap-2">
+                            <td class="p-6 rounded-r-[1.5rem] text-center">
+                                <div class="inline-flex items-center justify-center gap-2">
                                     <a href="{{ route('pimpinan.manajemen_surat.riwayat', $r->surat->id_surat) }}" 
                                        class="p-2.5 bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-[#006b43] hover:text-white transition-all shadow-sm" 
                                        title="Lihat Detail Riwayat">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     
-                                    {{-- Form Hapus Riwayat SweetAlert2 --}}
-                                    <form action="{{ route('pimpinan.manajemen_surat.destroy_riwayat', $r->id_disposisi) }}" method="POST" id="delete-form-{{ $r->id_disposisi }}">
+                                    {{-- FORM HAPUS DENGAN ID UNIK YANG BENAR --}}
+                                    <form action="{{ route('pimpinan.manajemen_surat.destroy_riwayat', $r->id_disposisi) }}" method="POST" id="delete-form-{{ $r->id_disposisi }}" class="inline-block m-0 p-0">
                                         @csrf 
                                         @method('DELETE')
                                         <button type="button" 
                                                 onclick="konfirmasiHapus('{{ $r->id_disposisi }}')" 
-                                                class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm" 
+                                                class="p-2.5 bg-red-50 dark:bg-slate-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm cursor-pointer" 
                                                 title="Hapus Riwayat">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
@@ -324,7 +324,12 @@
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                document.getElementById('delete-form-' + id).submit();
+                const form = document.getElementById('delete-form-' + id);
+                if (form) {
+                    form.submit();
+                } else {
+                    console.error('Form delete-form-' + id + ' tidak ditemukan!');
+                }
             }
         });
     }

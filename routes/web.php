@@ -153,18 +153,19 @@ Route::patch('/manajemen_surat/{id}/teruskan', [AdminController::class, 'teruska
         // Dashboard
         Route::get('/dashboard', [PimpinanController::class, 'dashboard'])->name('dashboard');
 
-        // Manajemen Surat
+       // Manajemen Surat
         Route::prefix('manajemen_surat')->name('manajemen_surat.')->group(function() {
             Route::get('/', [PimpinanController::class, 'indexManajemenSurat'])->name('index');
-            Route::get('/{id}', [PimpinanController::class, 'showManajemenSurat'])->name('show');
             
-Route::get('/riwayat/{id}', [PimpinanController::class, 'showRiwayat'])->name('riwayat');
-
-            // Route akses dokumen aman (Fix 404 & 403)
-            Route::get('/dokumen/{id}', [PimpinanController::class, 'tampilkanDokumen'])->name('tampilkan_dokumen');
-            
-            Route::post('/disposisi/store', [PimpinanController::class, 'simpanDisposisi'])->name('simpan_disposisi');
+            // LETAKKAN RUTE SPESIFIK DI ATAS SEBELUM RUTE /{id} UMUM
+            Route::get('/riwayat/{id}', [PimpinanController::class, 'showRiwayat'])->name('riwayat');
             Route::delete('/riwayat/{id}', [PimpinanController::class, 'hapusRiwayat'])->name('destroy_riwayat');
+
+            // Route akses dokumen aman & posisikan show umum di paling bawah
+            Route::get('/dokumen/{id}', [PimpinanController::class, 'tampilkanDokumen'])->name('tampilkan_dokumen');
+            Route::post('/disposisi/store', [PimpinanController::class, 'simpanDisposisi'])->name('simpan_disposisi');
+            
+            Route::get('/{id}', [PimpinanController::class, 'showManajemenSurat'])->name('show');
         });
 
         // Monitoring Arsip Surat
