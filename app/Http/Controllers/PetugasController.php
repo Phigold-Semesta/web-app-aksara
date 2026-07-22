@@ -204,24 +204,26 @@ public function exportCsv()
         return view('petugas.manajemen_surat.edit', compact('surat', 'kategoris'));
     }
 
-   /**
+
+    /**
      * MANAJEMEN SURAT: UPDATE
-     * Disempurnakan dengan proteksi status & refactoring upload file
+     * Perbaikan: Memperluas proteksi status agar update & redirect berjalan lancar
      */
     public function update(Request $request, $id)
     {
         $surat = Surat::findOrFail($id);
 
-        // PROTEKSI: Jika status bukan 'belum dikirim', maka tidak boleh diubah
-        if ($surat->status !== 'belum dikirim') {
-            return back()->with('error', 'Aksi ditolak! Surat tidak bisa diubah karena sudah dikirim atau sedang diproses.');
+        // PERBAIKAN: Mengizinkan status 'belum dikirim' DAN 'pending' agar petugas bisa meng-edit
+        // Jika ingin semua status bisa di-edit, hapus blok 'if' di bawah ini.
+        if (!in_array($surat->status, ['belum dikirim', 'pending'])) {
+            return back()->with('error', 'Aksi ditolak! Surat tidak bisa diubah karena sudah diarsipkan.');
         }
 
         $request->validate([
             'nomor_surat'   => 'required|unique:surat,nomor_surat,' . $id . ',id_surat',
             'tanggal_surat' => 'required|date',
             'asal_instansi' => 'required|string|max:255',
-            'perihal'       => 'required|string',
+            'perihal'        => 'required|string',
             'id_kategori'   => 'required|exists:kategori_surat,id_kategori',
             'file_dokumen'  => 'nullable|mimes:pdf,jpg,png|max:4096', 
             'pdf_base64'    => 'nullable|string',
@@ -230,23 +232,29 @@ public function exportCsv()
         try {
             DB::beginTransaction();
 
-            // Jika ada file baru (upload atau smart scan), hapus file lama dan simpan yang baru
+            $fileName = $surat->file_surat; // Default gunakan nama file yang lama
+
+            // Jika ada file baru (upload manual atau smart scan), hapus file lama dan simpan yang baru
             if ($request->filled('pdf_base64') || $request->hasFile('file_dokumen')) {
                 if ($surat->file_surat) {
                     Storage::disk('public')->delete('dokumen_surat/' . $surat->file_surat);
                 }
 
-                // Menggunakan helper handleFileUpload yang sudah kita buat sebelumnya
-                $surat->file_surat = $this->handleFileUpload($request);
+                // Ambil nama file baru hasil upload
+                $newFileName = $this->handleFileUpload($request);
+                if ($newFileName) {
+                    $fileName = $newFileName;
+                }
             }
 
-            // Update data surat
+            // Update data surat secara keseluruhan
             $surat->update([
                 'nomor_surat'   => $request->nomor_surat,
-                'perihal'       => $request->perihal,
+                'perihal'        => $request->perihal,
                 'asal_instansi' => $request->asal_instansi,
                 'tanggal_surat' => $request->tanggal_surat,
                 'id_kategori'   => $request->id_kategori,
+                'file_surat'    => $fileName,
             ]);
 
             DB::commit();

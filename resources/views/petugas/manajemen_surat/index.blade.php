@@ -115,11 +115,44 @@
         </table>
     </div>
 
-    {{-- Pagination --}}
+    {{-- PERBAIKAN: Pagination Sesuai Desain Gambar Referensi --}}
     @if($surats instanceof \Illuminate\Pagination\LengthAwarePaginator && $surats->hasPages())
-    <div class="mt-10 px-4">
-        <div class="bg-white dark:bg-emerald-900/20 p-4 rounded-[2rem] border border-emerald-50 dark:border-emerald-800/50 shadow-sm flex justify-center">
-            {{ $surats->appends(request()->query())->links() }}
+    <div class="mt-8">
+        <div class="bg-white dark:bg-emerald-900/30 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-emerald-800/50 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            {{-- Keterangan Menampilkan Data (Sesuai Teks di Gambar) --}}
+            <div class="text-[11px] font-black uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">
+                MENAMPILKAN {{ $surats->firstItem() }} – {{ $surats->lastItem() }} DARI {{ $surats->total() }} DATA
+            </div>
+
+            {{-- Container Tombol Pagination yang Bisa Di-scroll Horisontal --}}
+            <div class="overflow-x-auto max-w-full pb-2 pt-1 px-2 custom-pagination-scroll">
+                <div class="flex items-center gap-2 min-w-max">
+                    {{-- Link Previous --}}
+                    @if ($surats->onFirstPage())
+                        <span class="px-4 py-2 bg-emerald-100/50 dark:bg-emerald-950/40 text-emerald-300 dark:text-emerald-700 font-extrabold text-xs rounded-2xl cursor-not-allowed">Prev</span>
+                    @else
+                        <a href="{{ $surats->previousPageUrl() }}" class="px-4 py-2 bg-emerald-200/60 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-300 font-extrabold text-xs rounded-2xl transition-all">Prev</a>
+                    @endif
+
+                    {{-- Elemen Angka Halaman --}}
+                    @foreach ($surats->getUrlRange(1, $surats->lastPage()) as $page => $url)
+                        @if ($page == $surats->currentPage())
+                            <span class="w-9 h-9 flex items-center justify-center bg-emerald-900 text-white font-black text-xs rounded-2xl shadow-md">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}" class="w-9 h-9 flex items-center justify-center bg-emerald-200/60 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-300 dark:hover:bg-emerald-800 font-bold text-xs rounded-2xl transition-all">{{ $page }}</a>
+                        @endif
+                    @endforeach
+
+                    {{-- Link Next --}}
+                    @if ($surats->hasMorePages())
+                        <a href="{{ $surats->nextPageUrl() }}" class="px-4 py-2 bg-emerald-900 hover:bg-emerald-950 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all">Next</a>
+                    @else
+                        <span class="px-4 py-2 bg-emerald-100/50 dark:bg-emerald-950/40 text-emerald-300 dark:text-emerald-700 font-extrabold text-xs rounded-2xl cursor-not-allowed">Next</span>
+                    @endif
+                </div>
+            </div>
+
         </div>
     </div>
     @endif
@@ -163,12 +196,15 @@
             icon: 'warning', 
             showCancelButton: true, 
             confirmButtonColor: '#dc2626', 
-            cancelButtonColor: cancelBtnColor, 
+            cancelButtonColor: '#e5e7eb', // PERBAIKAN: Warna background abu-abu muda sesuai gambar
             confirmButtonText: 'Ya, Hapus!', 
             cancelButtonText: 'Batalkan', 
             background: bgPopup, 
             color: textColor, 
-            customClass: { popup: 'rounded-[2.5rem]' } 
+            customClass: { 
+                popup: 'rounded-[2.5rem]',
+                cancelButton: '!text-gray-700 !font-bold' // PERBAIKAN: Warna teks abu-abu tua sesuai gambar
+            } 
         }).then((result) => {
             if (result.isConfirmed) document.getElementById('form-hapus-' + id).submit();
         });
@@ -181,12 +217,15 @@
             icon: 'question', 
             showCancelButton: true, 
             confirmButtonColor: '#2563eb', 
-            cancelButtonColor: cancelBtnColor, 
+            cancelButtonColor: '#e5e7eb', // PERBAIKAN: Warna background abu-abu muda sesuai gambar
             confirmButtonText: 'Ya, Teruskan!', 
             cancelButtonText: 'Batalkan', 
             background: bgPopup, 
             color: textColor, 
-            customClass: { popup: 'rounded-[2.5rem]' } 
+            customClass: { 
+                popup: 'rounded-[2.5rem]',
+                cancelButton: '!text-gray-700 !font-bold' // PERBAIKAN: Warna teks abu-abu tua sesuai gambar
+            } 
         }).then((result) => {
             if (result.isConfirmed) document.getElementById('form-teruskan-' + id).submit();
         });
@@ -194,10 +233,23 @@
 </script>
 
 <style>
-    .pagination { @apply flex gap-2; }
-    .pagination li { @apply list-none; }
-    .page-item.active .page-link { @apply bg-emerald-600 border-emerald-600 text-white rounded-xl shadow-lg; }
-    .page-link { @apply border-none bg-emerald-50 text-emerald-700 font-bold px-4 py-2 rounded-xl hover:bg-emerald-100 transition-all; }
-    .dark .page-link { @apply bg-emerald-900/40 text-emerald-400 hover:bg-emerald-800; }
+    /* Styling Scrollbar Khusus Pagination seperti di gambar referensi */
+    .custom-pagination-scroll::-webkit-scrollbar {
+        height: 10px;
+    }
+    .custom-pagination-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 20px;
+    }
+    .dark .custom-pagination-scroll::-webkit-scrollbar-track {
+        background: #064e3b;
+    }
+    .custom-pagination-scroll::-webkit-scrollbar-thumb {
+        background: #71717a;
+        border-radius: 20px;
+    }
+    .custom-pagination-scroll::-webkit-scrollbar-thumb:hover {
+        background: #52525b;
+    }
 </style>
 @endsection

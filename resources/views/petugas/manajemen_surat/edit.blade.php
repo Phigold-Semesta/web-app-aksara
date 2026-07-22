@@ -25,6 +25,7 @@
                         <label class="block text-sm font-black text-emerald-900 dark:text-emerald-100 uppercase tracking-widest mb-3">Nomor Surat</label>
                         <input type="text" name="nomor_surat" value="{{ old('nomor_surat', $surat->nomor_surat) }}" required
                                class="w-full px-6 py-4 bg-emerald-50/50 dark:bg-slate-800 border border-emerald-100 dark:border-slate-700 rounded-2xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all dark:text-white font-medium">
+                        @error('nomor_surat') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
@@ -62,34 +63,114 @@
                 </div>
             </div>
 
-            {{-- Edit File Section --}}
+            {{-- Edit File Section dengan Konsep Preview Dokumen Digital Viewer --}}
             <div class="mt-10 p-8 border-2 border-dashed border-emerald-200 dark:border-slate-700 rounded-[2rem] bg-emerald-50/30 dark:bg-slate-800/20">
-                <div class="flex flex-col md:flex-row gap-8 items-center">
-                    <div class="w-full md:w-1/3">
-                        <p class="text-xs font-black text-emerald-900 dark:text-emerald-100 uppercase tracking-widest mb-3 text-center">File Saat Ini</p>
-                        <div class="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-emerald-100 dark:border-slate-700 text-center">
-                            <i class="fas fa-file-pdf text-3xl text-red-500 mb-2"></i>
-                            <p class="text-[10px] text-emerald-600 truncate">{{ basename($surat->file_surat) }}</p>
+                
+                {{-- Area Upload / Input File Baru --}}
+                <div class="mb-6">
+                    <label class="block text-sm font-black text-emerald-900 dark:text-emerald-100 uppercase tracking-widest mb-3">Ganti Dokumen</label>
+                    <input type="file" name="file_dokumen" id="file_dokumen" accept=".pdf,.jpg,.jpeg,.png"
+                           class="block w-full text-sm text-emerald-500 file:mr-4 file:py-3 file:px-8 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 transition-all cursor-pointer">
+                    <p class="mt-2 text-[10px] text-emerald-400 italic">*Biarkan kosong jika tidak ingin mengganti file.</p>
+                </div>
+
+                {{-- State Preview Digital Viewer (Otomatis Menampilkan Dokumen Aktif / File Baru) --}}
+                <div id="filePreviewContainer" class="flex flex-col w-full bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    
+                    {{-- Header Kotak Viewer Digital --}}
+                    <div class="bg-slate-100 dark:bg-slate-950 px-6 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-file-pdf text-emerald-600"></i>
+                            <span class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-emerald-300">Preview Dokumen Digital</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ $surat->file_surat ? asset('storage/dokumen_surat/' . $surat->file_surat) : '#' }}" id="openFullScreen" target="_blank" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1 transition-all">
+                                Buka Layar Penuh <i class="fas fa-external-link-alt text-[10px]"></i>
+                            </a>
                         </div>
                     </div>
-                    <div class="w-full md:w-2/3">
-                        <label class="block text-sm font-black text-emerald-900 dark:text-emerald-100 uppercase tracking-widest mb-3">Ganti Dokumen (Opsional)</label>
-                        <input type="file" name="file_dokumen"
-                               class="block w-full text-sm text-emerald-500 file:mr-4 file:py-3 file:px-8 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 transition-all cursor-pointer">
-                        <p class="mt-2 text-[10px] text-emerald-400 italic">*Biarkan kosong jika tidak ingin mengganti file.</p>
+
+                    {{-- Toolbar Simulasi Viewer --}}
+                    <div class="bg-slate-50 dark:bg-slate-800/80 px-4 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 font-semibold">
+                        <div class="flex items-center gap-4">
+                            <span id="fileNameDisplay" class="truncate max-w-xs text-slate-700 dark:text-slate-200 font-mono">{{ basename($surat->file_surat) }}</span>
+                        </div>
+                        <div>
+                            <span id="fileSizeDisplay" class="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-md text-[10px] font-bold">File Tersimpan</span>
+                        </div>
                     </div>
+
+                    {{-- Area Render Konten Viewer (Embed / Iframe / Gambar) --}}
+                    <div class="w-full h-96 bg-slate-100 dark:bg-slate-950 flex items-center justify-center relative overflow-hidden p-2" id="previewWrapper">
+                        @if($surat->file_surat)
+                            @php
+                                $extension = pathinfo($surat->file_surat, PATHINFO_EXTENSION);
+                                $fileUrl = asset('storage/dokumen_surat/' . $surat->file_surat);
+                            @endphp
+                            @if(in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'webp']))
+                                <img src="{{ $fileUrl }}" class="w-full h-full object-contain rounded-xl">
+                            @else
+                                <embed src="{{ $fileUrl }}#toolbar=0" type="application/pdf" class="w-full h-full rounded-xl">
+                            @endif
+                        @endif
+                    </div>
+
                 </div>
+
             </div>
 
-            <div class="mt-10 flex justify-end gap-4">
-                <a href="{{ route('petugas.manajemen_surat.index') }}" class="px-8 py-4 text-emerald-600 dark:text-emerald-400 font-bold hover:bg-emerald-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
-                    Batalkan
-                </a>
-                <button type="submit" class="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black shadow-xl shadow-emerald-200 dark:shadow-none transition-all transform hover:-translate-y-1">
+            {{-- Tombol Submit Form Murni (Tombol Batalkan Sudah Dihapus) --}}
+            <div class="mt-10 flex justify-end">
+                <button type="submit" class="px-12 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black shadow-xl shadow-emerald-200 dark:shadow-none transition-all transform hover:-translate-y-1 cursor-pointer">
                     SIMPAN PERUBAHAN
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('file_dokumen');
+        const previewWrapper = document.getElementById('previewWrapper');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+        const openFullScreen = document.getElementById('openFullScreen');
+
+        // Fungsi ketika file baru dipilih untuk mengganti preview dokumen secara live
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                fileNameDisplay.textContent = file.name;
+                const fileSizeKB = (file.size / 1024).toFixed(2);
+                fileSizeDisplay.textContent = `${fileSizeKB} KB (File Baru)`;
+
+                previewWrapper.innerHTML = '';
+
+                const fileURL = URL.createObjectURL(file);
+                openFullScreen.href = fileURL;
+
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = fileURL;
+                    img.className = 'w-full h-full object-contain rounded-xl';
+                    previewWrapper.appendChild(img);
+                } else if (file.type === 'application/pdf') {
+                    const embed = document.createElement('embed');
+                    embed.src = fileURL + '#toolbar=0';
+                    embed.type = 'application/pdf';
+                    embed.className = 'w-full h-full rounded-xl';
+                    previewWrapper.appendChild(embed);
+                } else {
+                    const fallbackDiv = document.createElement('div');
+                    fallbackDiv.className = 'flex flex-col items-center justify-center text-slate-500';
+                    fallbackDiv.innerHTML = '<i class="fas fa-file-alt text-4xl mb-2"></i><p class="text-xs font-bold">Pratinjau tidak tersedia untuk format ini.</p>';
+                    previewWrapper.appendChild(fallbackDiv);
+                }
+            });
+        }
+    });
+</script>
 @endsection
