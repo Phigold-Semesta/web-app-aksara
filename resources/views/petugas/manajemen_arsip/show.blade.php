@@ -5,9 +5,9 @@
     {{-- Header & Action Buttons --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
         <div>
-            <a href="{{ route('petugas.manajemen_arsip.index') }}" class="text-emerald-600 hover:text-emerald-800 transition-all font-bold flex items-center gap-2 mb-2">
-                <i class="fas fa-arrow-left"></i> Kembali ke Daftar
-            </a>
+           <a href="{{ route('petugas.manajemen_arsip.index') }}" class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all mb-4 gap-2 shadow-sm">
+    <i class="fas fa-arrow-left"></i> Kembali
+</a>
             <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-white tracking-tight uppercase">Detail Arsip Dokumen</h1>
         </div>
         <div class="flex gap-3">
@@ -70,24 +70,28 @@
                 </div>
             </div>
 
-            {{-- Metadata Surat --}}
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-emerald-50 dark:border-slate-800 shadow-xl shadow-emerald-900/5">
-                <p class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-6">Metadata Surat</p>
-                <div class="space-y-6">
-                    <div>
-                        <p class="text-emerald-400 font-bold text-[10px] uppercase">Nomor Surat</p>
-                        <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->nomor_surat ?? 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-emerald-400 font-bold text-[10px] uppercase">Asal Instansi</p>
-                        <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->asal_instansi ?? 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-emerald-400 font-bold text-[10px] uppercase">Perihal</p>
-                        <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->perihal ?? 'N/A' }}</p>
-                    </div>
-                </div>
-            </div>
+          {{-- Metadata Surat --}}
+<div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-emerald-50 dark:border-slate-800 shadow-xl shadow-emerald-900/5">
+    <p class="text-emerald-900 dark:text-emerald-100 font-black uppercase text-xs tracking-widest mb-6">Metadata Surat</p>
+    <div class="space-y-6">
+        <div>
+            <p class="text-emerald-400 font-bold text-[10px] uppercase">Nomor Surat</p>
+            <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->nomor_surat ?? 'N/A' }}</p>
+        </div>
+        <div>
+            <p class="text-emerald-400 font-bold text-[10px] uppercase">Kategori Surat</p>
+            <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->kategori->nama_kategori ?? 'N/A' }}</p>
+        </div>
+        <div>
+            <p class="text-emerald-400 font-bold text-[10px] uppercase">Asal Instansi</p>
+            <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->asal_instansi ?? 'N/A' }}</p>
+        </div>
+        <div>
+            <p class="text-emerald-400 font-bold text-[10px] uppercase">Perihal</p>
+            <p class="text-lg font-bold text-emerald-950 dark:text-white mt-1">{{ $arsip->surat->perihal ?? 'N/A' }}</p>
+        </div>
+    </div>
+</div>
         </div>
 
         {{-- KANAN: Preview Dokumen --}}

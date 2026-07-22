@@ -6,9 +6,9 @@
 <div class="p-8 max-w-4xl mx-auto transition-colors duration-300 min-h-screen">
     <div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-            {{-- Tombol Kembali: Warna Abu-abu Muda (Slate) --}}
-            <a href="{{ route('petugas.manajemen_arsip.index') }}" class="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mb-4 hover:gap-4 transition-all">
-                <i class="fas fa-arrow-left"></i> Kembali ke Daftar
+            {{-- PERBAIKAN: Tombol Kembali Sesuai Gambar Referensi --}}
+            <a href="{{ route('petugas.manajemen_arsip.index') }}" class="inline-flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all mb-4 gap-2 shadow-sm">
+                <i class="fas fa-arrow-left"></i> Kembali
             </a>
             <h1 class="text-3xl font-extrabold text-emerald-950 dark:text-emerald-50 tracking-tight">Edit Data Arsip</h1>
             <p class="text-emerald-500 dark:text-emerald-400 font-medium mt-1">Perbarui informasi lokasi fisik dan masa retensi dokumen Aksara</p>
@@ -80,7 +80,7 @@
                     </div>
                 </div>
 
-                {{-- EDIT DURASI RETENSI (Fitur Baru Sesuai Permintaan) --}}
+                {{-- EDIT DURASI RETENSI --}}
                 <div class="col-span-1">
                     <label class="block text-emerald-900 dark:text-emerald-100 font-black uppercase text-[10px] tracking-[0.2em] mb-3">Durasi Retensi</label>
                     <div class="grid grid-cols-2 gap-4">
@@ -113,14 +113,11 @@
                 </div>
             </div>
 
-            {{-- Button Group --}}
-            <div class="mt-12 flex flex-col sm:flex-row gap-4">
-                <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-5 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-3">
+            {{-- PERBAIKAN: Hanya Tombol Simpan Perubahan di Pojok Kanan (Tombol Batal Dihapus) --}}
+            <div class="mt-12 flex justify-end">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-10 py-5 rounded-2xl shadow-xl shadow-emerald-200 dark:shadow-none transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-3 transform hover:-translate-y-1">
                     <i class="fas fa-save"></i> Perbarui Data Arsip
                 </button>
-                <a href="{{ route('petugas.manajemen_arsip.index') }}" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 font-black px-10 py-5 rounded-2xl transition-all uppercase tracking-widest text-xs text-center">
-                    Batal
-                </a>
             </div>
         </form>
     </div>

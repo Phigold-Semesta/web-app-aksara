@@ -86,7 +86,7 @@ public function exportCsv()
             });
         }
 
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 5);
         
         if ($perPage == 'all') {
             $surats = $query->paginate($query->count())->withQueryString();
@@ -320,9 +320,36 @@ public function exportCsv()
      * ==========================================
      */
 
-    public function kelolaArsip()
+    /**
+     * MANAJEMEN ARSIP: INDEX (DENGAN SEARCH, FILTER STATUS & PER PAGE)
+     */
+    public function kelolaArsip(Request $request)
     {
-        $arsips = Arsip::with('surat')->latest()->paginate(10);
+        $query = Arsip::with('surat')->latest();
+
+        // 1. Filter Pencarian (Cari berdasarkan Perihal atau Nomor Surat dari tabel relasi 'surat')
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->whereHas('surat', function ($q) use ($search) {
+                $q->where('perihal', 'like', "%{$search}%")
+                  ->orWhere('nomor_surat', 'like', "%{$search}%");
+            });
+        }
+
+        // 2. Filter Status Retensi (Aktif / Inaktif)
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status_retensi', $request->status);
+        }
+
+        // 3. Filter Jumlah Baris Per Halaman (per_page)
+        $perPage = $request->get('per_page', 5);
+
+        if ($perPage == 'all') {
+            $arsips = $query->paginate($query->count())->withQueryString();
+        } else {
+            $arsips = $query->paginate($perPage)->withQueryString();
+        }
+
         return view('petugas.manajemen_arsip.index', compact('arsips'));
     }
 
