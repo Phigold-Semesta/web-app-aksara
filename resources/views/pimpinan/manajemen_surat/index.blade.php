@@ -17,7 +17,7 @@
             </div>
             
             {{-- Card Kaca Center Simetris --}}
-            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-[2rem] w-full md:w-80 shadow-2xl flex flex-col items-center justify-center text-center shrink-0">
+            <div class="bg-white/15 backdrop-blur-md border border-white/20 p-6 rounded-[2rem] w-full md:w-80 shadow-2xl flex flex-col items-center justify-center text-center shrink-0">
                 <p class="text-[10px] font-black uppercase text-emerald-300 tracking-[0.2em]">Total Perlu Ditinjau</p>
                 <h2 class="text-5xl font-black text-white my-1 tracking-tighter">{{ $suratMasuk->total() ?? $suratMasuk->count() }}</h2>
                 <span class="inline-flex items-center justify-center bg-emerald-400/20 text-emerald-200 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest italic border border-emerald-300/30 mt-1">
@@ -106,7 +106,7 @@
                             <td class="p-6 text-center rounded-r-[1.5rem]">
                                 <a href="{{ route('pimpinan.manajemen_surat.show', $surat->id_surat) }}" 
                                    class="inline-flex items-center gap-2 bg-[#006b43] hover:bg-emerald-800 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md shadow-emerald-900/20 hover:scale-105">
-                                   <i class="fas fa-file-signature"></i> TINJAU
+                                    <i class="fas fa-file-signature"></i> TINJAU
                                 </a>
                             </td>
                         </tr>
