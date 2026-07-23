@@ -1,7 +1,7 @@
 {{-- resources/views/admin/aktivitas/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Audit Log Sistem - Aksara')
+@section('title', 'Audit Log Sistem')
 
 @section('content')
 

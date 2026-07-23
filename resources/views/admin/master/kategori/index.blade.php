@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master Kategori Surat - AKSARA')
+@section('title', 'Master Kategori Surat')
 
 @section('content')
 <div class="p-4 md:p-6 space-y-6 animate__animated animate__fadeIn">

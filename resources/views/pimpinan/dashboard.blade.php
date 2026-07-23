@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Eksekutif - Aksara')
+@section('title', 'Dashboard Pimpinan')
 
 @section('content')
 <div class="p-2 md:p-4 space-y-8 animate__animated animate__fadeIn">

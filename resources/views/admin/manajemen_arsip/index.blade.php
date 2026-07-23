@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+@section('title', 'Manajemen Arsip Surat')
 @section('content')
 <div class="p-8 min-h-screen transition-colors duration-300 dark:bg-emerald-950/20">
     {{-- Header Section --}}

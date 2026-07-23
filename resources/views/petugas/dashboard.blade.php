@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Petugas Dashboard - Aksara')
+@section('title', 'Dashboard Petugas')
 
 @section('content')
 <div class="p-2 md:p-4 space-y-8 animate__animated animate__fadeIn">
