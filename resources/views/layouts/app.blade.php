@@ -211,20 +211,24 @@
                 </div>
 
                 <div class="flex items-center gap-2 sm:gap-4">
+                    {{-- Tombol Toggle Dark/Light Mode --}}
                     <button @click="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-emerald-800 text-slate-500 dark:text-yellow-400 border border-slate-100 dark:border-emerald-700 transition-all">
                         <i x-show="darkMode" class="fa-solid fa-sun text-lg" x-cloak></i>
                         <i x-show="!darkMode" class="fa-solid fa-moon text-lg" x-cloak></i>
                     </button>
 
-                    <div class="flex items-center gap-2 sm:gap-4 bg-slate-50 dark:bg-emerald-800/50 py-1.5 pl-2 sm:pl-4 pr-1.5 rounded-2xl border border-slate-100 dark:border-emerald-700">
-                        <div class="text-right leading-tight hidden md:block">
-                            <p class="text-xs font-black text-slate-800 dark:text-emerald-50 uppercase tracking-tighter">{{ Auth::user()->username }}</p>
-                            <div class="flex items-center justify-end gap-1.5 mt-0.5">
-                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                                <p class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest italic">{{ strtoupper(Auth::user()->role) }}</p>
-                            </div>
+                    {{-- Nama User & Role Diletakkan Tepat Di Sebelah Tombol Dark/Light Mode (Diambil Dari Kolom nama_lengkap Pada Database) --}}
+                    <div class="text-right leading-tight hidden md:block">
+                        <p class="text-xs font-black text-slate-800 dark:text-emerald-50 uppercase tracking-tighter">{{ Auth::user()->nama_lengkap }}</p>
+                        <div class="flex items-center justify-end gap-1.5 mt-0.5">
+                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                            <p class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest italic">{{ strtoupper(Auth::user()->role) }}</p>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name={{ Auth::user()->username }}&background=008f5d&color=fff&bold=true" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shadow-sm border-2 border-white dark:border-emerald-700 shrink-0">
+                    </div>
+
+                    {{-- Avatar Foto User (Inisial Diambil Dari Kolom nama_lengkap Agar Konsisten Dengan Nama Yang Ditampilkan) --}}
+                    <div class="flex items-center bg-slate-50 dark:bg-emerald-800/50 py-1.5 px-1.5 rounded-2xl border border-slate-100 dark:border-emerald-700">
+                        <img src="https://ui-avatars.com/api/?name={{ Auth::user()->nama_lengkap }}&background=008f5d&color=fff&bold=true" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shadow-sm border-2 border-white dark:border-emerald-700 shrink-0">
                     </div>
                 </div>
             </header>
