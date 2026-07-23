@@ -278,5 +278,8 @@
             });
         }
     </script>
+
+    {{-- WAJIB ADA: tempat semua script yang di-push dari child view (misal @push('scripts') di manajemen_surat/index.blade.php) akan dirender di sini --}}
+    @stack('scripts')
 </body>
 </html>

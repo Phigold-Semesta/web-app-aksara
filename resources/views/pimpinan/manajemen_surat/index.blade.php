@@ -333,5 +333,19 @@
             }
         });
     }
+
+    // Notifikasi SweetAlert2 Berhasil Hapus (muncul setelah redirect balik dari controller)
+    @if(session('success'))
+        Swal.fire({
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            icon: 'success',
+            confirmButtonColor: '#006b43',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'rounded-[2rem]'
+            }
+        });
+    @endif
 </script>
 @endpush
