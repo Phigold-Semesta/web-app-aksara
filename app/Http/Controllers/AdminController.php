@@ -850,13 +850,13 @@ public function updateSurat(Request $request, $id)
     return redirect()->back()->with('success', 'Surat berhasil diteruskan ke pimpinan!');
 }
 
-  // 1. Menampilkan Halaman List Arsip
+// 1. Menampilkan Halaman List Arsip
 public function arsipIndex(Request $request) 
 { 
-    $query = \App\Models\Arsip::query();
+    $query = \App\Models\Arsip::with('surat'); // Eager load relasi surat agar tidak N+1 query saat ditampilkan di view
 
     // Fitur Pencarian
-    if ($request->has('search')) {
+    if ($request->has('search') && $request->search != '') {
         $query->whereHas('surat', function($q) use ($request) {
             $q->where('perihal', 'like', '%' . $request->search . '%')
               ->orWhere('nomor_surat', 'like', '%' . $request->search . '%');
@@ -868,10 +868,25 @@ public function arsipIndex(Request $request)
         $query->where('status_retensi', $request->status);
     }
 
-    $arsips = $query->latest()->paginate(10);
+    $query->latest();
+
+    // Fitur Filter Jumlah Baris (Per Page)
+    $perPage = $request->input('per_page', 5);
+
+    if ($perPage === 'all') {
+        // Ambil semua data tanpa paginasi, tapi tetap dibungkus paginator
+        // supaya method seperti hasPages(), firstItem(), dll di view tetap bisa dipakai
+        $totalData = $query->count();
+        $arsips = $query->paginate($totalData > 0 ? $totalData : 1);
+    } else {
+        $arsips = $query->paginate((int) $perPage);
+    }
+
+    // Pertahankan semua query string (search, status, per_page) saat pindah halaman pagination
+    $arsips->appends($request->query());
     
     return view('admin.manajemen_arsip.index', compact('arsips'));
-}
+}  
 
 // 2. Form Tambah Arsip (DIPERBAIKI)
 public function arsipCreate() 
