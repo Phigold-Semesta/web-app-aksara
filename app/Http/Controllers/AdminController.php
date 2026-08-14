@@ -8,6 +8,9 @@ use App\Models\AuditLog;
 use App\Models\KategoriSurat;
 use App\Models\InstruksiDisposisi;
 use App\Models\Arsip;
+use App\Models\Surat;
+use App\Exports\SuratExport; // <-- WAJIB ADA INI
+use Maatwebsite\Excel\Facades\Excel; // <-- WAJIB ADA INI
 // Catatan: Pastikan Anda mengimpor model Surat jika sudah ada (misal: use App\Models\Surat;)
 
 class AdminController extends Controller
@@ -71,73 +74,117 @@ class AdminController extends Controller
      * Laporan & Statistik - PENYEMPURNAAN: Diaktifkan dengan agregasi data nyata untuk Chart.js
      */
    
-public function lihatStatistik()
+public function lihatStatistik(Request $request)
     {
-        // 1. Data Card: Menggunakan relasi kategori (Meniru PetugasController yang akurat 100%)
-        $totalSuratMasuk = \App\Models\Surat::whereHas('kategori', function($q) {
+        // 1. Tangkap parameter filter dari request (Tahun, Bulan, Kategori)
+        $filterTahun = $request->input('tahun');
+        $filterBulan = $request->input('bulan');
+        $filterKategori = $request->input('kategori');
+
+        // 2. Buat Base Query untuk Surat agar bisa difilter secara dinamis
+        $suratQuery = \App\Models\Surat::query();
+
+        if ($filterTahun) {
+            $suratQuery->whereYear('tanggal_surat', $filterTahun);
+        }
+
+        if ($filterBulan) {
+            $suratQuery->whereMonth('tanggal_surat', $filterBulan);
+        }
+
+        if ($filterKategori) {
+            $suratQuery->where('id_kategori', $filterKategori);
+        }
+
+        // 3. Data Card (Dihitung berdasarkan hasil filter dinamis)
+        $totalSuratMasuk = (clone $suratQuery)->whereHas('kategori', function($q) {
             $q->where('nama_kategori', 'LIKE', '%Surat Masuk%');
         })->count();
 
-        $totalSuratKeluar = \App\Models\Surat::whereHas('kategori', function($q) {
+        $totalSuratKeluar = (clone $suratQuery)->whereHas('kategori', function($q) {
             $q->where('nama_kategori', 'LIKE', '%Surat Keluar%');
         })->count();
 
-        // Untuk total disposisi tetap melacak status surat atau instruksi disposisi
-        $totalDisposisi = \App\Models\Surat::where('status', 'LIKE', '%disposisi%')->count();
+        $totalDisposisi = (clone $suratQuery)->where('status', 'LIKE', '%disposisi%')->count();
 
-        // 2. Data Surat untuk Tabel
-        $surats = \App\Models\Surat::with('kategori')->latest()->take(10)->get();
+        // 4. Data Surat untuk Tabel
+        $surats = (clone $suratQuery)->with('kategori')->latest()->take(10)->get();
 
-        // 3. Data Kategori
+        // 5. Data Kategori & List Tahun untuk Dropdown Filter View
         $kategoriList = \App\Models\KategoriSurat::all();
-
-        // ============================================================
-        // 4. PENYEMPURNAAN: GENERATE DATA ARRAY UNTUK GRAFIK VIEW
-        // ============================================================
         
-        // A. Data untuk Grafik Donut (Hitung jumlah surat per masing-masing kategori berdasarkan relasi)
-        $dataKategoriCounts = [];
-        foreach ($kategoriList as $kategori) {
-            $dataKategoriCounts[] = \App\Models\Surat::where('id_kategori', $kategori->id_kategori)->count();
+        // Mengambil daftar tahun yang tersedia di database untuk opsi dropdown filter
+        $filterTahunList = \App\Models\Surat::selectRaw('YEAR(tanggal_surat) as tahun')
+                            ->distinct()
+                            ->orderBy('tahun', 'desc')
+                            ->pluck('tahun')
+                            ->toArray();
+
+        if (empty($filterTahunList)) {
+            $filterTahunList = [date('Y')];
         }
 
-        // B. Data untuk Grafik Garis (Tren Sirkulasi 5 Bulan Terakhir)
+        // ============================================================
+        // 6. GENERATE DATA ARRAY UNTUK GRAFIK VIEW (BERDASARKAN FILTER)
+        // ============================================================
+        
+        // A. Data untuk Grafik Donut (Hitung jumlah surat per masing-masing kategori sesuai filter tahun/bulan)
+        $dataKategoriCounts = [];
+        foreach ($kategoriList as $kategori) {
+            $katQuery = \App\Models\Surat::where('id_kategori', $kategori->id_kategori ?? $kategori->id);
+            if ($filterTahun) {
+                $katQuery->whereYear('tanggal_surat', $filterTahun);
+            }
+            if ($filterBulan) {
+                $katQuery->whereMonth('tanggal_surat', $filterBulan);
+            }
+            $dataKategoriCounts[] = $katQuery->count();
+        }
+
+        // B. Data untuk Grafik Garis (Tren Sirkulasi 5 Bulan Terakhir / Berdasarkan Tahun Filter)
         $labelsBulan = [];
         $dataSuratMasukChart = [];
         $dataSuratKeluarChart = [];
 
         for ($i = 4; $i >= 0; $i--) {
-            $bulan = \Carbon\Carbon::now()->subMonths($i);
-            $labelsBulan[] = $bulan->translatedFormat('M'); // Contoh: Jan, Feb, Mar
+            $bulanCarbon = \Carbon\Carbon::now()->subMonths($i);
+            if ($filterBulan && !$filterTahun) {
+                // Jika bulan spesifik dipilih tapi tahun tidak, sesuaikan bulan iterasi
+                $bulanCarbon = \Carbon\Carbon::create(date('Y'), $filterBulan, 1)->subMonths($i);
+            } elseif ($filterTahun) {
+                $bulanCarbon = \Carbon\Carbon::create($filterTahun, $filterBulan ?: 1, 1)->addMonths(4 - $i);
+            }
 
-            // Hitung total surat masuk per bulan berdasarkan kategori
+            $labelsBulan[] = $bulanCarbon->translatedFormat('M');
+
             $dataSuratMasukChart[] = \App\Models\Surat::whereHas('kategori', function($q) {
                 $q->where('nama_kategori', 'LIKE', '%Surat Masuk%');
             })
-            ->whereMonth('created_at', $bulan->month)
-            ->whereYear('created_at', $bulan->year)
+            ->when($filterTahun, fn($q) => $q->whereYear('tanggal_surat', $filterTahun))
+            ->whereMonth('tanggal_surat', $bulanCarbon->month)
+            ->whereYear('tanggal_surat', $bulanCarbon->year)
             ->count();
 
-            // Hitung total surat keluar per bulan berdasarkan kategori
             $dataSuratKeluarChart[] = \App\Models\Surat::whereHas('kategori', function($q) {
                 $q->where('nama_kategori', 'LIKE', '%Surat Keluar%');
             })
-            ->whereMonth('created_at', $bulan->month)
-            ->whereYear('created_at', $bulan->year)
+            ->when($filterTahun, fn($q) => $q->whereYear('tanggal_surat', $filterTahun))
+            ->whereMonth('tanggal_surat', $bulanCarbon->month)
+            ->whereYear('tanggal_surat', $bulanCarbon->year)
             ->count();
         }
 
-        // Penyelarasan variabel array grafik
         $dataSuratMasuk = $dataSuratMasukChart;
         $dataSuratKeluar = $dataSuratKeluarChart;
 
-        // Pastikan mengembalikan view yang benar beserta data grafiknya
+        // 7. Kembalikan view dengan menyertakan variabel filter tambahan ($filterTahunList)
         return view('admin.laporan.index', compact(
             'totalSuratMasuk',
             'totalSuratKeluar',
             'totalDisposisi',
             'surats',
             'kategoriList',
+            'filterTahunList',
             'labelsBulan',
             'dataSuratMasuk',
             'dataSuratKeluar',
@@ -145,6 +192,50 @@ public function lihatStatistik()
         ));
     }
     
+ public function exportExcel(Request $request)
+    {
+        $fileName = 'Laporan_Sirkulasi_Surat_Aksara_' . date('Y-m-d') . '.xlsx';
+        return Excel::download(new SuratExport($request), $fileName);
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $fileName = 'Laporan_Sirkulasi_Surat_Aksara_' . date('Y-m-d') . '.csv';
+        return Excel::download(new SuratExport($request), $fileName, \Maatwebsite\Excel\Excel::CSV);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $filterTahun = $request->input('tahun');
+        $filterBulan = $request->input('bulan');
+        $suratList = $this->getFilteredSuratForExport($request);
+
+        return view('admin.laporan.pdf', compact('suratList', 'filterTahun', 'filterBulan'));
+    }
+
+    // Helper privat untuk mengambil data surat secara dinamis sesuai filter laporan
+    private function getFilteredSuratForExport(Request $request)
+    {
+        $filterTahun = $request->input('tahun');
+        $filterBulan = $request->input('bulan');
+        $filterKategori = $request->input('kategori');
+
+        $query = Surat::with('kategori')->latest();
+
+        if ($filterTahun) {
+            $query->whereYear('tanggal_surat', $filterTahun);
+        }
+
+        if ($filterBulan) {
+            $query->whereMonth('tanggal_surat', $filterBulan);
+        }
+
+        if ($filterKategori) {
+            $query->where('id_kategori', $filterKategori);
+        }
+
+        return $query->get();
+    }
     /**
      * Kelola User (Read) - PERBAIKAN: Menggunakan paginate() agar sinkron dengan template Blade
      */

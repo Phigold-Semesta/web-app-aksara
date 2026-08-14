@@ -105,6 +105,9 @@ Route::patch('/manajemen_surat/{id}/teruskan', [AdminController::class, 'teruska
      ->name('manajemen_surat.teruskan');
     Route::get('/aktivitas', [AdminController::class, 'auditLog'])->name('aktivitas.index');
     Route::get('/statistik', [AdminController::class, 'lihatStatistik'])->name('statistik');
+    Route::get('/admin/laporan/export-csv', [AdminController::class, 'exportCsv'])->name('laporan.export.csv');
+Route::get('/admin/laporan/export-excel', [AdminController::class, 'exportExcel'])->name('laporan.export.excel');
+Route::get('/admin/laporan/export-pdf', [AdminController::class, 'exportPdf'])->name('laporan.export.pdf');
 });
 
   // ==========================================

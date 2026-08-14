@@ -3,43 +3,74 @@
 @section('title', 'Laporan & Statistik')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6 animate__animated animate__fadeIn">
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-emerald-900 p-6 rounded-3xl shadow-sm border border-emerald-50 dark:border-emerald-800 transition-colors">
+    <!-- Header & Filter Eksekutif Laporan -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-white dark:bg-emerald-900 p-6 rounded-[2rem] shadow-sm border border-emerald-50 dark:border-emerald-800 transition-colors">
         <div>
             <h1 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
                 <i class="fas fa-chart-pie text-[#008f5d]"></i> Laporan & Analisis Statistik
             </h1>
-            <p class="text-sm text-slate-500 dark:text-emerald-300/70 mt-1">Dinamika sirkulasi surat, kuantitas dokumen arsip, dan visualisasi aktivitas data pada AKSARA LPSE.</p>
+            <p class="text-xs md:text-sm text-slate-500 dark:text-emerald-300/70 mt-1">Dinamika sirkulasi surat, kuantitas dokumen arsip, dan visualisasi data terintegrasi AKSARA LPSE.</p>
         </div>
         
-        <div class="flex items-center gap-2 shrink-0">
-    <div class="relative inline-block text-left" id="dropdownEksporContainer">
-        <button onclick="toggleDropdownEkspor()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-emerald-950 dark:hover:bg-emerald-800 text-slate-700 dark:text-emerald-200 font-bold text-sm transition-all shadow-sm">
-            <i class="fas fa-download text-xs text-[#008f5d]"></i>
-            <span>Ekspor Data</span>
-            <i class="fas fa-chevron-down text-[10px] ml-1"></i>
-        </button>
-        
-        {{-- Dropdown Menu dengan Route Laravel --}}
-        <div id="menuDropdownEkspor" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-emerald-950 border border-slate-100 dark:border-emerald-800 shadow-xl z-50 overflow-hidden transition-all">
-            <div class="py-1">
-                <a href="{{ route('petugas.export.csv') }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
-                    <i class="fas fa-file-csv text-blue-500 text-base w-5"></i> Ekspor ke CSV
-                </a>
-                <a href="{{ route('petugas.export.excel') }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
-                    <i class="fas fa-file-excel text-emerald-600 text-base w-5"></i> Ekspor ke Excel
-                </a>
-                <a href="{{ route('petugas.export.pdf') }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
-                    <i class="fas fa-file-pdf text-red-500 text-base w-5"></i> Ekspor ke PDF
-                </a>
+        <!-- Panel Filter & Tombol Ekspor Dropdown -->
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+            
+            <!-- Filter Form -->
+            <form method="GET" action="" class="flex flex-wrap items-center gap-2">
+                <select name="tahun" onchange="this.form.submit()" class="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-200 font-bold text-xs border border-slate-200 dark:border-emerald-800 focus:outline-none">
+                    <option value="">Semua Tahun</option>
+                    @foreach($filterTahunList ?? [2024, 2025, 2026] as $th)
+                        <option value="{{ $th }}" {{ request('tahun') == $th ? 'selected' : '' }}>{{ $th }}</option>
+                    @endforeach
+                </select>
+
+                <select name="bulan" onchange="this.form.submit()" class="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-200 font-bold text-xs border border-slate-200 dark:border-emerald-800 focus:outline-none">
+                    <option value="">Semua Bulan</option>
+                    @php 
+                        $bulanList = [1=>'Januari', 2=>'Februari', 3=>'Maret', 4=>'April', 5=>'Mei', 6=>'Juni', 7=>'Juli', 8=>'Agustus', 9=>'September', 10=>'Oktober', 11=>'November', 12=>'Desember'];
+                    @endphp
+                    @foreach($bulanList as $key => $namaBulan)
+                        <option value="{{ $key }}" {{ request('bulan') == $key ? 'selected' : '' }}>{{ $namaBulan }}</option>
+                    @endforeach
+                </select>
+
+                <select name="kategori" onchange="this.form.submit()" class="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-emerald-950 text-slate-700 dark:text-emerald-200 font-bold text-xs border border-slate-200 dark:border-emerald-800 focus:outline-none">
+                    <option value="">Semua Kategori / Penyedia</option>
+                    @foreach($kategoriList as $kat)
+                        <option value="{{ $kat->id_kategori ?? $kat->id }}" {{ request('kategori') == ($kat->id_kategori ?? $kat->id) ? 'selected' : '' }}>{{ $kat->nama_kategori }}</option>
+                    @endforeach
+                </select>
+            </form>
+
+            <!-- Dropdown Ekspor Data yang Terhubung ke Backend dengan Query Parameter Filter -->
+            <div class="relative inline-block text-left" id="dropdownEksporContainer">
+                <button onclick="toggleDropdownEkspor()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#008f5d] hover:bg-[#00724a] text-white font-bold text-xs transition-all shadow-md">
+                    <i class="fas fa-download text-xs"></i>
+                    <span>Ekspor Data</span>
+                    <i class="fas fa-chevron-down text-[9px] ml-1"></i>
+                </button>
+                
+                <div id="menuDropdownEkspor" class="hidden absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-emerald-950 border border-slate-100 dark:border-emerald-800 shadow-xl z-50 overflow-hidden transition-all">
+                    <div class="py-1">
+                        <a href="{{ route('admin.laporan.export.csv') }}?{{ http_build_query(request()->all()) }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
+                            <i class="fas fa-file-csv text-blue-500 text-base w-5"></i> Ekspor ke CSV
+                        </a>
+                        <a href="{{ route('admin.laporan.export.excel') }}?{{ http_build_query(request()->all()) }}" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
+                            <i class="fas fa-file-excel text-emerald-600 text-base w-5"></i> Ekspor ke Excel
+                        </a>
+                        <a href="{{ route('admin.laporan.export.pdf') }}?{{ http_build_query(request()->all()) }}" target="_blank" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-emerald-200 hover:bg-slate-50 dark:hover:bg-emerald-900 transition-colors">
+                            <i class="fas fa-file-pdf text-red-500 text-base w-5"></i> Ekspor ke PDF
+                        </a>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
-</div>
-        </div>
-    
 
+    <!-- Statistik Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div class="bg-white dark:bg-emerald-900 p-6 rounded-3xl border border-emerald-50 dark:border-emerald-800 shadow-sm flex items-center justify-between">
             <div>
@@ -81,8 +112,8 @@
         </div>
     </div>
 
+    <!-- Grafik Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         <div class="lg:col-span-2 bg-white dark:bg-emerald-900 p-6 rounded-3xl border border-emerald-50 dark:border-emerald-800 shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <div>
@@ -110,12 +141,13 @@
                 @endif
             </div>
         </div>
-
     </div>
 
+    <!-- Tabel Master Kategori & Surat Terfilter -->
     <div class="bg-white dark:bg-emerald-900 rounded-3xl border border-emerald-50 dark:border-emerald-800 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 dark:border-emerald-800/50">
+        <div class="p-6 border-b border-slate-100 dark:border-emerald-800/50 flex justify-between items-center">
             <h3 class="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-white">Daftar Master Kategori dan Informasi Sistem</h3>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-3 py-1 rounded-full">Periode Terpilih: {{ request('tahun') ?: 'Semua Tahun' }}</span>
         </div>
         <div class="overflow-x-auto">
             <table id="tabelLaporanSistem" class="w-full text-left border-collapse text-sm">
@@ -130,7 +162,7 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-emerald-800/30 font-semibold text-slate-700 dark:text-slate-200">
                     @forelse($kategoriList as $kategori)
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-emerald-950/20 transition-colors">
-                            <td class="p-4 pl-6 font-mono text-xs text-slate-400">#00{{ $kategori->id }}</td>
+                            <td class="p-4 pl-6 font-mono text-xs text-slate-400">#00{{ $kategori->id_kategori ?? $kategori->id }}</td>
                             <td class="p-4 text-slate-800 dark:text-white">{{ $kategori->nama_kategori }}</td>
                             <td class="p-4 font-normal text-slate-500 dark:text-emerald-300/70">{{ $kategori->keterangan ?? 'Klasifikasi Resmi AKSARA' }}</td>
                             <td class="p-4 pr-6"><span class="px-2.5 py-1 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">Terintegrasi</span></td>
@@ -147,10 +179,8 @@
 
 </div>
 
+<!-- CDN untuk Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <script>
     // Fungsi Manajemen Dropdown Ekspor
@@ -159,7 +189,6 @@
         menu.classList.toggle('hidden');
     }
 
-    // Tutup dropdown otomatis jika pengguna mengklik di luar area menu
     window.addEventListener('click', function(e) {
         const container = document.getElementById('dropdownEksporContainer');
         const menu = document.getElementById('menuDropdownEkspor');
@@ -169,67 +198,12 @@
     });
 
     // ==========================================
-    // LOGIKA PROSES EKSPOR DATA (CLIENT-SIDE)
-    // ==========================================
-
-    // 1. Ekspor ke CSV
-    function eksporKeCSV() {
-        const table = document.getElementById('tabelLaporanSistem');
-        const wb = XLSX.utils.table_to_book(table, { sheet: "Laporan Aksara" });
-        XLSX.writeFile(wb, "Laporan_Kategori_Aksara.csv", { bookType: 'csv' });
-        document.getElementById('menuDropdownEkspor').classList.add('hidden');
-    }
-
-    // 2. Ekspor ke Excel
-    function eksporKeExcel() {
-        const table = document.getElementById('tabelLaporanSistem');
-        const wb = XLSX.utils.table_to_book(table, { sheet: "Data Kategori" });
-        XLSX.writeFile(wb, "Laporan_Kategori_Aksara.xlsx");
-        document.getElementById('menuDropdownEkspor').classList.add('hidden');
-    }
-
-    // 3. Ekspor ke PDF (Format Dokumen Resmi)
-    function eksporKePDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'pt', 'a4');
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.setTextColor(0, 143, 93); // Warna Hijau #008f5d
-        doc.text("AKSARA LPSE KABUPATEN KARAWANG", 40, 50);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(100, 116, 139);
-        doc.text("Laporan Analisis Statistik dan Daftar Master Kategori Aktif", 40, 65);
-        doc.text("Tanggal Unduh: " + new Date().toLocaleDateString('id-ID'), 40, 78);
-        
-        // Garis Pembatas
-        doc.setDrawColor(226, 232, 240);
-        doc.line(40, 90, 555, 90);
-
-        // Ekstraksi data tabel otomatis menggunakan jspdf-autotable
-        doc.autoTable({
-            html: '#tabelLaporanSistem',
-            startY: 110,
-            styles: { font: 'helvetica', fontSize: 9 },
-            headStyles: { fillColor: [0, 143, 93], textColor: [255, 255, 255], fontStyle: 'bold' },
-            alternateRowStyles: { fillColor: [248, 250, 252] },
-            margin: { left: 40, right: 40 }
-        });
-
-        doc.save("Laporan_Statistik_Aksara.pdf");
-        document.getElementById('menuDropdownEkspor').classList.add('hidden');
-    }
-
-    // ==========================================
-    // INISIALISASI GRAFIK CHART.JS (DINAMIS DARI DATABASE)
+    // INISIALISASI GRAFIK CHART.JS DINAMIS
     // ==========================================
     document.addEventListener("DOMContentLoaded", function() {
         const isDarkMode = document.documentElement.classList.contains('dark');
         const textGridColor = isDarkMode ? '#fff' : '#475569';
 
-        // 1. Grafik Tren Sirkulasi Dokumen
         const ctxSirkulasi = document.getElementById('chartSirkulasi').getContext('2d');
         new Chart(ctxSirkulasi, {
             type: 'line',
@@ -257,8 +231,8 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { 
-                    legend: { labels: { color: textGridColor, font: { weight: 'bold' } } } 
+                plugins: {  
+                    legend: { labels: { color: textGridColor, font: { weight: 'bold' } } }  
                 },
                 scales: {
                     y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#94a3b8' } },
@@ -267,13 +241,11 @@
             }
         });
 
-        // 2. Grafik Donut Data Kategori Dinamis
         @if(!$kategoriList->isEmpty())
             const ctxKategori = document.getElementById('chartKategori').getContext('2d');
             const kategoriLabels = {!! json_encode($kategoriList->pluck('nama_kategori')) !!};
             const dataCounts = {!! json_encode($dataKategoriCounts ?? []) !!};
 
-            // Fallback apabila controller tidak mengirim $dataKategoriCounts maka isi dengan 0
             if (dataCounts.length === 0) {
                 for (let i = 0; i < kategoriLabels.length; i++) {
                     dataCounts.push(0);
