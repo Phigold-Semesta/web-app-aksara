@@ -67,6 +67,70 @@
         </div>
     </div>
 
+    {{-- Diagram Progress & Statistik Operasional Petugas (Dinamis dari Database) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2.5rem] shadow-xl border border-slate-50 dark:border-slate-800 space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight italic">Diagram Progress Pengolahan</h2>
+                <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-[#006b43] dark:text-emerald-400 rounded-full text-[9px] font-black uppercase tracking-widest">Real-time DB</span>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                        <span>Arsip Masuk & Terverifikasi</span>
+                        <span class="text-[#006b43] dark:text-emerald-400">{{ $persenArsip ?? 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                        <div class="bg-gradient-to-r from-emerald-600 to-[#006b43] h-full rounded-full transition-all duration-500" style="width: {{ $persenArsip ?? 0 }}%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                        <span>Surat Diproses / Disposisi</span>
+                        <span class="text-blue-600 dark:text-blue-400">{{ $persenDisposisi ?? 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full transition-all duration-500" style="width: {{ $persenDisposisi ?? 0 }}%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                        <span>Kepatuhan Klasifikasi Dokumen</span>
+                        <span class="text-purple-600 dark:text-purple-400">{{ $persenKlasifikasi ?? 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-700 h-full rounded-full transition-all duration-500" style="width: {{ $persenKlasifikasi ?? 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2.5rem] shadow-xl border border-slate-50 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+                <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight italic mb-2">Ringkasan Kinerja Harian</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">Indikator operasional tugas petugas dalam mengelola input surat, penomoran, penataan arsip fisik, serta kesinambungan alur disposisi sistem Aksara LPSE.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 my-4">
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                    <p class="text-[9px] font-black uppercase text-slate-400 mb-1">Status Antrean</p>
+                    <p class="text-xl font-black text-slate-800 dark:text-white">OPTIMAL</p>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                    <p class="text-[9px] font-black uppercase text-slate-400 mb-1">Validasi Data</p>
+                    <p class="text-xl font-black text-[#006b43] dark:text-emerald-400">100%</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
+                <i class="fas fa-circle-check text-xs"></i> Tugas Operasional Berjalan Lancar
+            </div>
+        </div>
+    </div>
+
     {{-- Widget Akses Pintas & Navigasi Operasional --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <div class="bg-gradient-to-r from-[#006b43] to-emerald-800 p-8 rounded-[2.5rem] text-white shadow-xl flex items-center justify-between">

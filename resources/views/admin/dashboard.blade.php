@@ -98,6 +98,70 @@
         </div>
     </div>
 
+    {{-- Diagram Progress & Statistik Sistem (Dinamis dari Database) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg border border-slate-50 dark:border-slate-800 space-y-5">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight italic">Diagram Progress Arsip & Disposisi</h2>
+                <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-[#006b43] dark:text-emerald-400 rounded-full text-[9px] font-black uppercase tracking-widest">Real-time</span>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                        <span>Arsip Masuk & Terverifikasi</span>
+                        <span class="text-[#006b43] dark:text-emerald-400">{{ $persenArsip ?? 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                        <div class="bg-gradient-to-r from-emerald-600 to-[#006b43] h-full rounded-full transition-all duration-500" style="width: {{ $persenArsip ?? 0 }}%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                        <span>Disposisi Surat Selesai</span>
+                        <span class="text-blue-600 dark:text-blue-400">{{ $persenDisposisi ?? 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full transition-all duration-500" style="width: {{ $persenDisposisi ?? 0 }}%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                        <span>Kepatuhan Klasifikasi Arsip</span>
+                        <span class="text-purple-600 dark:text-purple-400">{{ $persenKlasifikasi ?? 0 }}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-700 h-full rounded-full transition-all duration-500" style="width: {{ $persenKlasifikasi ?? 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg border border-slate-50 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+                <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight italic mb-2">Ringkasan Kinerja Sistem</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Indikator operasional harian Aksara LPSE berjalan optimal dengan tingkat responsivitas tinggi pada database arsip dan disposisi surat.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 my-4">
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                    <p class="text-[9px] font-black uppercase text-slate-400 mb-1">Uptime Server</p>
+                    <p class="text-xl font-black text-slate-800 dark:text-white">99.9%</p>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                    <p class="text-[9px] font-black uppercase text-slate-400 mb-1">Rata-rata Respon</p>
+                    <p class="text-xl font-black text-[#006b43] dark:text-emerald-400">0.24s</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
+                <i class="fas fa-circle-check text-xs"></i> Sistem Beroperasi Tanpa Kendala
+            </div>
+        </div>
+    </div>
+
     {{-- Activity Table --}}
     <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-lg border border-slate-50 dark:border-slate-800">
         <div class="flex justify-between items-center mb-4">

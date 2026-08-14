@@ -18,7 +18,7 @@ class PimpinanController extends Controller
      * DASHBOARD PIMPINAN (EKSEKUTIF)
      * Menyiapkan Data Statistik Utama dan Seluruh Riwayat Surat untuk DataTables Frontend
      */
-    public function dashboard()
+   public function dashboard()
     {
         // 1. Ambil data statistik ringkasan pimpinan
         $totalSuratMasuk = Surat::whereHas('kategori', function($q) {
@@ -28,7 +28,7 @@ class PimpinanController extends Controller
         $totalSuratKeluar = Surat::whereHas('kategori', function($q) {
                                  $q->where('nama_kategori', 'like', '%Surat Keluar%');
                              })->count();
-                            
+                             
         $totalDisposisi = Surat::where('status', 'disposisi')->count();
 
         // 2. Ambil SELURUH data surat beserta relasinya untuk DataTables Frontend
@@ -36,15 +36,29 @@ class PimpinanController extends Controller
                         ->latest()
                         ->get();
 
-        // 3. Kirim data ke view dashboard pimpinan
+        // 3. Perhitungan Dinamis untuk Diagram Progress Eksekutif
+        $totalArsipCount = \App\Models\Arsip::count();
+        $arsipTerverifikasi = \App\Models\Arsip::where('status_retensi', 'Aktif')->count();
+        $persenArsip = $totalArsipCount > 0 ? round(($arsipTerverifikasi / $totalArsipCount) * 100) : 0;
+
+        $totalSurat = Surat::count();
+        $suratSelesai = Surat::where('status', 'LIKE', '%selesai%')->count();
+        $persenDisposisi = $totalSurat > 0 ? round(($suratSelesai / $totalSurat) * 100) : 0;
+
+        $suratBerbasisKategori = Surat::whereNotNull('id_kategori')->count();
+        $persenKlasifikasi = $totalSurat > 0 ? round(($suratBerbasisKategori / $totalSurat) * 100) : 95;
+
+        // 4. Kirim data lengkap ke view dashboard pimpinan
         return view('pimpinan.dashboard', compact(
             'totalSuratMasuk', 
             'totalSuratKeluar', 
             'totalDisposisi', 
-            'surats'
+            'surats',
+            'persenArsip',
+            'persenDisposisi',
+            'persenKlasifikasi'
         ));
     }
- 
     /**
      * Manajemen Surat Pimpinan (Surat Masuk & Riwayat Disposisi)
      * Dilengkapi Filter Searching, Limit Baris Dinamis, & Pagination Independen

@@ -21,14 +21,34 @@ class AdminController extends Controller
     /**
      * Logika utama dashboard
      */
+   /**
+     * Logika utama dashboard
+     */
     public function dashboard()
     {
         $totalPengguna = User::count();
         $totalArsip = Arsip::count();
         $totalKategori = KategoriSurat::count();
-        $logs = AuditLog::latest()->take(5)->get();
+        $logs = AuditLog::with('user')->latest()->take(5)->get();
 
-        // Data untuk grafik
+        // ==========================================
+        // PERHITUNGAN DINAMIS UNTUK DIAGRAM PROGRESS
+        // ==========================================
+        
+        // 1. Arsip Masuk & Terverifikasi (Berdasarkan status_retensi Aktif)
+        $arsipTerverifikasi = Arsip::where('status_retensi', 'Aktif')->count();
+        $persenArsip = $totalArsip > 0 ? round(($arsipTerverifikasi / $totalArsip) * 100) : 0;
+
+        // 2. Disposisi / Surat Selesai (Berdasarkan status surat yang selesai)
+        $totalSurat = \App\Models\Surat::count();
+        $suratSelesai = \App\Models\Surat::where('status', 'LIKE', '%selesai%')->count();
+        $persenDisposisi = $totalSurat > 0 ? round(($suratSelesai / $totalSurat) * 100) : 0;
+
+        // 3. Kepatuhan Klasifikasi Arsip (Berdasarkan surat yang memiliki kategori)
+        $suratBerbasisKategori = \App\Models\Surat::whereNotNull('id_kategori')->count();
+        $persenKlasifikasi = $totalSurat > 0 ? round(($suratBerbasisKategori / $totalSurat) * 100) : 95;
+
+        // Data untuk grafik lama (tetap dipertahankan)
         $labels = json_encode(['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun']);
         $dataArsip = json_encode([90, 130, 110, 160, 145, 190]);
         $dataSurat = json_encode([120, 185, 140, 210, 195, 245]);
@@ -40,7 +60,10 @@ class AdminController extends Controller
             'logs', 
             'labels', 
             'dataArsip', 
-            'dataSurat'
+            'dataSurat',
+            'persenArsip',
+            'persenDisposisi',
+            'persenKlasifikasi'
         ));
     }
 

@@ -134,5 +134,45 @@
 
     </div>
 
+    {{-- Diagram Progress & Indikator Kinerja Eksekutif Sistem (Dinamis dari Database) --}}
+    <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2.5rem] shadow-xl border border-slate-50 dark:border-slate-800 space-y-6">
+        <div class="flex justify-between items-center">
+            <h2 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight italic">Diagram Progress Eksekutif & Sirkulasi Dokumen</h2>
+            <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-[#006b43] dark:text-emerald-400 rounded-full text-[9px] font-black uppercase tracking-widest">Real-time DB</span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                    <span>Arsip Masuk & Terverifikasi</span>
+                    <span class="text-[#006b43] dark:text-emerald-400">{{ $persenArsip ?? 0 }}%</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                    <div class="bg-gradient-to-r from-emerald-600 to-[#006b43] h-full rounded-full transition-all duration-500" style="width: {{ $persenArsip ?? 0 }}%"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                    <span>Disposisi Surat Selesai</span>
+                    <span class="text-blue-600 dark:text-blue-400">{{ $persenDisposisi ?? 0 }}%</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-700 h-full rounded-full transition-all duration-500" style="width: {{ $persenDisposisi ?? 0 }}%"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center text-xs font-black uppercase text-slate-600 dark:text-slate-300 mb-1.5">
+                    <span>Kepatuhan Klasifikasi Arsip</span>
+                    <span class="text-purple-600 dark:text-purple-400">{{ $persenKlasifikasi ?? 0 }}%</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-700 h-full rounded-full transition-all duration-500" style="width: {{ $persenKlasifikasi ?? 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection

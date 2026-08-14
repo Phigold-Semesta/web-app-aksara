@@ -22,55 +22,70 @@ class PetugasController extends Controller
      */
  
 public function dashboard()
-    {
-        // 1. Hitung statistik umum
-        $stats = [
-            'surat_masuk'  => Surat::whereHas('kategori', function($q) {
-                                  $q->where('nama_kategori', 'like', '%Surat Masuk%');
-                              })->count(),
-            
-            'surat_keluar' => Surat::whereHas('kategori', function($q) {
-                                  $q->where('nama_kategori', 'like', '%Surat Keluar%');
-                              })->count(),
-                              
-            'total_arsip'  => Arsip::count(),
-            'update_time'  => now()->format('H:i')
-        ];
+{
+    // 1. Hitung statistik umum
+    $stats = [
+        'surat_masuk'  => Surat::whereHas('kategori', function($q) {
+                                $q->where('nama_kategori', 'like', '%Surat Masuk%');
+                            })->count(),
+        
+        'surat_keluar' => Surat::whereHas('kategori', function($q) {
+                                $q->where('nama_kategori', 'like', '%Surat Keluar%');
+                            })->count(),
+                            
+        'total_arsip'  => Arsip::count(),
+        'update_time'  => now()->format('H:i')
+    ];
 
-        // 2. Data Label Bulan (Jan - Des)
-        $labelsBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        $dataSuratMasuk = [];
-        $dataSuratKeluar = [];
+    // 2. Data Label Bulan (Jan - Des)
+    $labelsBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    $dataSuratMasuk = [];
+    $dataSuratKeluar = [];
 
-        // Loop menghitung volume per bulan di tahun berjalan
-        for ($bulan = 1; $bulan <= 12; $bulan++) {
-            $dataSuratMasuk[] = Surat::whereHas('kategori', function($q) {
-                $q->where('nama_kategori', 'like', '%Surat Masuk%');
-            })->whereYear('tanggal_surat', date('Y'))->whereMonth('tanggal_surat', $bulan)->count();
+    // Loop menghitung volume per bulan di tahun berjalan
+    for ($bulan = 1; $bulan <= 12; $bulan++) {
+        $dataSuratMasuk[] = Surat::whereHas('kategori', function($q) {
+            $q->where('nama_kategori', 'like', '%Surat Masuk%');
+        })->whereYear('tanggal_surat', date('Y'))->whereMonth('tanggal_surat', $bulan)->count();
 
-            $dataSuratKeluar[] = Surat::whereHas('kategori', function($q) {
-                $q->where('nama_kategori', 'like', '%Surat Keluar%');
-            })->whereYear('tanggal_surat', date('Y'))->whereMonth('tanggal_surat', $bulan)->count();
-        }
-
-        // 3. Data Distribusi Kategori Surat untuk Chart Doughnut
-        $kategoriList = KategoriSurat::all();
-        $dataKategoriCounts = [];
-
-        foreach ($kategoriList as $kat) {
-            $dataKategoriCounts[] = Surat::where('id_kategori', $kat->id_kategori ?? $kat->id)->count();
-        }
-
-        // 4. Kirim data ke view dashboard petugas
-        return view('petugas.dashboard', compact(
-            'stats', 
-            'labelsBulan', 
-            'dataSuratMasuk', 
-            'dataSuratKeluar', 
-            'kategoriList', 
-            'dataKategoriCounts'
-        ));
+        $dataSuratKeluar[] = Surat::whereHas('kategori', function($q) {
+            $q->where('nama_kategori', 'like', '%Surat Keluar%');
+        })->whereYear('tanggal_surat', date('Y'))->whereMonth('tanggal_surat', $bulan)->count();
     }
+
+    // 3. Data Distribusi Kategori Surat untuk Chart Doughnut
+    $kategoriList = KategoriSurat::all();
+    $dataKategoriCounts = [];
+
+    foreach ($kategoriList as $kat) {
+        $dataKategoriCounts[] = Surat::where('id_kategori', $kat->id_kategori ?? $kat->id)->count();
+    }
+
+    // 4. Perhitungan Dinamis untuk Diagram Progress (Sinkron dengan View Dashboard Petugas)
+    $totalArsipCount = Arsip::count();
+    $arsipTerverifikasi = Arsip::where('status_retensi', 'Aktif')->count();
+    $persenArsip = $totalArsipCount > 0 ? round(($arsipTerverifikasi / $totalArsipCount) * 100) : 0;
+
+    $totalSurat = Surat::count();
+    $suratSelesai = Surat::where('status', 'LIKE', '%selesai%')->count();
+    $persenDisposisi = $totalSurat > 0 ? round(($suratSelesai / $totalSurat) * 100) : 0;
+
+    $suratBerbasisKategori = Surat::whereNotNull('id_kategori')->count();
+    $persenKlasifikasi = $totalSurat > 0 ? round(($suratBerbasisKategori / $totalSurat) * 100) : 95;
+
+    // 5. Kirim data lengkap ke view dashboard petugas
+    return view('petugas.dashboard', compact(
+        'stats', 
+        'labelsBulan', 
+        'dataSuratMasuk', 
+        'dataSuratKeluar', 
+        'kategoriList', 
+        'dataKategoriCounts',
+        'persenArsip',
+        'persenDisposisi',
+        'persenKlasifikasi'
+    ));
+}
 
 
    
