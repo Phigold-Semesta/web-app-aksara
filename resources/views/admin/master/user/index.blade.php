@@ -23,8 +23,8 @@
             
             <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
                 <form action="{{ route('admin.master.user.index') }}" method="GET" class="flex flex-wrap gap-2">
-                    <input type="text" name="search" placeholder="Cari..." value="{{ request('search') }}" 
-                        class="bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none w-full sm:w-40">
+                    <input type="text" name="search" placeholder="Cari (Nama/Email)..." value="{{ request('search') }}" 
+                        class="bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none w-full sm:w-48">
                     
                     <select name="per_page" class="bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5 Baris</option>
@@ -60,6 +60,7 @@
                         <th class="px-6 py-3">Username</th>
                         <th class="px-6 py-3">Nama Lengkap</th>
                         <th class="px-6 py-3">Jabatan</th>
+                        <th class="px-6 py-3">Email</th>
                         <th class="px-6 py-3">Role</th>
                         <th class="px-6 py-3 text-center">Aksi</th>
                     </tr>
@@ -84,6 +85,7 @@
                         <td class="px-6 py-4 font-bold text-emerald-900 dark:text-emerald-100">{{ $user->username }}</td>
                         <td class="px-6 py-4 font-semibold text-emerald-800 dark:text-emerald-300">{{ $user->nama_lengkap }}</td>
                         <td class="px-6 py-4 font-medium text-emerald-700 dark:text-emerald-400 text-sm">{{ $user->jabatan ?? '-' }}</td>
+                        <td class="px-6 py-4 font-medium text-emerald-700 dark:text-emerald-400 text-sm">{{ $user->email ?? '-' }}</td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider {{ $badgeClass }}">
                                 {{ $user->role }}
@@ -111,7 +113,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-10 text-emerald-400 font-bold italic">Data tidak ditemukan.</td>
+                        <td colspan="8" class="text-center py-10 text-emerald-400 font-bold italic">Data tidak ditemukan.</td>
                     </tr>
                     @endforelse
                 </tbody>

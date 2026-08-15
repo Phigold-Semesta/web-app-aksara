@@ -244,36 +244,37 @@ public function lihatStatistik(Request $request)
  * Menampilkan Daftar Pengguna dengan fitur Search, Filter, dan Pagination Dinamis
  */
 public function kelolaUser(Request $request)
-{
-    // Mulai query dari model User
-    $query = User::query();
+    {
+        // Mulai query dari model User
+        $query = User::query();
 
-    // 1. Logika Searching
-    if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('nama_lengkap', 'like', '%' . $request->search . '%')
-              ->orWhere('username', 'like', '%' . $request->search . '%');
-        });
+        // 1. Logika Searching (Ditambahkan pencarian berdasarkan EMAIL)
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('nama_lengkap', 'like', '%' . $request->search . '%')
+                  ->orWhere('username', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%'); // <-- Tambahan untuk mencari via Email
+            });
+        }
+
+        // 2. Logika Filtering Role
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        // 3. Logika Filtering Per Halaman
+        // Jika 'all', kita ambil total count, jika tidak maka gunakan nilai input atau default 10
+        $perPage = $request->per_page;
+        
+        if ($perPage === 'all') {
+            $users = $query->latest()->get(); // Ambil semua data tanpa pagination
+        } else {
+            $perPage = in_array($perPage, ['5', '10', '25']) ? $perPage : 10;
+            $users = $query->latest()->paginate((int)$perPage)->withQueryString();
+        }
+
+        return view('admin.master.user.index', compact('users'));
     }
-
-    // 2. Logika Filtering Role
-    if ($request->filled('role')) {
-        $query->where('role', $request->role);
-    }
-
-    // 3. Logika Filtering Per Halaman
-    // Jika 'all', kita ambil total count, jika tidak maka gunakan nilai input atau default 10
-    $perPage = $request->per_page;
-    
-    if ($perPage === 'all') {
-        $users = $query->latest()->get(); // Ambil semua data tanpa pagination
-    } else {
-        $perPage = in_array($perPage, ['5', '10', '25']) ? $perPage : 10;
-        $users = $query->latest()->paginate((int)$perPage)->withQueryString();
-    }
-
-    return view('admin.master.user.index', compact('users'));
-}
     /**
      * PERBAIKAN: Menampilkan Halaman Form Tambah Pengguna Baru (Create Page)
      */
@@ -285,40 +286,42 @@ public function kelolaUser(Request $request)
  * Simpan Pengguna Baru (Create Store) - Diperbarui untuk kestabilan
  */
 public function storeUser(Request $request)
-{
-    // 1. Validasi: Menambahkan validasi untuk jabatan agar sinkron dengan database
-    $request->validate([
-        'username'     => 'required|string|max:255|unique:user,username',
-        'password'     => 'required|string|min:6',
-        'nama_lengkap' => 'required|string|max:255',
-        'role'         => 'required|in:admin,petugas,pimpinan',
-        'jabatan'      => 'nullable|string|max:100' // Ditambahkan karena kolom di DB bersifat wajib
-    ]);
-
-    // 2. Gunakan DB Transaction untuk memastikan integritas data
-    return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
-        
-        // Simpan User dengan menyertakan jabatan
-        $user = User::create([
-            'username'     => $request->username,
-            'password'     => bcrypt($request->password),
-            'nama_lengkap' => $request->nama_lengkap,
-            'role'         => $request->role,
-            'jabatan'      => $request->jabatan ?? 'Staf', // Memberikan default jika kosong
+    {
+        // 1. Validasi: Menambahkan validasi untuk email dan jabatan agar sinkron dengan database
+        $request->validate([
+            'username'     => 'required|string|max:255|unique:user,username',
+            'email'        => 'required|email|max:255|unique:user,email', // <-- Tambahan validasi wajib Email
+            'password'     => 'required|string|min:6',
+            'nama_lengkap' => 'required|string|max:255',
+            'role'         => 'required|in:admin,petugas,pimpinan',
+            'jabatan'      => 'nullable|string|max:100' // Ditambahkan karena kolom di DB bersifat wajib
         ]);
 
-        // 3. Tembak Audit Log
-        AuditLog::create([
-            'aktivitas'      => 'TAMBAH USER',
-            'deskripsi'      => auth()->user()->nama_lengkap . " membuat pengguna baru dengan nama: {$user->nama_lengkap} (Role: {$user->role})",
-            'ip_address'     => $request->ip(),
-            'waktu_kejadian' => now(),
-            'id_user'        => auth()->id()
-        ]);
+        // 2. Gunakan DB Transaction untuk memastikan integritas data
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            
+            // Simpan User dengan menyertakan email dan jabatan
+            $user = User::create([
+                'username'     => $request->username,
+                'email'        => $request->email, // <-- Eksekusi simpan Email
+                'password'     => bcrypt($request->password),
+                'nama_lengkap' => $request->nama_lengkap,
+                'role'         => $request->role,
+                'jabatan'      => $request->jabatan ?? 'Staf', // Memberikan default jika kosong
+            ]);
 
-        return redirect()->route('admin.master.user.index')->with('success', 'Pengguna baru berhasil ditambahkan!');
-    });
-}
+            // 3. Tembak Audit Log
+            AuditLog::create([
+                'aktivitas'      => 'TAMBAH USER',
+                'deskripsi'      => auth()->user()->nama_lengkap . " membuat pengguna baru dengan nama: {$user->nama_lengkap} (Role: {$user->role})",
+                'ip_address'     => $request->ip(),
+                'waktu_kejadian' => now(),
+                'id_user'        => auth()->id()
+            ]);
+
+            return redirect()->route('admin.master.user.index')->with('success', 'Pengguna baru berhasil ditambahkan!');
+        });
+    }
     /**
      * PERBAIKAN: Menampilkan Halaman Detail Pengguna (Show Page)
      */
@@ -341,45 +344,47 @@ public function storeUser(Request $request)
  * Perbarui Data Pengguna (Update) - Integrasi Manajemen User Baru Berpindah Halaman
  */
 public function updateUser(Request $request, $id)
-{
-    // 1. Pastikan findOrFail mencari berdasarkan kolom yang benar jika perlu
-    // Jika 'id' pada route adalah 'id_user', maka ini sudah aman.
-    $user = User::findOrFail($id);
+    {
+        // 1. Pastikan findOrFail mencari berdasarkan kolom yang benar jika perlu
+        // Jika 'id' pada route adalah 'id_user', maka ini sudah aman.
+        $user = User::findOrFail($id);
 
-    // 2. Perbaikan Validasi Unique
-    // Syntax: unique:tabel,kolom,id_yang_dikecualikan,nama_kolom_primary_key
-    $request->validate([
-        'username' => 'required|unique:user,username,' . $id . ',id_user',
-        'nama_lengkap' => 'required',
-        'role' => 'required'
-    ]);
+        // 2. Perbaikan Validasi Unique (Termasuk validasi unik untuk Email)
+        // Syntax: unique:tabel,kolom,id_yang_dikecualikan,nama_kolom_primary_key
+        $request->validate([
+            'username'     => 'required|unique:user,username,' . $id . ',id_user',
+            'email'        => 'required|email|unique:user,email,' . $id . ',id_user', // <-- Tambahan validasi unik Email
+            'nama_lengkap' => 'required',
+            'role'         => 'required'
+        ]);
 
-    $user->username = $request->username;
-    $user->nama_lengkap = $request->nama_lengkap;
-    $user->role = $request->role;
+        $user->username = $request->username;
+        $user->email = $request->email; // <-- Eksekusi update Email
+        $user->nama_lengkap = $request->nama_lengkap;
+        $user->role = $request->role;
 
-    // Perbaikan: Pastikan jabatan juga diupdate jika ada di form
-    if ($request->has('jabatan')) {
-        $user->jabatan = $request->jabatan;
+        // Perbaikan: Pastikan jabatan juga diupdate jika ada di form
+        if ($request->has('jabatan')) {
+            $user->jabatan = $request->jabatan;
+        }
+
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->password);
+        }
+
+        $user->save();
+
+        // 3. Tembak Audit Log
+        AuditLog::create([
+            'aktivitas' => 'UBAH USER',
+            'deskripsi' => auth()->user()->nama_lengkap . " mengubah data pengguna: {$user->nama_lengkap}",
+            'ip_address' => $request->ip(),
+            'waktu_kejadian' => now(),
+            'id_user' => auth()->id() // Pastikan kolom ini sesuai dengan struktur tabel audit_logs Anda
+        ]);
+
+        return redirect()->route('admin.master.user.index')->with('success', 'Data pengguna berhasil diperbarui!');
     }
-
-    if ($request->filled('password')) {
-        $user->password = bcrypt($request->password);
-    }
-
-    $user->save();
-
-    // 3. Tembak Audit Log
-    AuditLog::create([
-        'aktivitas' => 'UBAH USER',
-        'deskripsi' => auth()->user()->nama_lengkap . " mengubah data pengguna: {$user->nama_lengkap}",
-        'ip_address' => $request->ip(),
-        'waktu_kejadian' => now(),
-        'id_user' => auth()->id() // Pastikan kolom ini sesuai dengan struktur tabel audit_logs Anda
-    ]);
-
-    return redirect()->route('admin.master.user.index')->with('success', 'Data pengguna berhasil diperbarui!');
-}
 
     /**
      * Hapus Pengguna (Delete) - Integrasi Manajemen User Baru

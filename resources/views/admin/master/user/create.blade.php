@@ -47,6 +47,14 @@
                     @error('username') <span class="text-[10px] text-red-500 font-bold mt-1 ml-1 block">{{ $message }}</span> @enderror
                 </div>
 
+                {{-- Email Baru --}}
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2 ml-1">Email Aktif</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="Contoh: nama@karawangkab.go.id" 
+                        class="w-full bg-emerald-50 dark:bg-emerald-950 border-2 border-transparent focus:border-emerald-500 dark:border-emerald-800 rounded-xl px-4 py-3.5 text-sm font-semibold text-emerald-900 dark:text-white outline-none transition-all @error('email') border-red-500 @enderror">
+                    @error('email') <span class="text-[10px] text-red-500 font-bold mt-1 ml-1 block">{{ $message }}</span> @enderror
+                </div>
+
                 {{-- Role --}}
                 <div>
                     <label class="block text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2 ml-1">Role Akses</label>

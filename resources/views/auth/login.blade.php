@@ -134,6 +134,12 @@
                         <input type="password" name="password" id="password" 
                             class="w-full px-8 py-4 bg-white/10 border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white/15 transition-all duration-300 text-white text-sm placeholder-white/20"
                             placeholder="••••••••" required>
+                        <!-- Tautan Lupa Password ditambahkan di sini secara presisi -->
+                        <div class="flex justify-end mt-2 mr-2">
+                            <a href="{{ route('password.request') }}" class="text-[10px] text-emerald-300 hover:text-emerald-100 font-bold tracking-[0.2em] uppercase transition-colors duration-300">
+                                Lupa Password?
+                            </a>
+                        </div>
                     </div>
 
                     <button type="submit" 

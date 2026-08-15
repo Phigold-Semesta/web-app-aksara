@@ -18,6 +18,11 @@ use App\Http\Controllers\PimpinanController;
 Route::middleware(['guest'])->group(function () {
     Route::get('/', [AuthController::class, 'index'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+
+Route::get('/lupa-password', [AuthController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/lupa-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
 // --- AREA TERPROTEKSI (Wajib Login) ---

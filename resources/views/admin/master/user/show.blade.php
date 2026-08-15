@@ -45,6 +45,7 @@
             @php $fields = [
                 ['label' => 'User ID', 'value' => $user->id ?? $user->id_user],
                 ['label' => 'Nama Lengkap', 'value' => $user->nama_lengkap],
+                ['label' => 'Email Aktif', 'value' => $user->email ?? '-'],
                 ['label' => 'Jabatan', 'value' => $user->jabatan ?? '-'],
                 ['label' => 'Username', 'value' => $user->username],
                 ['label' => 'Dibuat Pada', 'value' => $user->created_at ? $user->created_at->translatedFormat('d F Y, H:i') : 'Bawaan Sistem']
